@@ -6,7 +6,7 @@
     "dev": "storybook dev --host 127.0.0.1 --port 6006 --exact-port --no-open --disable-telemetry",
     "build": "storybook build --output-dir dist --disable-telemetry",
     "typecheck": "tsc --noEmit",
-    "test:ui": "vitest run",
+    "test:ui": "node scripts/test-addon-config.mjs && vitest run",
     "test:ui:install": "playwright install chromium --only-shell"
   },
   "dependencies": {
