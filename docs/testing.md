@@ -4,7 +4,7 @@
 
 ## Component tests
 
-Run `bun run test:ui:install` once, then `bun run test:ui` to render the shared UI stories in Chromium in both light and dark themes. The suite checks accessibility and interactive behavior without backend services. `bun run build:storybook` verifies the static component workspace. See the [Storybook guide](../apps/storybook/README.md). CI runs these checks in the `ui` job.
+Run `bun run test:ui:install` once, then `bun run test:ui` to check the Fumadocs Story manual in Chromium in both light and dark themes. Playwright builds and serves it on loopback port 4384. The small suite protects core interactions, accessible labels and descriptions, generated controls, responsive navigation, and browser-composited color contrast without backend services. `bun run build:storybook` verifies the static manual. See the [component stories guide](../apps/storybook/README.md). CI runs these checks in the `ui` job.
 
 ## End-to-end tests
 

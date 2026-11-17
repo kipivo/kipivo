@@ -1,5 +1,7 @@
 {
   "extends": "@kipivo/tsconfig/react.json",
-  "compilerOptions": { "types": ["node", "vite/client"] },
-  "include": [".storybook", "src", "vitest.config.ts"]
+  "compilerOptions": {
+    "types": ["node", "vite/client"]
+  },
+  "include": ["src", "tests", "vite.config.ts", "playwright.config.ts"]
 }

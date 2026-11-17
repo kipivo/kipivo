@@ -65,6 +65,8 @@ typings/
 apps/web/src/routeTree.gen.ts
 tests/e2e/test-results/
 tests/e2e/playwright-report/
+apps/storybook/test-results/
+apps/storybook/playwright-report/
 
 # Expo local and generated native files
 .expo/

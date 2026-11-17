@@ -1,14 +1,16 @@
-# Storybook
+# Component stories
 
-The isolated development workspace for `@kipivo/ui`. It uses React/Vite, the shared Tailwind stylesheet and self-hosted font, a light/dark theme toolbar, and Storybook's accessibility and Vitest addons. It does not start Web, the API, a database, or the local runner.
-
-From the repository root:
+The `storybook` workspace is a standalone component manual built with [Fumadocs Story Headless](https://www.fumadocs.dev/docs/tanstack-start/integrations/story/headless), React, and Vite. The workspace name and commands are retained; the Storybook framework and addons have been removed.
 
 ```sh
 bun run dev:storybook
 ```
 
-Open [localhost:6006](http://localhost:6006). Storybook starts only when requested; `bun run dev` excludes it. Every initial component has stories, and Foundations shows the palette and Wordmark. Controls adjust props. The accessibility panel reports violations. The testing widget runs stories in one project using the preview's default theme; the CLI tests both light and dark themes.
+Open [localhost:6006](http://localhost:6006). The manual does not start Web, the API, or a database. `bun run dev` excludes this workspace.
+
+The nine shared components and Wordmark have live examples, editable props, usage snippets, and accessibility guidance. Theme & colors shows the semantic and chart palettes. Light/Dark switches apply the application's shared stylesheet to both previews and portals; the selection persists locally.
+
+## Build and verify
 
 ```sh
 bun run build:storybook
@@ -16,6 +18,19 @@ bun run test:ui:install
 bun run test:ui
 ```
 
-The static build is written to `apps/storybook/dist`. `test:ui` first checks Vitest startup with the Storybook addon's environment and project filter, then renders every story in both themes. Browser tests fail on accessibility violations and exercise input labeling, button clicks, dialog dismissal/focus restoration, menu keyboard navigation, and tooltips. They run separately from `bun run check`, which does not require browser binaries. On Linux, add `--with-deps` to the browser installation command if system libraries are missing.
+The static build is written to `apps/storybook/dist`. Playwright builds and serves it on loopback port 4384 and checks both light and dark themes. Tests cover generated controls and reset, disabled/loading states, field labels and errors, dialog focus restoration, menu keyboard navigation, tooltip descriptions, theme persistence, and narrow screens. A small contrast regression checks browser-composited text, input borders, focus colors, and muted text. CI runs these in the `ui` job and retains traces on failure. On Linux, add `--with-deps` to the browser installation command if system libraries are missing.
 
-Add `*.stories.tsx` files under `src`, importing components through `@kipivo/ui` public subpaths. Keep examples deterministic and independent of backend services. Import app-specific story styles through `src/styles.css`; the preview already supplies TooltipProvider. Portal assertions must query the story document's body rather than only the canvas.
+`bun run check` includes formatting, lint, types, and unused-code checks for this workspace. Browser tests run separately and do not require backend services. There is no screenshot baseline, coverage service, or Chromatic dependency.
+
+## Add a story
+
+1. Add a small example in `src/examples.tsx`, importing from `@kipivo/ui` public subpaths. Give it explicit scalar props for the controls you need.
+2. Export a `defineStory({ Component, args })` in `src/components.story.tsx`. The Vite plugin transforms `*.story.tsx` and generates the control types from TypeScript.
+3. Register the page's title, description, usage, and guidance in `src/pages.ts`. Keep examples deterministic and independent of backend services.
+4. Add a browser check only for behavior that needs protection.
+
+`src/story.tsx` replaces Fumadocs' built-in panel through `defineStoryFactory({ WithControl: StoryPanel })`. The custom panel uses `StoryProvider`, `useStory`, `useStoryArgs`, and `@fumari/stf` fields. It supports the string, number, boolean, and literal/enum props used by these examples. The table describes **example props**, not the complete inherited DOM/Base UI API. Add an appropriate control before introducing a more complex prop type.
+
+Fumadocs Story requires `fumadocs-core` and `fumadocs-ui` as peers even with a custom panel. Both are pinned here, with `fumadocs-ui` mapped to Fumadocs' Base UI distribution; Knip permits these peer-only dependencies. The manual uses the shared Kipivo stylesheet and components for its interface.
+
+Examples already have TooltipProvider. Give fields unique IDs with `useId`; compose Base UI triggers with `render={<Button />}`. Portal assertions must query the page rather than only the preview region.

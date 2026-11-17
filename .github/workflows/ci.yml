@@ -35,6 +35,13 @@ jobs:
       - run: bun run test:ui:install --with-deps
       - run: bun run build:storybook
       - run: bun run test:ui
+      - if: failure()
+        uses: actions/upload-artifact@v5
+        with:
+          name: ui-test-results
+          path: apps/storybook/test-results/
+          if-no-files-found: ignore
+          retention-days: 7
   cli:
     runs-on: ubuntu-26.04
     steps:
