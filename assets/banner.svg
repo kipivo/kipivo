@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="400" viewBox="0 0 1280 400"
+     role="img" aria-labelledby="title description">
+  <title id="title">Kipivo</title>
+  <desc id="description">From spark to done.</desc>
+
+  <defs>
+    <radialGradient id="background" cx="88%" cy="22%" r="78%">
+      <stop stop-color="#331D1B"/>
+      <stop offset="1" stop-color="#121214"/>
+    </radialGradient>
+    <linearGradient id="trails" x1="752" y1="390" x2="1198" y2="92" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF6B4A" stop-opacity="0"/>
+      <stop offset="1" stop-color="#FFB02E" stop-opacity=".48"/>
+    </linearGradient>
+    <clipPath id="frame">
+      <rect width="1280" height="400" rx="24"/>
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#frame)">
+    <rect width="1280" height="400" fill="url(#background)"/>
+    <g fill="none" stroke="url(#trails)" stroke-width="2" stroke-linecap="round">
+      <path d="M 710 340 H 811 Q 848 340 875 313 L 1085 103"/>
+      <path d="M 717 382 H 874 Q 911 382 938 355 L 1186 107"/>
+      <path d="M 813 424 H 937 Q 974 424 1001 397 L 1224 174"/>
+    </g>
+    <circle cx="1085" cy="103" r="5" fill="#FFB02E"/>
+    <circle cx="1186" cy="107" r="3" fill="#FF6B4A"/>
+    <circle cx="1224" cy="174" r="3" fill="#FFB02E"/>
+  </g>
+
+  <g transform="translate(96 120) scale(1.6)">
+    <rect width="100" height="100" rx="22" fill="#121214" stroke="#393235"/>
+    <path d="M 24 24 L 24 80 M 26 54 L 52 28 M 32 48 L 58 80"
+          fill="none" stroke="#FF6B4A" stroke-width="16"
+          stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="77" cy="19" r="9" fill="#FFB02E"/>
+  </g>
+
+  <g font-family="Inter, system-ui, sans-serif">
+    <text x="304" y="202" fill="#FFFFFF" font-size="84" font-weight="700">Kipivo</text>
+    <text x="308" y="256" fill="#E0CDCB" font-size="34">From spark to done.</text>
+  </g>
+</svg>
