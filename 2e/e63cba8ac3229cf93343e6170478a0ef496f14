@@ -1,0 +1,74 @@
+apps/web/tsconfig.json
+  s_3e41f39f6e31c8::t_86254c3eb8db1a 1-14
+.dockerignore
+  s_3e41f39f6e31c8::t_4fd76f96e2eb18 1-12
+package.json
+  s_3e41f39f6e31c8::t_80acc7ccbd09ce 4-7,26-30
+  s_3e41f39f6e31c8::t_86254c3eb8db1a 1-3,9-25,31
+  s_3e41f39f6e31c8::t_de34b201bddbe6 8
+.railway/tsconfig.json
+  s_3e41f39f6e31c8::t_86254c3eb8db1a 1-12
+.oxfmtrc.json
+  s_3e41f39f6e31c8::t_86254c3eb8db1a 1-4
+scripts/smoke-web.mjs
+  s_3e41f39f6e31c8::t_e232b687c1a3ae 5,7,22
+  s_3e41f39f6e31c8::t_4fd76f96e2eb18 1-4,6,8-21,23-28
+apps/web/src/routes/__root.tsx
+  s_3e41f39f6e31c8::t_86254c3eb8db1a 1-29
+.gitignore
+  s_3e41f39f6e31c8::t_86254c3eb8db1a 59-66
+.github/workflows/ci.yml
+  s_3e41f39f6e31c8::t_4fd76f96e2eb18 1-28,30
+  s_3e41f39f6e31c8::t_732f7ec787c890 29
+apps/web/src/styles.css
+  s_3e41f39f6e31c8::t_86254c3eb8db1a 1-44
+apps/web/src/router.tsx
+  s_3e41f39f6e31c8::t_86254c3eb8db1a 1-12
+.node-version
+  s_3e41f39f6e31c8::t_86254c3eb8db1a 1
+.railway/railway.ts
+  s_3e41f39f6e31c8::t_86254c3eb8db1a 1-11
+Dockerfile
+  s_3e41f39f6e31c8::t_4fd76f96e2eb18 1-16
+README.md
+  s_3e41f39f6e31c8::t_4fd76f96e2eb18 4-30,32-33,35-42
+  s_3e41f39f6e31c8::t_98195ddaf41871 31,34
+.oxlintrc.json
+  s_3e41f39f6e31c8::t_86254c3eb8db1a 1-4
+apps/web/src/routes/index.tsx
+  s_3e41f39f6e31c8::t_86254c3eb8db1a 1-6
+apps/web/src/home-page.test.tsx
+  s_3e41f39f6e31c8::t_86254c3eb8db1a 1-12
+turbo.json
+  s_3e41f39f6e31c8::t_86254c3eb8db1a 1-18
+apps/web/src/routes/healthz.ts
+  s_3e41f39f6e31c8::t_86254c3eb8db1a 1-9
+apps/web/vitest.config.ts
+  s_3e41f39f6e31c8::t_86254c3eb8db1a 1-5
+apps/web/package.json
+  s_3e41f39f6e31c8::t_86254c3eb8db1a 1-5,8-9,11-27
+  s_3e41f39f6e31c8::t_a36d05f3887dda 6-7,10
+apps/web/src/home-page.tsx
+  s_3e41f39f6e31c8::t_86254c3eb8db1a 1-10,15-17
+  s_3e41f39f6e31c8::t_80acc7ccbd09ce 11-14
+apps/web/vite.config.ts
+  s_3e41f39f6e31c8::t_86254c3eb8db1a 1-8
+bun.lock
+  s_3e41f39f6e31c8::t_f91bf6601cada3 1-511
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "2ee63cba8ac3229cf93343e6170478a0ef496f14",
+  "prompts": {},
+  "sessions": {
+    "s_3e41f39f6e31c8": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1e9a8-b146-7c61-ab65-7677b3118a2e",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "heixing <heixing@xiaohongshu.com>"
+    }
+  }
+}
