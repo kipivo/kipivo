@@ -1,0 +1,12 @@
+.git
+**/node_modules
+**/.turbo
+**/dist
+**/.output
+**/.nitro
+**/.tanstack
+**/.vitest
+**/coverage
+**/.env
+**/.env.*
+apps/web/src/routeTree.gen.ts

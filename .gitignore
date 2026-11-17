@@ -56,6 +56,14 @@ typings/
 # TypeScript cache
 *.tsbuildinfo
 
+# Monorepo and web build output
+.turbo/
+.output/
+.nitro/
+.tanstack/
+.vitest/
+apps/web/src/routeTree.gen.ts
+
 # Optional npm cache directory
 .npm
 
