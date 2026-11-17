@@ -10,6 +10,8 @@ Open [localhost:6006](http://localhost:6006). The manual does not start Web, the
 
 The nine shared components and Wordmark have live examples, editable props, usage snippets, and accessibility guidance. Theme & colors shows the semantic and chart palettes. Light/Dark switches apply the application's shared stylesheet to both previews and portals; the selection persists locally.
 
+Follow the [theme contrast constraints](../../packages/ui/README.md#contrast-constraints) when composing examples. In particular, small primary-colored links need a local darker color on a full muted/secondary surface in light mode. Recheck the documented combinations when changing surfaces or tokens.
+
 ## Build and verify
 
 ```sh

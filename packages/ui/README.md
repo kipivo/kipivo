@@ -34,6 +34,34 @@ Use semantic classes such as `bg-background`, `text-foreground`, `bg-primary`, `
 
 The existing `kipivo-*` color aliases map to these same tokens. Put product-specific layout in the consuming app.
 
+### Contrast constraints
+
+Keep the current token values. The light theme has three text combinations with relatively little contrast margin:
+
+| Text / surface               | Recorded contrast |
+| ---------------------------- | ----------------- |
+| `muted-foreground` / `muted` | 4.82:1            |
+| `primary` / `background`     | 4.67:1            |
+| `primary` / `card`           | 4.89:1            |
+
+Recheck these combinations before changing the light theme's background, card, or muted colors. The recorded ratios use browser-resolved sRGB colors; they are reference measurements, not a substitute for checking a changed surface.
+
+Do not place small `text-primary` links on a full `bg-muted` surface in light mode: the contrast is approximately 4.29:1, below the 4.5:1 text requirement. This also applies to `bg-secondary`, which currently has the same light color. Check table stripes, selected navigation items, and tinted notices when adding links.
+
+For a brand-colored link on a muted surface, scope the darker color to that link instead of changing the global tokens:
+
+```tsx
+<div className="bg-muted">
+  <a href="/runs" className="text-primary-hover underline underline-offset-4 dark:text-primary">
+    View runs
+  </a>
+</div>
+```
+
+This uses the existing light `primary-hover` value, `oklch(0.53 0.19 34)`, and retains `primary` in dark mode. Recheck this link if either token or the container background changes, including hover, focus, and visited states. Alternatives are `text-foreground` with an underline or a card/page background. These are local composition rules; do not globally darken `primary` or strengthen decorative borders to address them.
+
+Disabled controls are exempt from the contrast requirement, but must still communicate that they are unavailable through behavior and visible state. Preserve native `disabled` behavior and the existing disabled styling.
+
 Wrap the app in `TooltipProvider` before using tooltips. The stylesheet isolates the body stacking context so Base UI's portals remain above app content; avoid raising application wrappers above portals.
 
 Use Base UI's `render` prop to compose triggers with Button. For navigation, apply `buttonVariants` to a real link so it retains link semantics. Pair inputs with Label and errors with `aria-invalid` and `aria-describedby`. Decorative Hugeicons use stroke width 2 and `aria-hidden="true"`; icon-only controls need accessible names.
