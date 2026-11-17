@@ -26,7 +26,7 @@ test("all component pages render generated controls and usage", async ({ page })
       .click();
     await expect(page.getByRole("heading", { name, exact: true, level: 1 })).toBeVisible();
     await expect(page.getByRole("region", { name: "Component preview" })).toBeVisible();
-    await expect(page.getByRole("table")).toBeVisible();
+    await expect(page.getByRole("form", { name: "Example props" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Usage", exact: true })).toBeVisible();
     await expect(page.getByText("Configure this prop in the story source.")).toHaveCount(0);
   }
@@ -134,6 +134,11 @@ test("theme persists and the manual fits a narrow viewport", async ({ page }, te
   await page.getByRole("link", { name: "Skip to content" }).press("Enter");
   await expect(page.getByRole("main")).toBeFocused();
   await expect(page.getByRole("heading", { name: "Input", level: 1, exact: true })).toBeVisible();
+  const heading = await page
+    .getByRole("heading", { name: "Input", level: 1, exact: true })
+    .boundingBox();
+  const header = await page.locator("header").boundingBox();
+  expect(heading!.y).toBeGreaterThanOrEqual(header!.y + header!.height);
   await expect(
     page.getByRole("button", {
       name: testInfo.project.name === "dark" ? "Dark" : "Light",

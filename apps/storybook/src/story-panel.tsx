@@ -53,7 +53,7 @@ function Content() {
       </div>
       <section
         aria-label="Component preview"
-        className="flex min-h-64 items-center justify-center px-6 py-12"
+        className="flex min-h-48 min-w-0 items-center justify-center px-5 py-10 sm:min-h-56 sm:px-6"
       >
         <Component key={`${variant}-${revision}`} {...args} />
       </section>
@@ -63,34 +63,21 @@ function Content() {
             Example props
           </summary>
           <p className="px-4 pb-3 text-xs text-muted-foreground">
-            Edit the example below. Types come from its TypeScript props.
+            Changes appear in the preview above. Reset restores the selected preset.
           </p>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="border-y border-border bg-muted text-xs">
-                <tr>
-                  <th className="px-4 py-2 font-medium">Prop</th>
-                  <th className="px-4 py-2 font-medium">Type</th>
-                  <th className="px-4 py-2 font-medium">Value</th>
-                </tr>
-              </thead>
-              <tbody>
-                {properties.map((property) => (
-                  <tr key={property.name} className="border-b border-border last:border-b-0">
-                    <th scope="row" className="px-4 py-3 font-mono text-xs font-normal">
-                      {property.name}
-                    </th>
-                    <td className="max-w-52 px-4 py-3 font-mono text-xs text-muted-foreground">
-                      {typeLabel(property.type)}
-                    </td>
-                    <td className="min-w-52 px-4 py-3">
-                      <PropControl key={variant} name={property.name} node={property.type} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <form
+            aria-label="Example props"
+            className="border-t border-border"
+            onSubmit={(event) => event.preventDefault()}
+          >
+            {properties.map((property) => (
+              <PropField
+                key={`${variant}-${property.name}`}
+                name={property.name}
+                node={property.type}
+              />
+            ))}
+          </form>
         </details>
       )}
     </div>
@@ -116,7 +103,34 @@ function typeLabel(node: TypeNode): string {
     .join(" | ");
 }
 
-function PropControl({ name, node }: { name: string; node: TypeNode }) {
+function PropField({ name, node }: { name: string; node: TypeNode }) {
+  const id = useId();
+  const nodes = types(node);
+  const optionCount = nodes.reduce(
+    (count, item) => count + (item.type === "enum" ? item.members.length : 1),
+    0,
+  );
+  const summary =
+    optionCount > 1 && nodes.every((item) => item.type === "literal" || item.type === "enum")
+      ? `${optionCount} options`
+      : typeLabel(node);
+
+  return (
+    <div className="grid min-w-0 items-center gap-3 border-b border-border px-4 py-4 last:border-b-0 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
+      <div className="flex min-w-0 items-baseline justify-between gap-3 sm:grid sm:justify-start sm:gap-1">
+        <Label htmlFor={id} className="font-mono text-xs">
+          {name}
+        </Label>
+        <p id={`${id}-type`} title={typeLabel(node)} className="text-xs text-muted-foreground">
+          {summary}
+        </p>
+      </div>
+      <PropControl id={id} name={name} node={node} />
+    </div>
+  );
+}
+
+function PropControl({ id, name, node }: { id: string; name: string; node: TypeNode }) {
   const [value, setValue] = useFieldValue([name]);
   const nodes = types(node);
   const scalar = nodes[0];
@@ -133,15 +147,19 @@ function PropControl({ name, node }: { name: string; node: TypeNode }) {
     (options.length === 2 && options.every((option) => typeof option.value === "boolean"))
   ) {
     return (
-      <label className="inline-flex min-h-8 items-center gap-2">
+      <div className="inline-flex min-h-9 items-center gap-2">
         <input
+          id={id}
+          aria-describedby={`${id}-type`}
           className="size-4 accent-primary outline-ring focus-visible:outline-2"
           type="checkbox"
           checked={value === true}
           onChange={(event) => setValue(event.target.checked)}
         />
-        <span className="text-xs">{name}</span>
-      </label>
+        <span aria-hidden="true" className="font-mono text-xs text-muted-foreground">
+          {value === true ? "true" : "false"}
+        </span>
+      </div>
     );
   }
   if (
@@ -151,8 +169,9 @@ function PropControl({ name, node }: { name: string; node: TypeNode }) {
   ) {
     return (
       <select
+        id={id}
         className="docs-select w-full"
-        aria-label={name}
+        aria-describedby={`${id}-type`}
         value={value === undefined ? "" : String(value)}
         onChange={(event) =>
           setValue(options.find((option) => String(option.value) === event.target.value)?.value)
@@ -170,7 +189,8 @@ function PropControl({ name, node }: { name: string; node: TypeNode }) {
   if (scalar?.type === "string" || scalar?.type === "number") {
     return (
       <Input
-        aria-label={name}
+        id={id}
+        aria-describedby={`${id}-type`}
         type={scalar.type === "number" ? "number" : "text"}
         value={value === undefined ? "" : String(value)}
         onChange={(event) =>

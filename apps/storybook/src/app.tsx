@@ -1,11 +1,22 @@
 import { Wordmark } from "@kipivo/ui";
 import { Button } from "@kipivo/ui/components/button";
+import { Input } from "@kipivo/ui/components/input";
 import { TooltipProvider } from "@kipivo/ui/components/tooltip";
 import { Suspense, useEffect, useRef, useState } from "react";
 import logo from "../../../assets/logo.svg";
 import { pages } from "./pages";
+import { CodeBlock } from "./copy-button";
+import { Palette } from "./palette";
+import { PreviewBoundary } from "./preview-boundary";
 
-const navigation = [{ id: "theme", title: "Theme & colors" }, ...pages];
+const navigation = [
+  {
+    id: "theme",
+    title: "Theme & colors",
+    description: "Semantic tokens, chart colors, and contrast",
+  },
+  ...pages,
+];
 
 function currentPage() {
   const id = location.hash.slice(1);
@@ -17,6 +28,7 @@ export function App() {
   const [dark, setDark] = useState(() => document.documentElement.classList.contains("dark"));
   const heading = useRef<HTMLHeadingElement>(null);
   const page = pages.find((item) => item.id === pageId);
+  const pageIndex = navigation.findIndex((item) => item.id === pageId);
   useEffect(() => {
     function changePage() {
       setPageId(currentPage());
@@ -87,22 +99,12 @@ export function App() {
       </header>
       <div className="mx-auto grid max-w-7xl md:grid-cols-[14rem_minmax(0,1fr)]">
         <aside className="sticky top-20 hidden h-[calc(100dvh-5rem)] overflow-y-auto border-r border-border px-6 py-10 md:block">
-          <nav aria-label="Components" className="grid gap-1">
-            <p className="mb-2 px-3 text-xs font-medium text-muted-foreground">Foundations</p>
-            <NavLink id="theme" title="Theme & colors" current={pageId} />
-            <NavLink id="wordmark" title="Wordmark" current={pageId} />
-            <p className="mt-7 mb-2 px-3 text-xs font-medium text-muted-foreground">Components</p>
-            {pages
-              .filter((item) => item.id !== "wordmark")
-              .map((item) => (
-                <NavLink key={item.id} {...item} current={pageId} />
-              ))}
-          </nav>
+          <SideNavigation current={pageId} />
         </aside>
         <main
           id="content"
           tabIndex={-1}
-          className="min-w-0 px-5 py-10 outline-none sm:px-8 md:px-12 md:py-12"
+          className="min-w-0 scroll-mt-32 px-5 py-10 outline-none sm:px-8 md:scroll-mt-20 md:px-12 md:py-12"
         >
           <div className="mx-auto max-w-3xl">
             <h1
@@ -118,18 +120,20 @@ export function App() {
             </p>
             {page ? (
               <div key={page.id} className="mt-8 grid grid-cols-[minmax(0,1fr)] gap-10">
-                <Suspense
-                  fallback={
-                    <div
-                      className="h-64 animate-pulse rounded-xl bg-muted motion-reduce:animate-none"
-                      role="status"
-                    >
-                      <span className="sr-only">Loading example…</span>
-                    </div>
-                  }
-                >
-                  <page.Story />
-                </Suspense>
+                <PreviewBoundary>
+                  <Suspense
+                    fallback={
+                      <div
+                        className="h-64 animate-pulse rounded-xl bg-muted motion-reduce:animate-none"
+                        role="status"
+                      >
+                        <span className="sr-only">Loading example…</span>
+                      </div>
+                    }
+                  >
+                    <page.Story />
+                  </Suspense>
+                </PreviewBoundary>
                 <section aria-labelledby="usage-heading">
                   <h2 id="usage-heading" className="mb-4 text-lg font-semibold">
                     Usage
@@ -150,7 +154,20 @@ export function App() {
             ) : (
               <Palette />
             )}
-            <footer className="mt-14 border-t border-border pt-5 text-xs text-muted-foreground">
+            <nav
+              aria-label="Adjacent pages"
+              className="mt-12 grid grid-cols-2 gap-4 border-t border-border pt-5"
+            >
+              {navigation[pageIndex - 1] ? (
+                <PageLink page={navigation[pageIndex - 1]} direction="Previous" />
+              ) : (
+                <span />
+              )}
+              {navigation[pageIndex + 1] && (
+                <PageLink page={navigation[pageIndex + 1]} direction="Next" />
+              )}
+            </nav>
+            <footer className="mt-10 pb-2 text-xs text-muted-foreground">
               Kipivo UI · shadcn / Base UI · Fumadocs Story
             </footer>
           </div>
@@ -172,105 +189,125 @@ function NavLink({ id, title, current }: { id: string; title: string; current: s
   );
 }
 
-function CodeBlock({ code }: { code: string }) {
-  const [message, setMessage] = useState("");
+function SideNavigation({ current }: { current: string }) {
+  const [query, setQuery] = useState("");
+  const search = useRef<HTMLInputElement>(null);
+  const term = query.trim().toLowerCase();
+  const matches = navigation.filter((page) =>
+    `${page.title} ${page.description}`.toLowerCase().includes(term),
+  );
+
+  useEffect(() => {
+    function focusSearch(event: KeyboardEvent) {
+      const target = event.target;
+      if (
+        event.key !== "/" ||
+        event.altKey ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.defaultPrevented
+      )
+        return;
+      if (
+        target instanceof HTMLElement &&
+        (target.isContentEditable ||
+          target.closest("input, textarea, select, [role=dialog], [role=menu]"))
+      )
+        return;
+      if (!search.current?.getClientRects().length) return;
+      event.preventDefault();
+      search.current.focus();
+      search.current.select();
+    }
+    window.addEventListener("keydown", focusSearch);
+    return () => window.removeEventListener("keydown", focusSearch);
+  }, []);
+
   return (
-    <div className="rounded-xl border border-border bg-card">
-      <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-2">
-        <span className="text-xs text-muted-foreground">React / TypeScript</span>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={async () => {
-            try {
-              await navigator.clipboard.writeText(code);
-              setMessage("Copied");
-            } catch {
-              setMessage("Select the code to copy it.");
+    <>
+      <div role="search" className="mb-6 grid gap-2">
+        <label htmlFor="component-search" className="text-xs font-medium text-muted-foreground">
+          Find a component
+        </label>
+        <Input
+          ref={search}
+          id="component-search"
+          type="search"
+          placeholder="Search components…"
+          value={query}
+          aria-describedby="search-help"
+          onChange={(event) => setQuery(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") {
+              setQuery("");
+              event.stopPropagation();
+            }
+            if (event.key === "Enter" && term && matches[0]) {
+              location.hash = matches[0].id;
+              document.getElementById("content")?.focus();
             }
           }}
-        >
-          Copy code
-        </Button>
+        />
+        <p id="search-help" className="text-xs text-muted-foreground">
+          Press <kbd className="font-mono">/</kbd> to search. Esc clears.
+        </p>
       </div>
-      <pre className="overflow-x-auto p-4 text-xs leading-6" tabIndex={0}>
-        <code>{code}</code>
-      </pre>
-      <p role="status" className={message ? "px-4 pb-3 text-xs text-muted-foreground" : "sr-only"}>
-        {message}
-      </p>
-    </div>
+      <nav aria-label="Components" className="grid gap-1">
+        {term ? (
+          <>
+            <p role="status" className="mb-2 px-3 text-xs text-muted-foreground">
+              {matches.length
+                ? `${matches.length} ${matches.length === 1 ? "result" : "results"}`
+                : "No matching components."}
+            </p>
+            {matches.map((item) => (
+              <NavLink key={item.id} {...item} current={current} />
+            ))}
+            {!matches.length && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setQuery("");
+                  search.current?.focus();
+                }}
+              >
+                Clear search
+              </Button>
+            )}
+          </>
+        ) : (
+          <>
+            <p className="mb-2 px-3 text-xs font-medium text-muted-foreground">Foundations</p>
+            <NavLink id="theme" title="Theme & colors" current={current} />
+            <NavLink id="wordmark" title="Wordmark" current={current} />
+            <p className="mt-7 mb-2 px-3 text-xs font-medium text-muted-foreground">Components</p>
+            {pages
+              .filter((item) => item.id !== "wordmark")
+              .map((item) => (
+                <NavLink key={item.id} {...item} current={current} />
+              ))}
+          </>
+        )}
+      </nav>
+    </>
   );
 }
 
-function Palette() {
+function PageLink({
+  page,
+  direction,
+}: {
+  page: { id: string; title: string };
+  direction: "Previous" | "Next";
+}) {
   return (
-    <div className="mt-8 grid grid-cols-[minmax(0,1fr)] gap-10">
-      <section aria-labelledby="semantic-heading">
-        <h2 id="semantic-heading" className="mb-5 text-lg font-semibold">
-          Semantic colors
-        </h2>
-        <dl className="grid gap-x-8 gap-y-5 sm:grid-cols-2">
-          {[
-            "background",
-            "foreground",
-            "card",
-            "popover",
-            "primary",
-            "primary-hover",
-            "secondary",
-            "muted",
-            "muted-foreground",
-            "accent",
-            "destructive",
-            "border",
-            "input",
-            "ring",
-          ].map((token) => (
-            <div key={token} className="flex items-center gap-3">
-              <span
-                className="size-10 shrink-0 rounded-lg border border-border"
-                style={{ background: `var(--${token})` }}
-                aria-hidden="true"
-              />
-              <dt className="font-mono text-xs">{token}</dt>
-              <dd className="sr-only">Shared theme token</dd>
-            </div>
-          ))}
-        </dl>
-      </section>
-      <section aria-labelledby="chart-heading">
-        <h2 id="chart-heading" className="mb-4 text-lg font-semibold">
-          Chart palette
-        </h2>
-        <ul className="grid grid-cols-5 gap-3">
-          {[1, 2, 3, 4, 5].map((index) => (
-            <li key={index} className="grid gap-2 text-center">
-              <span
-                className="h-20 rounded-lg"
-                style={{ background: `var(--chart-${index})` }}
-                aria-hidden="true"
-              />
-              <span className="font-mono text-xs text-muted-foreground">chart-{index}</span>
-            </li>
-          ))}
-        </ul>
-      </section>
-      <section aria-labelledby="review-heading">
-        <h2 id="review-heading" className="mb-3 text-lg font-semibold">
-          Check both themes
-        </h2>
-        <p className="text-sm leading-relaxed text-muted-foreground">
-          Use Light and Dark to compare each component. Check hover and keyboard focus, disabled and
-          loading actions, and invalid fields. Decorative borders stay subtle; input borders and
-          focus rings use stronger tokens.
-        </p>
-      </section>
-      <CodeBlock
-        code={
-          '@import "@kipivo/ui/globals.css";\n@source ".";\n\n/* Add .dark to the document element for dark mode. */'
-        }
-      />
-    </div>
+    <a
+      href={`#${page.id}`}
+      className={`grid gap-1 rounded-sm text-sm outline-ring hover:underline focus-visible:outline-2 ${direction === "Next" ? "text-right" : ""}`}
+    >
+      <span className="text-xs text-muted-foreground">{direction}</span>
+      <span className="font-medium underline-offset-4">{page.title}</span>
+    </a>
   );
 }
