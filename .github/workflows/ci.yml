@@ -13,25 +13,17 @@ jobs:
     runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
+      - uses: ./.github/actions/setup-workspace
         with:
-          node-version-file: .node-version
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version-file: package.json
-      - run: bun install --frozen-lockfile
+          cache-scope: check
       - run: bun run check
   ui:
     runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
+      - uses: ./.github/actions/setup-workspace
         with:
-          node-version-file: .node-version
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version-file: package.json
-      - run: bun install --frozen-lockfile
+          cache-scope: ui
       - run: bun run test:ui:install --with-deps
       - run: bun run build:storybook
       - run: bun run test:ui
@@ -46,13 +38,9 @@ jobs:
     runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
+      - uses: ./.github/actions/setup-workspace
         with:
-          node-version-file: .node-version
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version-file: package.json
-      - run: bun install --frozen-lockfile
+          cache-scope: cli
       - run: bun run build --filter=kipivo
       - name: Verify CLI commands
         run: |
@@ -71,15 +59,21 @@ jobs:
             dockerfile: apps/api/Dockerfile
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
+      - uses: ./.github/actions/setup-workspace
         with:
-          node-version-file: .node-version
-      - uses: oven-sh/setup-bun@v2
+          cache-scope: images-${{ matrix.app }}
+          install-dependencies: ${{ matrix.app == 'api' }}
+          cache-build: "false"
+      - uses: docker/setup-buildx-action@v4
+      - name: Build Docker image
+        uses: docker/build-push-action@v7
         with:
-          bun-version-file: package.json
-      - if: matrix.app == 'api'
-        run: bun install --frozen-lockfile
-      - run: docker build -f "${{ matrix.dockerfile }}" --tag "kipivo-${{ matrix.app }}:ci" .
+          context: .
+          file: ${{ matrix.dockerfile }}
+          tags: kipivo-${{ matrix.app }}:ci
+          load: true
+          cache-from: type=gha,scope=kipivo-${{ matrix.app }}
+          cache-to: type=gha,scope=kipivo-${{ matrix.app }},mode=max
       - name: Smoke test the Docker image
         env:
           APP: ${{ matrix.app }}
@@ -112,13 +106,9 @@ jobs:
       TEST_DATABASE_URL: postgresql://kipivo:kipivo_test@127.0.0.1:5432/kipivo_auth_test
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
+      - uses: ./.github/actions/setup-workspace
         with:
-          node-version-file: .node-version
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version-file: package.json
-      - run: bun install --frozen-lockfile
+          cache-scope: auth
       - run: bun run db:check
       - run: bun run test:auth
       - if: failure()
@@ -132,13 +122,9 @@ jobs:
     runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
+      - uses: ./.github/actions/setup-workspace
         with:
-          node-version-file: .node-version
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version-file: package.json
-      - run: bun install --frozen-lockfile
+          cache-scope: e2e
       - run: bun run test:e2e:install --only-shell --with-deps
       - run: bun run test:e2e
       - if: failure()

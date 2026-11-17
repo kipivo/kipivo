@@ -17,7 +17,7 @@ export default defineConfig({
     { name: "dark", use: { browserName: "chromium" } },
   ],
   webServer: {
-    command: "bun run build && bun run preview --port 4384",
+    command: "bun run --cwd ../.. build:storybook && bun run preview --port 4384",
     url: "http://127.0.0.1:4384",
     reuseExistingServer: false,
     timeout: 60_000,
