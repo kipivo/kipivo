@@ -1,0 +1,18 @@
+.gitignore
+  h_2f444dd408c3f2 1-113
+LICENSE
+  h_2f444dd408c3f2 1-201
+README.md
+  h_2f444dd408c3f2 1
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "fb3dd117b4d2ba6d0f13b5b18a70eb1d62294a9a",
+  "prompts": {},
+  "humans": {
+    "h_2f444dd408c3f2": {
+      "author": "heixing <heixing@xiaohongshu.com>"
+    }
+  }
+}
