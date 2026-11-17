@@ -16,11 +16,11 @@ export const Route = createRootRoute({
 
 function RootDocument({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" className="bg-kipivo-surface font-sans text-kipivo-foreground">
       <head>
         <HeadContent />
       </head>
-      <body>
+      <body className="grid min-h-svh place-items-center">
         {children}
         <Scripts />
       </body>

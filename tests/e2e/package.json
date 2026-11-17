@@ -1,0 +1,15 @@
+{
+  "name": "@kipivo/e2e",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:e2e": "playwright test",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@kipivo/api": "workspace:*",
+    "@kipivo/tsconfig": "workspace:*",
+    "@playwright/test": "1.65.1",
+    "@types/node": "22.20.5"
+  }
+}

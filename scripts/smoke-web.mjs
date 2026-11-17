@@ -12,7 +12,7 @@ async function get(path, headers) {
 assert.equal(await (await get("/healthz")).text(), "ok\n");
 
 const html = await (await get("/")).text();
-assert.match(html, /<h1>From spark to done\.<\/h1>/);
+assert.match(html, /<h1\b[^>]*>From spark to done\.<\/h1>/);
 
 const stylesheet = html.match(/<link\b(?=[^>]*\brel="stylesheet")[^>]*\bhref="([^"]+)"/)?.[1];
 const logo = html.match(/<img\b[^>]*\bsrc="([^"]+)"/)?.[1];
@@ -24,5 +24,30 @@ assert.match(styles.headers.get("content-type") ?? "", /^text\/css\b/);
 
 const image = await get(logo.replaceAll("&amp;", "&"));
 assert.match(image.headers.get("content-type") ?? "", /^image\/svg\+xml\b/);
+
+if (process.argv.includes("--production")) {
+  for (const path of [
+    "/runs",
+    "/api/local/runs",
+    "/api/local/runs/00000000-0000-4000-8000-000000000000",
+  ]) {
+    assert.equal(
+      (await fetch(new URL(path, base), { signal: AbortSignal.timeout(5000) })).status,
+      404,
+      path,
+    );
+  }
+  assert.equal(
+    (
+      await fetch(new URL("/api/local/runs", base), {
+        method: "POST",
+        headers: { Origin: base.origin, "Content-Type": "application/json" },
+        body: '{"kind":"check"}',
+        signal: AbortSignal.timeout(5000),
+      })
+    ).status,
+    404,
+  );
+}
 
 console.log(`Verified health, SSR, stylesheet, and logo at ${base.origin}`);

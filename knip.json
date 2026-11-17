@@ -1,0 +1,9 @@
+{
+  "$schema": "./node_modules/knip/schema.json",
+  "workspaces": {
+    "apps/api": { "entry": ["src/plugins/*.ts"] },
+    "apps/web": { "entry": ["src/routes/**/*.{ts,tsx}"] },
+    "apps/mobile": { "ignoreDependencies": ["expo-updates"] },
+    "tests/e2e": { "entry": ["fixtures/check.mjs"] }
+  }
+}

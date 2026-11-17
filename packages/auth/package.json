@@ -1,0 +1,19 @@
+{
+  "name": "@kipivo/auth",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./server": "./src/server.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@better-auth/drizzle-adapter": "1.7.25",
+    "@kipivo/db": "workspace:*",
+    "better-auth": "1.7.25"
+  },
+  "devDependencies": {
+    "@kipivo/tsconfig": "workspace:*"
+  }
+}

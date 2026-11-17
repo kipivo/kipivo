@@ -3,21 +3,35 @@
   "private": true,
   "workspaces": [
     "apps/*",
-    "packages/*"
+    "packages/*",
+    "tests/*"
   ],
   "type": "module",
   "scripts": {
     "dev": "turbo run dev",
+    "dev:api": "bun run --cwd apps/api serve",
+    "dev:mobile": "bun run --cwd apps/mobile start",
+    "kipivo": "bun ./apps/cli/src/index.ts",
+    "kpvo": "bun ./apps/cli/src/index.ts",
     "build": "turbo run build",
     "start": "bun run --filter web start",
     "typecheck": "turbo run typecheck && tsc -p .railway/tsconfig.json",
     "test": "turbo run test",
+    "test:e2e": "turbo run build --filter=api --filter=kipivo && bun run --cwd tests/e2e test:e2e --project=api --project=chromium",
+    "test:e2e:install": "bun run --cwd tests/e2e playwright install chromium",
+    "test:auth": "turbo run build --filter=web --filter=api && bun run --cwd tests/e2e test:e2e --project=auth",
+    "db:generate": "bun run --cwd packages/db generate",
+    "db:check": "bun run --cwd packages/db schema:check",
+    "db:migrate": "bun run --cwd packages/db migrate",
+    "knip": "turbo run generate:routes --filter=web && knip",
     "lint": "oxlint --deny-warnings .",
     "format": "oxfmt .",
     "format:check": "oxfmt --check .",
-    "check": "bun run format:check && bun run lint && bun run typecheck && bun run test"
+    "check": "bun run format:check && bun run lint && bun run db:check && bun run typecheck && bun run knip && bun run test"
   },
   "devDependencies": {
+    "@kipivo/tsconfig": "workspace:*",
+    "knip": "6.45.1",
     "oxfmt": "0.79.0",
     "oxlint": "1.94.0",
     "railway": "3.17.0",

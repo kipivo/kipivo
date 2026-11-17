@@ -21,10 +21,109 @@ jobs:
           bun-version-file: package.json
       - run: bun install --frozen-lockfile
       - run: bun run check
-      - run: docker build --tag kipivo-web:ci .
-      - name: Smoke test the Docker image
+  cli:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .node-version
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+      - run: bun install --frozen-lockfile
+      - run: bun run build --filter=kipivo
+      - name: Verify CLI commands
         run: |
-          container=$(docker run --detach --env PORT=8080 --publish 127.0.0.1:3000:8080 kipivo-web:ci)
+          version=$(bun apps/cli/dist/kipivo.js --version)
+          test -n "$version"
+          test "$version" = "$(bun run --silent kipivo --version)"
+          test "$version" = "$(bun run --silent kpvo --version)"
+  images:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - app: web
+            dockerfile: Dockerfile
+          - app: api
+            dockerfile: apps/api/Dockerfile
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .node-version
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+      - if: matrix.app == 'api'
+        run: bun install --frozen-lockfile
+      - run: docker build -f "${{ matrix.dockerfile }}" --tag "kipivo-${{ matrix.app }}:ci" .
+      - name: Smoke test the Docker image
+        env:
+          APP: ${{ matrix.app }}
+        run: |
+          container=$(docker run --detach --env PORT=8080 --publish 127.0.0.1:3000:8080 "kipivo-$APP:ci")
           trap 'docker logs "$container"; docker rm --force "$container"' EXIT
           curl --fail --silent --show-error --retry 20 --retry-all-errors --retry-delay 1 --max-time 2 http://127.0.0.1:3000/healthz
-          node scripts/smoke-web.mjs http://127.0.0.1:3000
+          if [ "$APP" = web ]; then
+            node scripts/smoke-web.mjs http://127.0.0.1:3000 --production
+          else
+            E2E_API_ORIGIN=http://127.0.0.1:3000 bun run --cwd tests/e2e test:e2e --project=api
+          fi
+  auth:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: kipivo
+          POSTGRES_PASSWORD: kipivo_test
+          POSTGRES_DB: kipivo_auth_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U kipivo -d kipivo_auth_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgresql://kipivo:kipivo_test@127.0.0.1:5432/kipivo_auth_test
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .node-version
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+      - run: bun install --frozen-lockfile
+      - run: bun run db:check
+      - run: bun run test:auth
+      - if: failure()
+        uses: actions/upload-artifact@v5
+        with:
+          name: auth-test-results
+          path: tests/e2e/test-results/
+          if-no-files-found: ignore
+          retention-days: 7
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .node-version
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+      - run: bun install --frozen-lockfile
+      - run: bun run test:e2e:install --only-shell --with-deps
+      - run: bun run test:e2e
+      - if: failure()
+        uses: actions/upload-artifact@v5
+        with:
+          name: playwright-results
+          path: tests/e2e/test-results/
+          if-no-files-found: ignore
+          retention-days: 7

@@ -1,0 +1,16 @@
+{
+  "expo": {
+    "name": "Kipivo",
+    "slug": "kipivo-mobile",
+    "version": "0.1.0",
+    "scheme": "kipivo",
+    "platforms": ["ios", "android"],
+    "plugins": ["expo-router"],
+    "ios": {
+      "bundleIdentifier": "com.kipivo.mobile"
+    },
+    "android": {
+      "package": "com.kipivo.mobile"
+    }
+  }
+}
