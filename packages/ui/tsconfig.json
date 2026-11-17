@@ -1,5 +1,8 @@
 {
   "extends": "@kipivo/tsconfig/react.json",
-  "compilerOptions": { "types": ["react"] },
+  "compilerOptions": {
+    "types": ["react"],
+    "paths": { "@kipivo/ui/*": ["./src/*"] }
+  },
   "include": ["src"]
 }

@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   check:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
@@ -21,8 +21,22 @@ jobs:
           bun-version-file: package.json
       - run: bun install --frozen-lockfile
       - run: bun run check
+  ui:
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .node-version
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+      - run: bun install --frozen-lockfile
+      - run: bun run test:ui:install --with-deps
+      - run: bun run build:storybook
+      - run: bun run test:ui
   cli:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
@@ -40,7 +54,7 @@ jobs:
           test "$version" = "$(bun run --silent kipivo --version)"
           test "$version" = "$(bun run --silent kpvo --version)"
   images:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     strategy:
       matrix:
         include:
@@ -72,7 +86,7 @@ jobs:
             E2E_API_ORIGIN=http://127.0.0.1:3000 bun run --cwd tests/e2e test:e2e --project=api
           fi
   auth:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     services:
       postgres:
         image: postgres:17-alpine
@@ -108,7 +122,7 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
   e2e:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6

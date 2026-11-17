@@ -7,6 +7,8 @@ import {
   type RunSummary,
 } from "@kipivo/contracts/runs";
 import { useEffect, useState } from "react";
+import { Button } from "@kipivo/ui/components/button";
+import { Badge } from "@kipivo/ui/components/badge";
 
 const url = "/api/local/runs";
 
@@ -87,22 +89,23 @@ export function RunPage() {
       </a>
       <div className="mt-5 flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-4xl font-bold tracking-tight">Local runs</h1>
-        <button
+        <Button
           type="button"
-          className="rounded-md bg-amber-300 px-4 py-2 font-semibold text-stone-950 disabled:opacity-50"
+          size="lg"
+          aria-busy={submitting}
           disabled={connectionError !== "" || submitting || active}
           onClick={() => void submit()}
         >
           Run checks
-        </button>
+        </Button>
       </div>
       {connectionError && (
-        <p role="alert" className="mt-4 text-amber-200">
+        <p role="alert" className="mt-4 text-destructive">
           {connectionError}
         </p>
       )}
       {submitError && (
-        <p role="alert" className="mt-4 text-amber-200">
+        <p role="alert" className="mt-4 text-destructive">
           {submitError}
         </p>
       )}
@@ -116,11 +119,15 @@ export function RunPage() {
                 <button
                   type="button"
                   aria-pressed={detail?.id === run.id}
-                  className="w-full rounded-md border border-stone-700 p-3 text-left aria-pressed:border-amber-300"
+                  className="w-full rounded-lg border border-border p-3 text-left transition-colors outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background aria-pressed:border-primary"
                   onClick={() => setSelected(run.id)}
                 >
-                  <span className="block font-medium">{run.status}</span>
-                  <code className="block break-all text-xs text-kipivo-muted">{run.id}</code>
+                  <Badge variant={run.status === "failed" ? "destructive" : "secondary"}>
+                    {run.status}
+                  </Badge>
+                  <code className="mt-2 block break-all text-xs text-muted-foreground">
+                    {run.id}
+                  </code>
                 </button>
               </li>
             ))}
@@ -128,7 +135,7 @@ export function RunPage() {
         </section>
         <section
           aria-label="Run details"
-          className="min-w-0 rounded-md border border-stone-700 p-4"
+          className="min-w-0 rounded-xl border border-border bg-card p-4 text-card-foreground"
         >
           <h2 className="text-lg font-semibold">Run details</h2>
           {detail ? (

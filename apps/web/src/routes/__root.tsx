@@ -1,5 +1,6 @@
 import { createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import type { ReactNode } from "react";
+import { TooltipProvider } from "@kipivo/ui/components/tooltip";
 import stylesheet from "../styles.css?url";
 
 export const Route = createRootRoute({
@@ -16,12 +17,12 @@ export const Route = createRootRoute({
 
 function RootDocument({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className="bg-kipivo-surface font-sans text-kipivo-foreground">
+    <html lang="en" className="dark bg-background font-sans text-foreground">
       <head>
         <HeadContent />
       </head>
       <body className="grid min-h-svh place-items-center">
-        {children}
+        <TooltipProvider>{children}</TooltipProvider>
         <Scripts />
       </body>
     </html>

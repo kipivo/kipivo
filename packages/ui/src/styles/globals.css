@@ -1,0 +1,132 @@
+@import "tailwindcss" source(none);
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@fontsource-variable/geist";
+
+@source "../";
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-sans: "Geist Variable", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-kipivo-surface: var(--background);
+  --color-kipivo-foreground: var(--foreground);
+  --color-kipivo-muted: var(--muted-foreground);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+}
+
+:root {
+  color-scheme: light;
+  --background: oklch(0.985 0.004 56);
+  --foreground: oklch(0.183 0.004 286);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.183 0.004 286);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.183 0.004 286);
+  --primary: oklch(0.57 0.19 34);
+  --primary-foreground: oklch(0.985 0.004 56);
+  --secondary: oklch(0.955 0.008 56);
+  --secondary-foreground: oklch(0.25 0.008 286);
+  --muted: oklch(0.955 0.008 56);
+  --muted-foreground: oklch(0.52 0.01 56);
+  --accent: oklch(0.95 0.05 74);
+  --accent-foreground: oklch(0.35 0.08 60);
+  --destructive: oklch(0.49 0.2 27);
+  --border: oklch(0.91 0.008 56);
+  --input: oklch(0.63 0.01 56);
+  --ring: oklch(0.57 0.19 34);
+  --chart-1: oklch(0.57 0.19 34);
+  --chart-2: oklch(0.814 0.16 74);
+  --chart-3: oklch(0.55 0.08 230);
+  --chart-4: oklch(0.65 0.12 160);
+  --chart-5: oklch(0.45 0.01 286);
+  --radius: 0.625rem;
+  --primary-hover: oklch(0.53 0.19 34);
+}
+
+.dark {
+  color-scheme: dark;
+  --background: oklch(0.183 0.004 286);
+  --foreground: oklch(0.96 0.004 56);
+  --card: oklch(0.224 0.008 286);
+  --card-foreground: oklch(0.96 0.004 56);
+  --popover: oklch(0.224 0.008 286);
+  --popover-foreground: oklch(0.96 0.004 56);
+  --primary: oklch(0.707 0.187 34);
+  --primary-foreground: oklch(0.183 0.004 286);
+  --secondary: oklch(0.271 0.009 286);
+  --secondary-foreground: oklch(0.96 0.004 56);
+  --muted: oklch(0.271 0.009 286);
+  --muted-foreground: oklch(0.72 0.01 56);
+  --accent: oklch(0.32 0.05 74);
+  --accent-foreground: oklch(0.814 0.16 74);
+  --destructive: oklch(0.76 0.16 25);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(0.58 0.01 286);
+  --ring: oklch(0.814 0.16 74);
+  --chart-1: oklch(0.707 0.187 34);
+  --chart-2: oklch(0.814 0.16 74);
+  --chart-3: oklch(0.72 0.1 230);
+  --chart-4: oklch(0.75 0.13 160);
+  --chart-5: oklch(0.7 0.01 56);
+  --primary-hover: oklch(0.76 0.16 34);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring;
+    scrollbar-color: var(--input) var(--background);
+  }
+
+  body {
+    /* Base UI portals must stack above the application's isolated content. */
+    isolation: isolate;
+    @apply bg-background font-sans text-foreground antialiased;
+  }
+
+  ::selection {
+    background: var(--primary);
+    color: var(--primary-foreground);
+  }
+
+  input,
+  textarea {
+    caret-color: var(--primary);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-slot] {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}

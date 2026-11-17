@@ -17,6 +17,8 @@ Open [localhost:3000](http://localhost:3000). Run `bun run check` to verify form
 
 To start the Web production build locally, run `bun run build --filter=web` followed by `bun run start`.
 
+Run `bun run dev:storybook` for the shared UI component workspace at [localhost:6006](http://localhost:6006). See the [UI guide](packages/ui/README.md) for shadcn/Base UI components and themes, and the [Storybook guide](apps/storybook/README.md) for builds and browser tests.
+
 Run `bun run dev:api` to start the public API locally on port 3001. See the [architecture and local runner guide](docs/architecture.md) and the [testing guide](docs/testing.md).
 
 See [database and authentication](docs/auth.md) to start PostgreSQL, apply Drizzle migrations, and configure email/password authentication.

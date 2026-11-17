@@ -1,9 +1,2 @@
-@import "tailwindcss" source(".");
-@source "../../../packages/ui/src";
-
-@theme {
-  --font-sans: Geist, system-ui, sans-serif;
-  --color-kipivo-surface: #191510;
-  --color-kipivo-foreground: #fff9ee;
-  --color-kipivo-muted: #d6c7b4;
-}
+@import "@kipivo/ui/globals.css";
+@source ".";
