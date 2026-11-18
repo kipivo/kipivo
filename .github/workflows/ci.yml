@@ -2,13 +2,58 @@ name: CI
 
 on:
   pull_request:
+  workflow_dispatch:
   push:
     branches: [main]
 
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || format('run-{0}-{1}', github.run_id, github.run_attempt) }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
+  changes:
+    runs-on: ubuntu-26.04
+    outputs:
+      ui: ${{ steps.plan.outputs.ui }}
+      cli: ${{ steps.plan.outputs.cli }}
+      auth: ${{ steps.plan.outputs.auth }}
+      e2e: ${{ steps.plan.outputs.e2e }}
+      has-images: ${{ steps.plan.outputs.has-images }}
+      images: ${{ steps.plan.outputs.images }}
+      plan: ${{ steps.plan.outputs.plan }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+      - name: Install only the pinned Turbo binary
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          version=$(bun -e 'console.log((await Bun.file("package.json").json()).devDependencies.turbo)')
+          mkdir -p "$RUNNER_TEMP/ci-turbo"
+          echo '{}' > "$RUNNER_TEMP/ci-turbo/package.json"
+          bun install --cwd "$RUNNER_TEMP/ci-turbo" --no-save "turbo@$version"
+          mkdir -p node_modules/.bin
+          ln -s "$RUNNER_TEMP/ci-turbo/node_modules/.bin/turbo" node_modules/.bin/turbo
+      - name: Select CI jobs
+        id: plan
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if [ "$EVENT_NAME" = pull_request ]; then
+            bun run ci:plan --base "$BASE_SHA" --head "$HEAD_SHA"
+          else
+            bun run ci:plan --full
+          fi
   check:
     runs-on: ubuntu-26.04
     steps:
@@ -18,6 +63,8 @@ jobs:
           cache-scope: check
       - run: bun run check
   ui:
+    needs: changes
+    if: needs.changes.outputs.ui == 'true'
     runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v6
@@ -26,7 +73,6 @@ jobs:
           cache-scope: ui
       - run: bun run test:ui:install --with-deps
       - run: bun run test:stories
-      - run: bun run build:storybook
       - run: bun run test:ui
       - if: failure()
         uses: actions/upload-artifact@v5
@@ -36,6 +82,8 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
   cli:
+    needs: changes
+    if: needs.changes.outputs.cli == 'true'
     runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v6
@@ -50,14 +98,12 @@ jobs:
           test "$version" = "$(bun run --silent kipivo --version)"
           test "$version" = "$(bun run --silent kpvo --version)"
   images:
+    needs: changes
+    if: needs.changes.outputs.has-images == 'true'
     runs-on: ubuntu-26.04
     strategy:
-      matrix:
-        include:
-          - app: web
-            dockerfile: Dockerfile
-          - app: api
-            dockerfile: apps/api/Dockerfile
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.changes.outputs.images) }}
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/setup-workspace
@@ -88,6 +134,8 @@ jobs:
             E2E_API_ORIGIN=http://127.0.0.1:3000 bun run --cwd tests/e2e test:e2e --project=api
           fi
   auth:
+    needs: changes
+    if: needs.changes.outputs.auth == 'true'
     runs-on: ubuntu-26.04
     services:
       postgres:
@@ -110,7 +158,6 @@ jobs:
       - uses: ./.github/actions/setup-workspace
         with:
           cache-scope: auth
-      - run: bun run db:check
       - run: bun run test:auth
       - if: failure()
         uses: actions/upload-artifact@v5
@@ -120,6 +167,8 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
   e2e:
+    needs: changes
+    if: needs.changes.outputs.e2e == 'true'
     runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v6
@@ -135,3 +184,18 @@ jobs:
           path: tests/e2e/test-results/
           if-no-files-found: ignore
           retention-days: 7
+  result:
+    name: CI result
+    if: always()
+    needs: [changes, check, ui, cli, auth, e2e, images]
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@v6
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+      - name: Require all selected jobs to succeed
+        env:
+          CI_PLAN: ${{ needs.changes.outputs.plan }}
+          CI_NEEDS: ${{ toJSON(needs) }}
+        run: bun scripts/ci-result.mjs
