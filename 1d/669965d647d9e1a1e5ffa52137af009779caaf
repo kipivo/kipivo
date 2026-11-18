@@ -1,0 +1,30 @@
+.railway/railway.ts
+  s_73fcf29ef63e03::t_55d3a5ef903966 85-88
+Dockerfile
+  s_73fcf29ef63e03::t_55d3a5ef903966 19
+docs/architecture.md
+  s_73fcf29ef63e03::t_96a5a5c500df96 38
+apps/web/src/analytics.tsx
+  s_73fcf29ef63e03::t_55d3a5ef903966 10,44
+turbo.json
+  s_73fcf29ef63e03::t_55d3a5ef903966 18-19
+apps/web/src/env.ts
+  s_73fcf29ef63e03::t_96a5a5c500df96 1-2,4-10
+  s_73fcf29ef63e03::t_2bcca40e8fbafa 3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "1d669965d647d9e1a1e5ffa52137af009779caaf",
+  "prompts": {},
+  "sessions": {
+    "s_73fcf29ef63e03": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1eeaf-0692-7e60-b6b4-36c2d0e8f9d7",
+        "model": "gpt-6.2-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
