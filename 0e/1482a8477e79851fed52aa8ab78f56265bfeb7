@@ -1,0 +1,96 @@
+apps/web/src/features/account/client.ts
+  s_ede7f0ca7c4b93::t_2816b36539688f 30-31
+  s_ede7f0ca7c4b93::t_f24162d09eedfb 1-8,12-29,32
+  s_ede7f0ca7c4b93::t_aa5da4d088984d 9-11
+apps/web/src/features/account/account-control.tsx
+  s_ede7f0ca7c4b93::t_ad37775d6863e7 1-24
+apps/web/src/routes/__root.tsx
+  s_ede7f0ca7c4b93::t_1ae12dd82704fd 1-2,5,7-9,29,41,44-60
+packages/core/package.json
+  s_ede7f0ca7c4b93::t_d2c8df8bd1cbfa 12
+apps/web/src/features/account/sign-in-page.tsx
+  s_ede7f0ca7c4b93::t_f24162d09eedfb 1-16,20-38,44-51,53-72,78,86-93,102-104,120,138-141,152-158
+  s_ede7f0ca7c4b93::t_2816b36539688f 17-19,73-77,79-85,94-101,105-119,121-137,142-151
+  s_ede7f0ca7c4b93::t_1ae12dd82704fd 39-43,52
+apps/web/src/routes/index.tsx
+  s_ede7f0ca7c4b93::t_1ae12dd82704fd 2,6
+apps/api/src/routes/procedures.ts
+  s_ede7f0ca7c4b93::t_d2c8df8bd1cbfa 13,35-36,42-43,46-47,50,52,54,56
+apps/api/src/resources.ts
+  s_ede7f0ca7c4b93::t_2816b36539688f 54-57
+  s_ede7f0ca7c4b93::t_d2c8df8bd1cbfa 51-53,58-61
+apps/web/src/home-page.tsx
+  s_ede7f0ca7c4b93::t_1ae12dd82704fd 2,5,10
+apps/web/src/routes/admin/accounts.tsx
+  s_ede7f0ca7c4b93::t_f86f8a9c0e8c08 1-7
+apps/web/src/features/runs/run-page.tsx
+  s_ede7f0ca7c4b93::t_1ae12dd82704fd 9-10
+docs/testing.md
+  s_ede7f0ca7c4b93::t_23947d4414c377 70
+docs/architecture.md
+  s_ede7f0ca7c4b93::t_23947d4414c377 54-56
+packages/core/src/access.ts
+  s_ede7f0ca7c4b93::t_2816b36539688f 21-24
+  s_ede7f0ca7c4b93::t_d2c8df8bd1cbfa 1,4,6,9-14,16-20,25-36
+docs/auth.md
+  s_ede7f0ca7c4b93::t_23947d4414c377 52-53
+tests/e2e/playwright.config.ts
+  s_ede7f0ca7c4b93::t_1ae12dd82704fd 12
+apps/web/package.json
+  s_ede7f0ca7c4b93::t_f24162d09eedfb 14,17
+apps/web/src/routes/sign-in.tsx
+  s_ede7f0ca7c4b93::t_f24162d09eedfb 1-14
+apps/web/src/features/account/admin-accounts-page.tsx
+  s_ede7f0ca7c4b93::t_2816b36539688f 5-11,27-35,41-43,46-51,54-58,67-69,81-84,97,99-115,126-139,142-143,147-149,151-154,158-162,165-177,180-189,191-201,203-206,208-220,223-226,229-244
+  s_ede7f0ca7c4b93::t_f86f8a9c0e8c08 1-4,12-26,36-40,44-45,52-53,59-66,70-80,85-96,116-125,140-141,144-146,150,155-157,163-164,178-179,190,202,207,221-222,227-228,245-250
+  s_ede7f0ca7c4b93::t_aa5da4d088984d 98
+.github/workflows/ci.yml
+  s_ede7f0ca7c4b93::t_1ae12dd82704fd 172-174
+apps/web/src/features/account/role-change.tsx
+  s_ede7f0ca7c4b93::t_2816b36539688f 47-53,61-68,79-80,87-89,93-97
+  s_ede7f0ca7c4b93::t_f86f8a9c0e8c08 1-38,41-46,54-60,69-78,81-86,90-92,98-107
+  s_ede7f0ca7c4b93::t_aa5da4d088984d 39-40
+apps/web/src/home-page.test.tsx
+  s_ede7f0ca7c4b93::t_1ae12dd82704fd 6
+tests/e2e/specs/auth.spec.ts
+  s_ede7f0ca7c4b93::t_5823041dfa1382 374,376-385
+  s_ede7f0ca7c4b93::t_aa5da4d088984d 305
+  s_ede7f0ca7c4b93::t_cfaa3019764526 375
+  s_ede7f0ca7c4b93::t_23947d4414c377 39-50,226,289-304,306-322,326-365,372-373,386-396,400-402
+  s_ede7f0ca7c4b93::t_2816b36539688f 323-325,366-371,397-399
+  s_ede7f0ca7c4b93::t_436103dbf41ca7 403
+.railway/railway.ts
+  s_ede7f0ca7c4b93::t_1ae12dd82704fd 83-85
+apps/web/src/features/account/presentation.tsx
+  s_ede7f0ca7c4b93::t_2816b36539688f 15-20,22-25
+  s_ede7f0ca7c4b93::t_f24162d09eedfb 1-14,21,26-29
+apps/web/src/features/account/account-menu.tsx
+  s_ede7f0ca7c4b93::t_aa5da4d088984d 1-89
+apps/web/src/header-actions.tsx
+  s_ede7f0ca7c4b93::t_1ae12dd82704fd 1-11
+apps/api/src/access.ts
+  s_ede7f0ca7c4b93::t_d2c8df8bd1cbfa 3-7,11,16-24
+  s_ede7f0ca7c4b93::t_f24162d09eedfb 25-26
+apps/web/src/features/account/session.tsx
+  s_ede7f0ca7c4b93::t_f24162d09eedfb 10-32,35-57
+  s_ede7f0ca7c4b93::t_2816b36539688f 1-9
+  s_ede7f0ca7c4b93::t_aa5da4d088984d 33-34
+bun.lock
+  s_ede7f0ca7c4b93::t_66e17dbc18b4af 108,111,189
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "0e1482a8477e79851fed52aa8ab78f56265bfeb7",
+  "prompts": {},
+  "sessions": {
+    "s_ede7f0ca7c4b93": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1eeda-d4f1-7f53-87ef-ae4cec611e36",
+        "model": "gpt-6.2-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
