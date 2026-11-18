@@ -1,0 +1,29 @@
+.railway/gateway/Caddyfile
+  s_5ea4f386bc9505::t_299af9e33eaea5 9
+docs/testing.md
+  s_5ea4f386bc9505::t_299af9e33eaea5 19
+AGENTS.md
+  s_5ea4f386bc9505::t_299af9e33eaea5 41
+.github/workflows/ci.yml
+  s_5ea4f386bc9505::t_299af9e33eaea5 7
+README.md
+  s_5ea4f386bc9505::t_299af9e33eaea5 55,64
+.railway/railway.ts
+  s_5ea4f386bc9505::t_299af9e33eaea5 4
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "fee3e1bab459bff17c4060dadaef02aa53197f25",
+  "prompts": {},
+  "sessions": {
+    "s_5ea4f386bc9505": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1ed89-c084-7a23-900f-ba2538dc806f",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
