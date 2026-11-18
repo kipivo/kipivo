@@ -11,7 +11,11 @@ function getAbsolutePath(name: string) {
 const config: StorybookConfig = {
   stories: ["../src/**/*.stories.tsx"],
   storySorts: [{ order: ["Foundations", "Components"] }],
-  addons: [getAbsolutePath("@storybook/addon-docs"), getAbsolutePath("@storybook/addon-themes")],
+  addons: [
+    getAbsolutePath("@storybook/addon-docs"),
+    getAbsolutePath("@storybook/addon-themes"),
+    getAbsolutePath("@storybook/addon-vitest"),
+  ],
   framework: getAbsolutePath("@storybook/react-vite"),
   core: { disableTelemetry: true },
   async viteFinal(config) {

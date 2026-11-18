@@ -15,7 +15,9 @@ These caches need no remote Turbo account or additional repository secrets. A ca
 
 ## Component tests
 
-Run `bun run test:ui:install` once, then `bun run test:ui` to check the Fumadocs Story manual in Chromium in both light and dark themes. Playwright builds and serves it on loopback port 4384. The small suite protects core interactions, accessible labels and descriptions, generated controls, responsive navigation, and browser-composited color contrast without backend services. `bun run build:storybook` verifies the static manual. See the [component stories guide](../apps/storybook/README.md). CI runs these checks in the `ui` job.
+Run `bun run test:ui:install` once, then `bun run test:stories` to run all Storybook stories as Chromium component tests through the Vitest addon. The same tests can be run and watched from Storybook's sidebar testing widget.
+
+Run `bun run test:ui` to check the Storybook application in Chromium in both light and dark themes. Playwright builds and serves it on loopback port 4384. The suite protects core interactions, accessible labels and descriptions, native Controls and Docs, narrow screens, and browser-composited color contrast without backend services. `bun run build:storybook` verifies the static build. See the [component stories guide](../apps/storybook/README.md). CI runs both suites in the `ui` job.
 
 ## End-to-end tests
 

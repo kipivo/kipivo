@@ -32,6 +32,7 @@ Follow the [theme contrast constraints](../../packages/ui/README.md#contrast-con
 ```sh
 bun run build:storybook
 bun run test:ui:install
+bun run test:stories
 bun run test:ui
 ```
 
@@ -39,7 +40,11 @@ The static build is written to `apps/storybook/dist` and cached by Turbo. `bun r
 
 CI retains Bun's package cache, Turbo artifacts, Vite dependencies, and Storybook's manager/builder cache. It runs browser tests in the `ui` job and retains traces/screenshots on failure. On Linux, add `--with-deps` to browser installation if system libraries are missing.
 
-`bun run check` covers formatting, lint, types, unused code, and unit tests. Browser checks run separately. The installed addons provide Docs and Themes; Playwright handles the browser checks directly.
+`bun run check` covers formatting, lint, types, unused code, and unit tests. Browser checks run separately. The [Vitest addon](https://storybook.js.org/docs/writing-tests/integrations/vitest-addon/) turns all 25 stories into Chromium component tests. Run them with `bun run test:stories`, or use **Run tests** in Storybook's sidebar testing widget; its eye toggle reruns affected stories while editing. New `play` functions add interaction assertions to these tests.
+
+V8 coverage is installed. Enable **Coverage** in the testing widget, or run `bun run test:stories --coverage` to write a report to `apps/storybook/coverage`.
+
+The addon and CLI share one project in `vitest.config.ts`. In panel mode the addon names projects by Storybook config directory, so registering this directory more than once causes duplicate project names. The preview's theme decorator and TooltipProvider are loaded automatically by Storybook 11; a manual `setProjectAnnotations` setup file is unnecessary. Playwright's separate suite checks both themes, the manager UI, and contrast. CI runs both suites in the `ui` job using the same installed Chromium binary.
 
 ## Add a story
 
@@ -48,4 +53,4 @@ CI retains Bun's package cache, Turbo artifacts, Vite dependencies, and Storyboo
 3. Add usage and guidance to `src/documentation.ts`, then attach it with `parameters: docsFor("component")`.
 4. Add a browser check for new behavior that needs protection.
 
-`.storybook/preview.tsx` supplies TooltipProvider and the theme decorator. Give fields unique IDs with `useId`; compose Base UI triggers with `render={<Button />}`. Portal assertions must query the preview document, not only the example's container. Configure browser tests in Playwright; Storybook does not start a separate Vitest project.
+`.storybook/preview.tsx` supplies TooltipProvider and the theme decorator. Give fields unique IDs with `useId`; compose Base UI triggers with `render={<Button />}`. Portal assertions must query the preview document, not only the example's container. Configure story rendering and `play` tests in Vitest, and manager/theme/contrast checks in Playwright.

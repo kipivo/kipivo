@@ -25,6 +25,7 @@ jobs:
         with:
           cache-scope: ui
       - run: bun run test:ui:install --with-deps
+      - run: bun run test:stories
       - run: bun run build:storybook
       - run: bun run test:ui
       - if: failure()

@@ -6,6 +6,7 @@
     "dev": "storybook dev --host 127.0.0.1 --port 6006 --exact-port --disable-telemetry",
     "build": "storybook build --output-dir dist --disable-telemetry",
     "preview": "vite preview --host 127.0.0.1 --port 6006 --strictPort",
+    "test:stories": "vitest run",
     "test:ui": "playwright test",
     "test:ui:install": "playwright install chromium --only-shell",
     "typecheck": "tsc --noEmit"
@@ -20,13 +21,17 @@
     "@playwright/test": "1.65.1",
     "@storybook/addon-docs": "11.0.0-beta.3",
     "@storybook/addon-themes": "11.0.0-beta.3",
+    "@storybook/addon-vitest": "11.0.0-beta.3",
     "@storybook/react-vite": "11.0.0-beta.3",
     "@tailwindcss/vite": "4.3.5",
     "@types/node": "22.20.5",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
+    "@vitest/browser-playwright": "5.1.0",
+    "@vitest/coverage-v8": "5.1.0",
     "storybook": "11.0.0-beta.3",
     "typescript": "6.0.3",
-    "vite": "8.3.8"
+    "vite": "8.3.8",
+    "vitest": "5.1.0"
   }
 }

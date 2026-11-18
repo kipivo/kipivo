@@ -13,6 +13,7 @@
     "dev:mobile": "bun run --cwd apps/mobile start",
     "dev:storybook": "bun run --cwd apps/storybook dev",
     "build:storybook": "turbo run build --filter=storybook",
+    "test:stories": "bun run --cwd apps/storybook test:stories",
     "test:ui": "bun run --cwd apps/storybook test:ui",
     "test:ui:install": "bun run --cwd apps/storybook test:ui:install",
     "ui:add": "bun run --cwd packages/ui ui:add",
