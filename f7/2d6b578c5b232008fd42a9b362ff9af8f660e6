@@ -1,0 +1,33 @@
+.github/actions/setup-playwright/action.yml
+  s_73fcf29ef63e03::t_0e4ba7b0ee6e09 1-38
+scripts/ci-plan.mjs
+  s_73fcf29ef63e03::t_f3567b20b711e5 306-309,342-345,357-359
+  s_73fcf29ef63e03::t_487a982ac73a43 232,266-305,310-325,339,355-356,360
+.github/workflows/ci.yml
+  s_73fcf29ef63e03::t_0e4ba7b0ee6e09 80-82,190-192
+  s_73fcf29ef63e03::t_487a982ac73a43 19-21,35,40,54,56,58-59
+scripts/ci-plan.test.mjs
+  s_73fcf29ef63e03::t_c584e0cfcc08da 326-402,410
+  s_73fcf29ef63e03::t_f3567b20b711e5 6-13,403-409,411-424
+  s_73fcf29ef63e03::t_296b8d1c429f87 425-426
+AGENTS.md
+  s_73fcf29ef63e03::t_c584e0cfcc08da 41
+docs/testing.md
+  s_73fcf29ef63e03::t_c584e0cfcc08da 19,38
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "f72d6b578c5b232008fd42a9b362ff9af8f660e6",
+  "prompts": {},
+  "sessions": {
+    "s_73fcf29ef63e03": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1eeaf-0692-7e60-b6b4-36c2d0e8f9d7",
+        "model": "gpt-6.2-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
