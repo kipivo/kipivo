@@ -20,7 +20,7 @@ test("native Controls edit and reset the example args", async ({ page }, testInf
   await expect(preview.getByRole("status")).toHaveText("Click to try the action.");
   await page
     .getByRole("navigation", { name: "Stories", exact: true })
-    .getByRole("link", { name: "Loading", exact: true })
+    .getByRole("row", { name: /^Loading\b/ })
     .click();
   await expect(preview.getByRole("button", { name: "Running checks…" })).toBeDisabled();
 });

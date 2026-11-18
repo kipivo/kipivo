@@ -1,6 +1,15 @@
 # Component stories
 
-The `storybook` workspace uses official [Storybook for React & Vite](https://storybook.js.org/docs/get-started/frameworks/react-vite). Shared components remain in `@kipivo/ui`; this application supplies their examples, documentation, and the theme inspector.
+The `storybook` workspace uses [Storybook 11 beta for React & Vite](https://storybook.js.org/blog/storybook-11-beta), with its core and addons pinned together at `11.0.0-beta.3`. Shared components remain in `@kipivo/ui`; this application supplies their examples, documentation, and the theme inspector.
+
+Storybook has its own TypeScript 6 dependency for server-side component docgen. TypeScript 7 does not expose the compiler API required by this beta. The other workspaces keep their own TypeScript versions. See the [Storybook 11 migration guide](https://storybook.js.org/docs/11/releases/migration-guide#typescript).
+
+The new headless CLI can read example props and story snippets without a running dev server:
+
+```sh
+bun run --cwd apps/storybook storybook tools docs list --no-attach
+bun run --cwd apps/storybook storybook tools docs show --id components-button --no-attach
+```
 
 ```sh
 bun run dev:storybook
