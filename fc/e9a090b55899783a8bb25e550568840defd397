@@ -1,0 +1,32 @@
+scripts/smoke-web.mjs
+  s_5ea4f386bc9505::t_c6c51c3130a464 14-15,33,35-37,39-44
+  s_5ea4f386bc9505::t_2d730fa8776d29 34
+  s_5ea4f386bc9505::t_312408206dea1b 38
+apps/web/public/favicon.svg
+  s_5ea4f386bc9505::t_6ef5d807675bcc 1-11
+apps/web/src/routes/__root.tsx
+  s_5ea4f386bc9505::t_ec7b17e06f2394 11,14-17
+  s_5ea4f386bc9505::t_be3b6428f3de5e 18
+apps/web/vite.config.ts
+  s_5ea4f386bc9505::t_c6c51c3130a464 12-18,20-23
+  s_5ea4f386bc9505::t_2d730fa8776d29 19
+apps/web/public/manifest.webmanifest
+  s_5ea4f386bc9505::t_ec7b17e06f2394 1-13,15-19,21-25,27-32
+  s_5ea4f386bc9505::t_b316bdb9665144 14,20,26
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "fce9a090b55899783a8bb25e550568840defd397",
+  "prompts": {},
+  "sessions": {
+    "s_5ea4f386bc9505": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1ed89-c084-7a23-900f-ba2538dc806f",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
