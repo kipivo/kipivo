@@ -6,7 +6,7 @@ See the [documentation index](docs/README.md) for the workspace layout and guide
 
 ## Development
 
-Install Bun 1.4.3 and the Node.js version in `.node-version`.
+Install Bun 1.4.4 and the Node.js version in `.node-version`.
 
 ```sh
 bun install --frozen-lockfile
