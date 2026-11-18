@@ -1,0 +1,104 @@
+packages/core/package.json
+  s_ede7f0ca7c4b93::t_4f4525a81eee12 1-14
+docs/auth.md
+  s_ede7f0ca7c4b93::t_fa023dcb12e475 31,48-59,103
+tests/e2e/specs/api.spec.ts
+  s_ede7f0ca7c4b93::t_21340fc2af9d4e 32-34,46-48,51
+packages/core/tsconfig.json
+  s_ede7f0ca7c4b93::t_4f4525a81eee12 1-4
+packages/core/src/access.ts
+  s_ede7f0ca7c4b93::t_4f4525a81eee12 1-19
+packages/db/drizzle/0001_account_rbac.sql
+  s_ede7f0ca7c4b93::t_47c14a791ccbf7 1-2
+packages/db/scripts/grant-admin.ts
+  s_ede7f0ca7c4b93::t_4f4525a81eee12 1-16
+docs/architecture.md
+  s_ede7f0ca7c4b93::t_fa023dcb12e475 34,42,46,52,54
+apps/web/src/routes/api/v1/$.ts
+  s_ede7f0ca7c4b93::t_5b9c45e3e9ae68 1-11
+packages/db/src/factory.ts
+  s_ede7f0ca7c4b93::t_4f4525a81eee12 27-30
+apps/api/src/resources.ts
+  s_ede7f0ca7c4b93::t_e609e11771f43f 8,49-52
+apps/api/src/app.ts
+  s_ede7f0ca7c4b93::t_e609e11771f43f 8,10,45-50
+scripts/smoke-gateway-image.sh
+  s_ede7f0ca7c4b93::t_5b9c45e3e9ae68 75-79
+packages/db/src/schema.ts
+  s_ede7f0ca7c4b93::t_4f4525a81eee12 1-4,20
+apps/web/src/api-proxy.server.ts
+  s_ede7f0ca7c4b93::t_8f5a64ec35de63 17-23
+  s_ede7f0ca7c4b93::t_5b9c45e3e9ae68 25-30
+packages/api/package.json
+  s_ede7f0ca7c4b93::t_4f4525a81eee12 13
+apps/api/src/access.ts
+  s_ede7f0ca7c4b93::t_e609e11771f43f 1-24,27-29,31,33,36-37
+  s_ede7f0ca7c4b93::t_f028555b64b244 25-26,30,32,34-35
+.railway/railway.ts
+  s_ede7f0ca7c4b93::t_4f4525a81eee12 45
+apps/web/src/routes/api/auth/$.ts
+  s_ede7f0ca7c4b93::t_5b9c45e3e9ae68 2-5,10-11
+packages/db/src/access.ts
+  s_ede7f0ca7c4b93::t_4f4525a81eee12 1-62
+apps/api/src/routes/procedures.ts
+  s_ede7f0ca7c4b93::t_e609e11771f43f 3,8-9,14,16-20,25-26,30-31,34,37-41,44-46,48-60,64-65,70,72-84,89-92,106,112
+  s_ede7f0ca7c4b93::t_f028555b64b244 7,12,35-36,42-43,47,62-63,68
+  s_ede7f0ca7c4b93::t_8f5a64ec35de63 66-67,69,85-87,93-105,107-111
+tests/e2e/specs/auth.spec.ts
+  s_ede7f0ca7c4b93::t_8f5a64ec35de63 156-158,186-192,210-212,226-229,253-255,257-263,268-270,273-275
+  s_ede7f0ca7c4b93::t_21340fc2af9d4e 3-4,134-155,159-185,193-209,213-225,230-252,256,264-267,271-272,276-283
+  s_ede7f0ca7c4b93::t_4dac7da4b8d375 284
+package.json
+  s_ede7f0ca7c4b93::t_4f4525a81eee12 40
+scripts/ci-plan.mjs
+  s_ede7f0ca7c4b93::t_4f4525a81eee12 27
+packages/api/src/contract.ts
+  s_ede7f0ca7c4b93::t_8f5a64ec35de63 14-17,54-56
+  s_ede7f0ca7c4b93::t_e609e11771f43f 1-2,5-13,18-19,21-24,26-27,30-45,47-53,57,59-69
+  s_ede7f0ca7c4b93::t_f028555b64b244 25,46,58
+  s_ede7f0ca7c4b93::t_03d9fd79f77973 20
+apps/web/src/routes/rpc/$.ts
+  s_ede7f0ca7c4b93::t_5b9c45e3e9ae68 1-11
+.railway/gateway/Caddyfile
+  s_ede7f0ca7c4b93::t_5b9c45e3e9ae68 30
+packages/db/package.json
+  s_ede7f0ca7c4b93::t_4f4525a81eee12 7,17,21
+packages/api/src/client.ts
+  s_ede7f0ca7c4b93::t_e609e11771f43f 2,5-8
+knip.json
+  s_ede7f0ca7c4b93::t_5b9c45e3e9ae68 7
+docs/README.md
+  s_ede7f0ca7c4b93::t_fa023dcb12e475 14,31
+apps/web/src/routes/api/openapi[.]json.ts
+  s_ede7f0ca7c4b93::t_5b9c45e3e9ae68 1-10
+apps/api/Dockerfile
+  s_ede7f0ca7c4b93::t_5b9c45e3e9ae68 20
+docs/api.md
+  s_ede7f0ca7c4b93::t_fa023dcb12e475 1-4,11-25
+  s_ede7f0ca7c4b93::t_8f5a64ec35de63 5-10
+apps/api/package.json
+  s_ede7f0ca7c4b93::t_4f4525a81eee12 16,22,24
+  s_ede7f0ca7c4b93::t_f028555b64b244 21
+bun.lock
+  s_ede7f0ca7c4b93::t_860d0f5e852786 23,28-29,31,132,174-179,183,652-653,718-723,740-741,1430,1642,2206-2207,2294-2295,2346-2347,2694-2695,2704-2705
+packages/db/drizzle/meta/0001_snapshot.json
+  s_ede7f0ca7c4b93::t_494f92bfd5ca24 1-399
+packages/db/drizzle/meta/_journal.json
+  s_ede7f0ca7c4b93::t_510fc1393f1a34 11-17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "fd6daa9da16b34204a49de53ac8e7eda067535f1",
+  "prompts": {},
+  "sessions": {
+    "s_ede7f0ca7c4b93": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1eeda-d4f1-7f53-87ef-ae4cec611e36",
+        "model": "gpt-6.2-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
