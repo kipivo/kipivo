@@ -1,0 +1,14 @@
+apps/web/src/analytics.ts
+  h_f0766e80fd3864 20
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "9624c08d1794b86c8dde5d9e3a5210610397cdd0",
+  "prompts": {},
+  "humans": {
+    "h_f0766e80fd3864": {
+      "author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
