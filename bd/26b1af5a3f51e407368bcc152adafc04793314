@@ -1,0 +1,33 @@
+tests/e2e/specs/local-runs.spec.ts
+  s_ede7f0ca7c4b93::t_cd9bd7d4338a81 59-77,94-95,102,107-108,110,112-113
+packages/ui/src/components/theme-selector.tsx
+  s_ede7f0ca7c4b93::t_376dfbf1867f41 5,23-24,28,32-38,40-63
+  s_ede7f0ca7c4b93::t_cd9bd7d4338a81 27
+apps/web/src/features/theme/theme-switch.tsx
+  s_ede7f0ca7c4b93::t_7b4827554dfeff 2-10
+  s_ede7f0ca7c4b93::t_0cb68b3686c954 84-86,99,116,119-121,123-129,131-140,143-145
+  s_ede7f0ca7c4b93::t_cd9bd7d4338a81 15,17,51-66,69-77,82-83,89-93,98,107,113-115,117-118,122,130,142
+  s_ede7f0ca7c4b93::t_2fb0aae0917573 141
+apps/storybook/tests/components.spec.ts
+  s_ede7f0ca7c4b93::t_2b3bb60b255d06 133-140,143,151
+  s_ede7f0ca7c4b93::t_4b32d7a4503419 147-150
+  s_ede7f0ca7c4b93::t_376dfbf1867f41 125-132,141-142,144-146,152
+apps/web/src/styles.css
+  s_ede7f0ca7c4b93::t_cd9bd7d4338a81 16-39
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "bd26b1af5a3f51e407368bcc152adafc04793314",
+  "prompts": {},
+  "sessions": {
+    "s_ede7f0ca7c4b93": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1eeda-d4f1-7f53-87ef-ae4cec611e36",
+        "model": "gpt-6.2-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
