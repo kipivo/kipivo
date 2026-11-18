@@ -3,30 +3,29 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite --host 127.0.0.1 --port 6006 --strictPort",
-    "build": "vite build",
+    "dev": "storybook dev --host 127.0.0.1 --port 6006 --exact-port --no-open --disable-telemetry",
+    "build": "storybook build --output-dir dist --disable-telemetry",
     "preview": "vite preview --host 127.0.0.1 --port 6006 --strictPort",
     "test:ui": "playwright test",
     "test:ui:install": "playwright install chromium --only-shell",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@fumadocs/story": "1.5.4",
-    "@fumari/stf": "1.1.2",
     "@kipivo/ui": "workspace:*",
-    "fumadocs-core": "16.19.3",
-    "fumadocs-ui": "npm:@fumadocs/base-ui@16.19.3",
     "react": "19.3.1",
     "react-dom": "19.3.1"
   },
   "devDependencies": {
     "@kipivo/tsconfig": "workspace:*",
     "@playwright/test": "1.65.1",
+    "@storybook/addon-docs": "10.6.7",
+    "@storybook/addon-themes": "10.6.7",
+    "@storybook/react-vite": "10.6.7",
     "@tailwindcss/vite": "4.3.5",
     "@types/node": "22.20.5",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
-    "@vitejs/plugin-react": "6.3.0",
+    "storybook": "10.6.7",
     "vite": "8.3.8"
   }
 }

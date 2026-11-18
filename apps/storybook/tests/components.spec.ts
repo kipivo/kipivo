@@ -1,82 +1,63 @@
 import { expect, test } from "@playwright/test";
+import { openStory } from "./helpers";
 
-test.beforeEach(async ({ page }, testInfo) => {
-  await page.addInitScript((theme) => {
-    if (!localStorage.getItem("kipivo-ui-theme")) localStorage.setItem("kipivo-ui-theme", theme);
-  }, testInfo.project.name);
-});
-
-test("all component pages render generated controls and usage", async ({ page }) => {
-  await page.goto("/");
-  for (const name of [
-    "Button",
-    "Input",
-    "Textarea",
-    "Label",
-    "Badge",
-    "Card",
-    "Dialog",
-    "Dropdown menu",
-    "Tooltip",
-    "Wordmark",
-  ]) {
-    await page
-      .getByRole("navigation", { name: "Components" })
-      .getByRole("link", { name, exact: true })
-      .click();
-    await expect(page.getByRole("heading", { name, exact: true, level: 1 })).toBeVisible();
-    await expect(page.getByRole("region", { name: "Component preview" })).toBeVisible();
-    await expect(page.getByRole("form", { name: "Example props" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Usage", exact: true })).toBeVisible();
-    await expect(page.getByText("Configure this prop in the story source.")).toHaveCount(0);
+test("every component variant renders with unique story IDs", async ({
+  page,
+  request,
+}, testInfo) => {
+  const response = await request.get("/index.json");
+  expect(response.ok()).toBe(true);
+  const { entries } = (await response.json()) as {
+    entries: Record<string, { id: string; type: string }>;
+  };
+  const stories = Object.values(entries).filter((entry) => entry.type === "story");
+  expect(stories.length).toBe(25);
+  expect(new Set(stories.map((story) => story.id)).size).toBe(stories.length);
+  for (const story of stories) {
+    await openStory(page, story.id, testInfo.project.name);
+    await expect(page.locator("#storybook-root")).toBeVisible();
+    await expect(page.locator(".sb-errordisplay")).not.toBeVisible();
   }
-  await page.getByRole("link", { name: "Theme & colors" }).click();
-  await expect(page.getByRole("heading", { name: "Chart palette" })).toBeVisible();
 });
 
-test("controls, presets and reset update the live example", async ({ page }) => {
-  await page.goto("/#button");
-  const preview = page.getByRole("region", { name: "Component preview" });
-  await page.getByRole("textbox", { name: "label", exact: true }).fill("Check now");
-  await preview.getByRole("button", { name: "Check now" }).click();
-  await expect(preview.getByRole("status")).toHaveText("Action ran 1 time.");
-  await page.getByRole("button", { name: "Reset example" }).click();
-  await expect(preview.getByRole("button", { name: "Run checks" })).toBeEnabled();
-  await expect(preview.getByRole("status")).toHaveText("Click to try the action.");
-  await page.getByRole("combobox", { name: "Preset" }).selectOption("Disabled");
-  await expect(preview.getByRole("button")).toBeDisabled();
-  await page.getByRole("combobox", { name: "Preset" }).selectOption("Loading");
-  await expect(preview.getByRole("button", { name: "Running checks…" })).toBeDisabled();
-  await expect(preview.getByRole("button")).toHaveAttribute("aria-busy", "true");
+test("disabled and loading stories keep their native action semantics", async ({
+  page,
+}, testInfo) => {
+  await openStory(page, "components-button--disabled", testInfo.project.name);
+  await expect(page.getByRole("button", { name: "Waiting for runner" })).toBeDisabled();
+  await openStory(page, "components-button--loading", testInfo.project.name);
+  await expect(page.getByRole("button", { name: "Running checks…" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Running checks…" })).toHaveAttribute(
+    "aria-busy",
+    "true",
+  );
 });
 
-test("fields connect labels and validation messages", async ({ page }) => {
+test("fields connect labels and validation messages", async ({ page }, testInfo) => {
   for (const [id, label] of [
     ["input", "Task name"],
     ["textarea", "Task description"],
   ]) {
-    await page.goto(`/#${id}`);
-    const preview = page.getByRole("region", { name: "Component preview" });
+    await openStory(page, `components-${id}--default`, testInfo.project.name);
+    const preview = page.locator("#storybook-root");
     const field = preview.getByRole("textbox", { name: label });
     await field.fill("Verify the project");
     await expect(field).toHaveValue("Verify the project");
-    await page.getByRole("combobox", { name: "Preset" }).selectOption("Invalid");
+    await openStory(page, `components-${id}--invalid`, testInfo.project.name);
     await expect(field).toHaveAttribute("aria-invalid", "true");
     await expect(field).toHaveAccessibleDescription(/Enter a .* to continue\./);
-    await page.getByRole("combobox", { name: "Preset" }).selectOption("Disabled");
+    await openStory(page, `components-${id}--disabled`, testInfo.project.name);
     await expect(field).toBeDisabled();
   }
-  await page.goto("/#label");
-  const preview = page.getByRole("region", { name: "Component preview" });
+  await openStory(page, "components-label--default", testInfo.project.name);
+  const preview = page.locator("#storybook-root");
   await preview.getByText("Project name", { exact: true }).click();
   await expect(preview.getByRole("textbox", { name: "Project name" })).toBeFocused();
 });
 
-test("dialog restores focus after Escape and Cancel", async ({ page }) => {
-  await page.goto("/#dialog");
-  const trigger = page
-    .getByRole("region", { name: "Component preview" })
-    .getByRole("button", { name: "Delete run" });
+test("dialog restores focus after Escape and Cancel", async ({ page }, testInfo) => {
+  await openStory(page, "components-dialog--default", testInfo.project.name);
+  const trigger = page.locator("#storybook-root").getByRole("button", { name: "Delete run" });
   await trigger.click();
   const dialog = page.getByRole("dialog", { name: "Delete this run?" });
   await expect(dialog).toHaveAccessibleDescription(
@@ -91,9 +72,9 @@ test("dialog restores focus after Escape and Cancel", async ({ page }) => {
   await expect(trigger).toBeFocused();
 });
 
-test("menu supports keyboard navigation and disabled actions", async ({ page }) => {
-  await page.goto("/#dropdown-menu");
-  const preview = page.getByRole("region", { name: "Component preview" });
+test("menu supports keyboard navigation and disabled actions", async ({ page }, testInfo) => {
+  await openStory(page, "components-dropdown-menu--default", testInfo.project.name);
+  const preview = page.locator("#storybook-root");
   const trigger = preview.getByRole("button", { name: "Run actions" });
   await trigger.focus();
   await page.keyboard.press("ArrowDown");
@@ -113,11 +94,9 @@ test("menu supports keyboard navigation and disabled actions", async ({ page }) 
   await expect(preview.getByRole("status")).toHaveText("Showing example logs.");
 });
 
-test("tooltip describes its trigger on hover and keyboard focus", async ({ page }) => {
-  await page.goto("/#tooltip");
-  const trigger = page
-    .getByRole("region", { name: "Component preview" })
-    .getByRole("button", { name: "Run checks" });
+test("tooltip describes its trigger on hover and keyboard focus", async ({ page }, testInfo) => {
+  await openStory(page, "components-tooltip--default", testInfo.project.name);
+  const trigger = page.locator("#storybook-root").getByRole("button", { name: "Run checks" });
   await trigger.hover();
   await expect(page.getByRole("tooltip")).toHaveText("Run the project's configured checks.");
   await expect(trigger).toHaveAccessibleDescription("Run the project's configured checks.");
@@ -126,39 +105,4 @@ test("tooltip describes its trigger on hover and keyboard focus", async ({ page 
   await trigger.focus();
   await expect(page.getByRole("tooltip")).toBeVisible();
   await expect(trigger).toHaveAccessibleDescription("Run the project's configured checks.");
-});
-
-test("theme persists and the manual fits a narrow viewport", async ({ page }, testInfo) => {
-  await page.goto("/#input");
-  await page.keyboard.press("Tab");
-  await page.getByRole("link", { name: "Skip to content" }).press("Enter");
-  await expect(page.getByRole("main")).toBeFocused();
-  await expect(page.getByRole("heading", { name: "Input", level: 1, exact: true })).toBeVisible();
-  const heading = await page
-    .getByRole("heading", { name: "Input", level: 1, exact: true })
-    .boundingBox();
-  const header = await page.locator("header").boundingBox();
-  expect(heading!.y).toBeGreaterThanOrEqual(header!.y + header!.height);
-  await expect(
-    page.getByRole("button", {
-      name: testInfo.project.name === "dark" ? "Dark" : "Light",
-      exact: true,
-    }),
-  ).toHaveAttribute("aria-pressed", "true");
-  await page
-    .getByRole("button", { name: testInfo.project.name === "dark" ? "Light" : "Dark", exact: true })
-    .click();
-  await page.reload();
-  await expect(
-    page.getByRole("button", {
-      name: testInfo.project.name === "dark" ? "Light" : "Dark",
-      exact: true,
-    }),
-  ).toHaveAttribute("aria-pressed", "true");
-  await page.setViewportSize({ width: 390, height: 844 });
-  await page.getByRole("combobox", { name: "Component", exact: true }).selectOption("dialog");
-  await expect(page.getByRole("heading", { name: "Dialog", exact: true, level: 1 })).toBeVisible();
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
-    true,
-  );
 });

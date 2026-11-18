@@ -28,7 +28,7 @@ Consumers install the Tailwind Vite plugin and import the shared stylesheet once
 @source ".";
 ```
 
-The shared stylesheet scans UI source, self-hosts Geist, and owns semantic colors, radii, focus, and reduced-motion behavior. Light mode uses warm white surfaces; `.dark` on the document element selects neutral charcoal surfaces. Coral marks primary actions, amber marks accent and dark focus states, and the base radius is 10px. Web starts in dark mode. The Fumadocs Story manual exposes both themes through its toolbar.
+The shared stylesheet scans UI source, self-hosts Geist, and owns semantic colors, radii, focus, and reduced-motion behavior. Light mode uses warm white surfaces; `.dark` on the document element selects neutral charcoal surfaces. Coral marks primary actions, amber marks accent and dark focus states, and the base radius is 10px. Web starts in dark mode. Storybook exposes both themes through its toolbar.
 
 Use semantic classes such as `bg-background`, `text-foreground`, `bg-primary`, `text-muted-foreground`, and `border-border`. The opaque `primary-hover` token preserves button text contrast in both themes. Input borders and focus rings are stronger than decorative borders; destructive colors remain readable on tinted surfaces, including hover states. Five `chart-*` tokens are also exposed as Tailwind colors.
 
@@ -78,4 +78,4 @@ bun run ui:add select
 
 The CLI runs in this package and uses `components.json` to select Base UI, Hugeicons, and the shared source paths. Web also has a matching configuration for adding app-owned blocks from its directory. Add only components required by a feature, review generated changes to customized components, and keep shared dependencies declared here.
 
-Add examples and Fumadocs stories in `apps/storybook/src` for variants and disabled/loading/error states. See the [component stories guide](../../apps/storybook/README.md) for the headless panel and browser checks. Verify with `bun run check`, `bun run build --filter=web`, `bun run build:storybook`, and `bun run test:ui`.
+Add examples and Storybook stories in `apps/storybook/src` for variants and disabled/loading/error states. See the [component stories guide](../../apps/storybook/README.md) for Controls, documentation, and browser checks. Verify with `bun run check`, `bun run build --filter=web`, `bun run build:storybook`, and `bun run test:ui`.

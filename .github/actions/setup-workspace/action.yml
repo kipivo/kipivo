@@ -1,15 +1,15 @@
 name: Set up workspace
-description: Install pinned runtimes and dependencies with Bun, Turbo, and Vite caches.
+description: Install pinned runtimes and dependencies with Bun, Turbo, Vite, and Storybook caches.
 
 inputs:
   cache-scope:
-    description: Job-specific scope for task and Vite caches.
+    description: Job-specific scope for task, Vite, and Storybook caches.
     required: true
   install-dependencies:
     description: Restore the Bun package cache and install workspace dependencies.
     default: "true"
   cache-build:
-    description: Restore and save Turbo task artifacts and Vite dependency caches.
+    description: Restore and save Turbo task artifacts, Vite dependencies, and Storybook caches.
     default: "true"
 
 runs:
@@ -34,7 +34,7 @@ runs:
       if: inputs.install-dependencies == 'true'
       shell: bash
       run: bun install --frozen-lockfile
-    - name: Cache Turbo tasks and Vite dependencies
+    - name: Cache Turbo tasks, Vite dependencies, and Storybook
       if: inputs.cache-build == 'true'
       uses: actions/cache@v6
       with:
@@ -42,6 +42,7 @@ runs:
           .turbo/cache
           node_modules/.vite
           apps/*/node_modules/.vite
+          apps/storybook/node_modules/.cache/storybook
         key: tasks-v1-${{ runner.os }}-${{ runner.arch }}-${{ inputs.cache-scope }}-${{ steps.bun.outputs.bun-version }}-${{ hashFiles('bun.lock', '.node-version', 'package.json') }}-${{ github.sha }}
         restore-keys: |
           tasks-v1-${{ runner.os }}-${{ runner.arch }}-${{ inputs.cache-scope }}-${{ steps.bun.outputs.bun-version }}-${{ hashFiles('bun.lock', '.node-version', 'package.json') }}-

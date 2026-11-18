@@ -1,4 +1,5 @@
 import { expect, test, type Locator } from "@playwright/test";
+import { openStory } from "./helpers";
 
 // Resolve OKLCH and translucent surfaces through Chromium's sRGB canvas.
 // Paint ancestor surfaces before sampling the foreground, as the browser does.
@@ -42,19 +43,15 @@ async function contrast(element: Locator, property = "color", includeOwnBackgrou
 }
 
 test("text, control boundaries and focus colors retain contrast", async ({ page }, testInfo) => {
-  await page.addInitScript(
-    (theme) => localStorage.setItem("kipivo-ui-theme", theme),
-    testInfo.project.name,
-  );
-  await page.goto("/#button");
-  const preview = page.getByRole("region", { name: "Component preview" });
+  await openStory(page, "components-button--primary", testInfo.project.name);
+  const preview = page.locator("#storybook-root");
   const button = preview.getByRole("button");
   await button.hover();
   await button.evaluate((element) =>
     Promise.all(element.getAnimations().map((animation) => animation.finished)),
   );
   expect(await contrast(button)).toBeGreaterThanOrEqual(4.5);
-  await page.getByRole("combobox", { name: "Preset" }).selectOption("Destructive");
+  await openStory(page, "components-button--destructive", testInfo.project.name);
   await expect(button).toHaveText("Delete run");
   await button.hover();
   await button.evaluate((element) =>
@@ -62,19 +59,19 @@ test("text, control boundaries and focus colors retain contrast", async ({ page 
   );
   expect(await contrast(button)).toBeGreaterThanOrEqual(4.5);
 
-  await page.goto("/#input");
+  await openStory(page, "components-input--default", testInfo.project.name);
   const input = preview.getByRole("textbox", { name: "Task name" });
   expect(await contrast(input, "border-top-color", false)).toBeGreaterThanOrEqual(3);
   expect(await contrast(input, "--ring", false)).toBeGreaterThanOrEqual(3);
 
-  await page.goto("/#dropdown-menu");
+  await openStory(page, "components-dropdown-menu--default", testInfo.project.name);
   await preview.getByRole("button", { name: "Run actions" }).click();
   const destructive = page.getByRole("menuitem", { name: "Delete run" });
   await destructive.focus();
   await expect(destructive).toBeFocused();
   expect(await contrast(destructive)).toBeGreaterThanOrEqual(4.5);
 
-  await page.goto("/#theme");
+  await openStory(page, "foundations-theme--palette", testInfo.project.name);
   const description = page.getByRole("main").locator("h1 + p");
   expect(await contrast(description)).toBeGreaterThanOrEqual(4.5);
   for (const surface of ["--muted", "--card"]) {

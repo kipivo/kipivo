@@ -1,23 +1,5 @@
-import { lazy, type ComponentType } from "react";
-
-function story(name: keyof typeof import("./components.story")) {
-  return lazy(async () => ({ default: (await import("./components.story"))[name].WithControl }));
-}
-
-interface Page {
-  id: string;
-  title: string;
-  description: string;
-  Story: ComponentType;
-  code: string;
-  notes: string[];
-}
-
-export const pages: Page[] = [
-  {
-    id: "button",
-    title: "Button",
-    Story: story("button"),
+const documentation = {
+  button: {
     description: "Actions with a clear hierarchy, from the primary action to a destructive choice.",
     code: `import { Button, buttonVariants } from "@kipivo/ui/components/button";
 
@@ -31,10 +13,7 @@ export const pages: Page[] = [
       "For a loading action, combine disabled, aria-busy, and a visible progress label.",
     ],
   },
-  {
-    id: "input",
-    title: "Input",
-    Story: story("input"),
+  input: {
     description: "A single line of text, with a visible label and an explicit error state.",
     code: `import { Input } from "@kipivo/ui/components/input";
 import { Label } from "@kipivo/ui/components/label";
@@ -50,10 +29,7 @@ import { Label } from "@kipivo/ui/components/label";
       "Connect error text with aria-describedby and set aria-invalid. A placeholder does not replace the label.",
     ],
   },
-  {
-    id: "textarea",
-    title: "Textarea",
-    Story: story("textarea"),
+  textarea: {
     description: "Longer descriptions with the same labeling and validation behavior as Input.",
     code: `import { Textarea } from "@kipivo/ui/components/textarea";
 import { Label } from "@kipivo/ui/components/label";
@@ -65,10 +41,7 @@ import { Label } from "@kipivo/ui/components/label";
       "Keep resizing available when users may enter longer text. Use disabled only when editing is unavailable.",
     ],
   },
-  {
-    id: "label",
-    title: "Label",
-    Story: story("label"),
+  label: {
     description: "A visible field name that also moves focus to its associated control.",
     code: `import { Label } from "@kipivo/ui/components/label";
 import { Input } from "@kipivo/ui/components/input";
@@ -80,10 +53,7 @@ import { Input } from "@kipivo/ui/components/input";
       "Put instructions and validation beside the field. Keep the label short and specific.",
     ],
   },
-  {
-    id: "badge",
-    title: "Badge",
-    Story: story("badge"),
+  badge: {
     description: "Compact status text that remains understandable without relying on color.",
     code: `import { Badge } from "@kipivo/ui/components/badge";
 
@@ -95,10 +65,7 @@ import { Input } from "@kipivo/ui/components/input";
       "A badge is noninteractive by default. If it navigates, compose it with a real link using render.",
     ],
   },
-  {
-    id: "card",
-    title: "Card",
-    Story: story("card"),
+  card: {
     description:
       "A content surface that groups a title, supporting information, and related actions.",
     code: `import {
@@ -119,10 +86,7 @@ import { Button } from "@kipivo/ui/components/button";
       'Use size="sm" for a compact card. Keep headings in the surrounding page hierarchy meaningful.',
     ],
   },
-  {
-    id: "dialog",
-    title: "Dialog",
-    Story: story("dialog"),
+  dialog: {
     description:
       "A focused decision with an accessible title, description, and a clear way to cancel.",
     code: `import {
@@ -149,10 +113,7 @@ import { Button } from "@kipivo/ui/components/button";
       "Compose triggers with render={<Button />}. Escape dismisses the dialog and returns focus to its trigger.",
     ],
   },
-  {
-    id: "dropdown-menu",
-    title: "Dropdown menu",
-    Story: story("dropdownMenu"),
+  "dropdown-menu": {
     description: "Related actions in a menu that supports pointer and keyboard navigation.",
     code: `import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
@@ -172,10 +133,7 @@ import { Button } from "@kipivo/ui/components/button";
       "Arrow keys move through the menu. Escape dismisses it and restores focus to the trigger.",
     ],
   },
-  {
-    id: "tooltip",
-    title: "Tooltip",
-    Story: story("tooltip"),
+  tooltip: {
     description: "Supplemental information available on hover and keyboard focus.",
     code: `import {
   TooltipProvider, Tooltip, TooltipTrigger, TooltipContent,
@@ -193,10 +151,7 @@ import { Button } from "@kipivo/ui/components/button";
       "Keep essential instructions visible. The tooltip adds a description; icon-only triggers still need an accessible name.",
     ],
   },
-  {
-    id: "wordmark",
-    title: "Wordmark",
-    Story: story("wordmark"),
+  wordmark: {
     description: "The Kipivo symbol and name, kept together as one identity.",
     code: `import { Wordmark } from "@kipivo/ui";
 import logo from "./logo.svg";
@@ -207,4 +162,16 @@ import logo from "./logo.svg";
       "Use a real link around the wordmark when it navigates to the home page.",
     ],
   },
-];
+} as const;
+
+export function docsFor(name: keyof typeof documentation) {
+  const { description, code, notes } = documentation[name];
+  return {
+    docs: {
+      description: {
+        component: `${description}\n\n### Guidance\n\n${notes.map((note) => `- ${note}`).join("\n")}`,
+      },
+      source: { code, language: "tsx" },
+    },
+  };
+}

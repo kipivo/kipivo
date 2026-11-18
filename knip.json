@@ -4,7 +4,6 @@
     "apps/api": { "entry": ["src/plugins/*.ts"] },
     "apps/web": { "entry": ["src/routes/**/*.{ts,tsx}"] },
     "apps/mobile": { "ignoreDependencies": ["expo-updates"] },
-    "apps/storybook": { "ignoreDependencies": ["fumadocs-core", "fumadocs-ui"] },
     "tests/e2e": { "entry": ["fixtures/check.mjs"] }
   }
 }
