@@ -1,0 +1,33 @@
+scripts/ci-plan.test.mjs
+  s_ede7f0ca7c4b93::t_ef72eb49fd07be 263-265,385,390-391,400-408
+.github/workflows/ci.yml
+  s_ede7f0ca7c4b93::t_89c87df071d33c 192
+scripts/ci-plan.mjs
+  s_ede7f0ca7c4b93::t_ef72eb49fd07be 14-15,46,51-56,86-95,243,256,264,267,269,273,275-281,348-351
+  s_ede7f0ca7c4b93::t_03b5eb0ad2ab2c 270-272
+docs/testing.md
+  s_ede7f0ca7c4b93::t_ef72eb49fd07be 19-21
+  s_ede7f0ca7c4b93::t_89c87df071d33c 58,66
+tests/e2e/specs/local-runs.spec.ts
+  s_ede7f0ca7c4b93::t_89c87df071d33c 6,13,21,26,41,43,57,60
+tests/e2e/playwright.config.ts
+  s_ede7f0ca7c4b93::t_89c87df071d33c 5
+tests/e2e/fixtures/local-runs.ts
+  s_ede7f0ca7c4b93::t_89c87df071d33c 13-17,25-48,98-103
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "0b42fcf47ba0aa89065e476be4ada147ee495890",
+  "prompts": {},
+  "sessions": {
+    "s_ede7f0ca7c4b93": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1eeda-d4f1-7f53-87ef-ae4cec611e36",
+        "model": "gpt-6.2-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
