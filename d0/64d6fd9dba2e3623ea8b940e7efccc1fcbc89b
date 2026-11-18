@@ -1,0 +1,23 @@
+apps/web/src/routes/__root.tsx
+  s_5ea4f386bc9505::t_81dec2fce2e51f 2,4,32
+docs/architecture.md
+  s_5ea4f386bc9505::t_81dec2fce2e51f 38
+apps/web/src/analytics.tsx
+  s_5ea4f386bc9505::t_81dec2fce2e51f 1-26,28,30-48
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "d064d6fd9dba2e3623ea8b940e7efccc1fcbc89b",
+  "prompts": {},
+  "sessions": {
+    "s_5ea4f386bc9505": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1ed89-c084-7a23-900f-ba2538dc806f",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
