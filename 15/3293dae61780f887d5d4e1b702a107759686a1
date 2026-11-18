@@ -1,0 +1,95 @@
+apps/api/package.json
+  s_3e41f39f6e31c8::t_e6a9bdb64dd121 14,16
+docs/resources.md
+  s_3e41f39f6e31c8::t_5179d017da3ceb 3,5-7,27
+  s_3e41f39f6e31c8::t_182b6714911073 1-2,4,8-26,28-31
+scripts/ci-plan.test.mjs
+  s_3e41f39f6e31c8::t_9edef8b8d2a3f9 16-17,52-57
+  s_3e41f39f6e31c8::t_9b31fbbe1634db 58-59
+.railway/railway.ts
+  s_3e41f39f6e31c8::t_9edef8b8d2a3f9 1,14,26-27,37-42,66
+apps/api/src/routes/rpc.ts
+  s_3e41f39f6e31c8::t_ad5e504b5cb950 2-3,8-14,21
+docs/README.md
+  s_3e41f39f6e31c8::t_182b6714911073 16-17,28
+tests/e2e/specs/resources.spec.ts
+  s_3e41f39f6e31c8::t_52dbc982060921 1-75,79-92,105-112,117-138
+  s_3e41f39f6e31c8::t_5c29de4d845aa0 93-104
+  s_3e41f39f6e31c8::t_d1e26686f363af 76-78,113-116
+packages/cache/src/client.ts
+  s_3e41f39f6e31c8::t_6bda24cfa4ff8f 2-27,29,31-34,36-87
+  s_3e41f39f6e31c8::t_c01d3ce60fb01b 1,28,30,35
+docs/testing.md
+  s_3e41f39f6e31c8::t_182b6714911073 17,57-63
+  s_3e41f39f6e31c8::t_8c4c6f7671858c 64
+tests/e2e/package.json
+  s_3e41f39f6e31c8::t_8b2dc0198485a0 11-12,15-16
+scripts/ci-plan.mjs
+  s_3e41f39f6e31c8::t_9edef8b8d2a3f9 24,27
+apps/api/src/app.ts
+  s_3e41f39f6e31c8::t_ad5e504b5cb950 2,5-6,13,17,20-23
+  s_3e41f39f6e31c8::t_c01d3ce60fb01b 4
+apps/api/src/plugins/resources.ts
+  s_3e41f39f6e31c8::t_ad5e504b5cb950 6
+tests/e2e/specs/auth.spec.ts
+  s_3e41f39f6e31c8::t_84b75fcd113947 6,22
+packages/storage/src/client.ts
+  s_3e41f39f6e31c8::t_67738e9b5f8a5b 15
+  s_3e41f39f6e31c8::t_c01d3ce60fb01b 31-32
+  s_3e41f39f6e31c8::t_6bda24cfa4ff8f 1-14,16-30,33-35,41-51,53-67
+  s_3e41f39f6e31c8::t_bd7b4a2c29ab66 36-40
+  s_3e41f39f6e31c8::t_8d86fa4ab6565a 52
+.github/workflows/ci.yml
+  s_3e41f39f6e31c8::t_9edef8b8d2a3f9 178
+tests/e2e/fixtures/resources.ts
+  s_3e41f39f6e31c8::t_52dbc982060921 1-57,70-73,78-97,116-119,122,128-132,134,136-146
+  s_3e41f39f6e31c8::t_d1e26686f363af 58-69,74-77,98-115
+  s_3e41f39f6e31c8::t_c01d3ce60fb01b 123-125,135
+  s_3e41f39f6e31c8::t_c5aba753f16649 120-121,126-127,133
+apps/api/src/runtime.ts
+  s_3e41f39f6e31c8::t_ad5e504b5cb950 2,4,6,8,26-57,61-71,73
+  s_3e41f39f6e31c8::t_bd7b4a2c29ab66 58-60
+  s_3e41f39f6e31c8::t_713061409a360e 72,74
+package.json
+  s_3e41f39f6e31c8::t_ad882f5a578e32 55
+  s_3e41f39f6e31c8::t_8b2dc0198485a0 29
+  s_3e41f39f6e31c8::t_c51d18b946d8eb 53-54,56
+tests/e2e/playwright.config.ts
+  s_3e41f39f6e31c8::t_84b75fcd113947 13
+packages/storage/package.json
+  s_3e41f39f6e31c8::t_e6a9bdb64dd121 1-19
+packages/storage/tsconfig.json
+  s_3e41f39f6e31c8::t_e6a9bdb64dd121 1-5
+tests/e2e/fixtures/process.ts
+  s_3e41f39f6e31c8::t_acaa1e0d55cad5 47-48,79-81
+  s_3e41f39f6e31c8::t_84b75fcd113947 2,22,26,28,30,44-46,49-52,72-78,82-92
+  s_3e41f39f6e31c8::t_eee8988e0baddf 93-94
+tests/e2e/specs/api.spec.ts
+  s_3e41f39f6e31c8::t_84b75fcd113947 3,6,10
+README.md
+  s_3e41f39f6e31c8::t_182b6714911073 24,62
+packages/cache/package.json
+  s_3e41f39f6e31c8::t_e6a9bdb64dd121 1-18
+packages/cache/tsconfig.json
+  s_3e41f39f6e31c8::t_e6a9bdb64dd121 1-5
+bun.lock
+  s_3e41f39f6e31c8::t_8972f42fb0c924 22,24,141-150,174-184,217-218,222,226-228,558-559,582-583,590-591,1162-1163,1242-1243,1296-1297,1496-1497,1852-1853,1960-1961,2078-2079
+packages/storage/patches/unstorage@2.0.0-beta.0.patch
+  s_3e41f39f6e31c8::t_1cffa334f64938 1-7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "153293dae61780f887d5d4e1b702a107759686a1",
+  "prompts": {},
+  "sessions": {
+    "s_3e41f39f6e31c8": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1e9a8-b146-7c61-ab65-7677b3118a2e",
+        "model": "gpt-6.2-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
