@@ -1,0 +1,42 @@
+scripts/ci-plan.test.mjs
+  s_e1b4451477b712::t_1c204aaee6285f 84-86,363-364
+docs/auth.md
+  s_e1b4451477b712::t_1c204aaee6285f 127
+apps/web/src/routes/index.tsx
+  s_e1b4451477b712::t_01905bc3db9fcb 17,86
+apps/web/src/env.ts
+  s_e1b4451477b712::t_01905bc3db9fcb 6,10
+docs/testing.md
+  s_e1b4451477b712::t_1c204aaee6285f 18
+README.md
+  s_e1b4451477b712::t_1c204aaee6285f 47
+apps/web/src/features/home/umami-analytics.tsx
+  s_e1b4451477b712::t_01905bc3db9fcb 1-54
+docs/architecture.md
+  s_e1b4451477b712::t_01905bc3db9fcb 40-41
+scripts/ci-plan.mjs
+  s_e1b4451477b712::t_1c204aaee6285f 52,73
+.railway/railway.ts
+  s_e1b4451477b712::t_1c204aaee6285f 79
+  s_e1b4451477b712::t_01905bc3db9fcb 97
+turbo.json
+  s_e1b4451477b712::t_01905bc3db9fcb 23
+apps/web/Dockerfile
+  s_e1b4451477b712::t_aa817a4e4482e5 20
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "09bca8363bc0a99aed3ae2524591712af9b33c3f",
+  "prompts": {},
+  "sessions": {
+    "s_e1b4451477b712": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1f1db-24c5-7972-b545-ac0d43b8bf32",
+        "model": "gpt-6.2-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
