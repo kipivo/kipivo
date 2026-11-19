@@ -181,7 +181,7 @@ docker exec "$api" bun -e '
   const headers = {Origin: "https://kipivo.example", "Content-Type": "application/json"};
   const body = JSON.stringify({name: "Operator", email: "install@example.com", password: crypto.randomUUID()});
   const post = (path) => fetch(`http://127.0.0.1:8080${path}`, {method:"POST", headers, body});
-  assert.equal((await post("/api/v1/setup/install")).status, 200);
+  assert.equal((await post("/api/v1/setup")).status, 200);
   assert.equal((await post("/api/auth/sign-in/email")).status, 200);
 '
 ledger >"$work_dir/first-ledger"
@@ -193,7 +193,7 @@ start_api "$database_url" --env DB_MIGRATE_ON_START=true
 wait_for_ready_api
 docker exec "$api" bun -e '
   import assert from "node:assert/strict";
-  const response = await fetch("http://127.0.0.1:8080/api/v1/setup/status");
+  const response = await fetch("http://127.0.0.1:8080/api/v1/setup");
   assert.deepEqual(await response.json(), {open:false});
 '
 ledger >"$work_dir/second-ledger"

@@ -38,21 +38,21 @@ export function EmailForm({ method, ...search }: { method: Method } & AuthSearch
       if (checkingCode) {
         await (
           await accountClient()
-        ).auth.signInWithCode({ email: sentTo, otp: String(data.get("code")) });
+        ).auth.emailCodeVerifications.create({ email: sentTo, otp: String(data.get("code")) });
         if ((await refresh())?.status !== "signed-in")
           setError("Could not load your session. Try signing in again.");
       } else {
         if (method === "link")
           await (
             await accountClient()
-          ).auth.sendMagicLink({
+          ).auth.magicLinks.create({
             email,
             callbackURL: router.buildLocation(afterSignIn(search)).href,
             errorCallbackURL: router.buildLocation({ to: "/magic-link", search }).href,
           });
         else if (method === "reset")
-          await (await accountClient()).auth.requestPasswordReset({ email });
-        else await (await accountClient()).auth.sendEmailCode({ email, type: "sign-in" });
+          await (await accountClient()).auth.passwordResets.create({ email });
+        else await (await accountClient()).auth.emailCodes.create({ email, type: "sign-in" });
         setSentTo(email);
       }
     } catch (cause) {

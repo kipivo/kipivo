@@ -52,7 +52,7 @@ export function useEmailMethods() {
   useEffect(() => {
     const abort = new AbortController();
     void accountClient()
-      .then((client) => client.auth.emailMethods(undefined, { signal: abort.signal }))
+      .then((client) => client.auth.methods.email.get(undefined, { signal: abort.signal }))
       .then((result) => result.enabled)
       .then(setEnabled)
       .catch(() => {

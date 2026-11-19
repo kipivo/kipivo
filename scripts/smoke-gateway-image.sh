@@ -53,28 +53,25 @@ mock=$(docker create --label "$run_label" --network "$network" --network-alias u
   oven/bun:1.4.4-slim bun /smoke/upstreams.mjs)
 docker cp "$work_dir/." "$mock:/smoke"
 docker start "$mock" >/dev/null
-start_gateway() {
-  gateway=$(docker create --label "$run_label" --network "$network" --network-alias "$1" \
-    --env WEB_UPSTREAM=upstream:8081 --env API_UPSTREAM=upstream:8082 "${@:2}" "$image")
-  docker start "$gateway" >/dev/null
-}
-start_gateway gateway --env LEGACY_API_HOST=api.example.test
-start_gateway default-gateway
+# A stale hostname variable must not bypass path routing.
+gateway=$(docker create --label "$run_label" --network "$network" --network-alias gateway \
+  --env WEB_UPSTREAM=upstream:8081 --env API_UPSTREAM=upstream:8082 \
+  --env LEGACY_API_HOST=api.example.test "$image")
+docker start "$gateway" >/dev/null
 cat > "$work_dir/test.mjs" <<'JS'
 import assert from "node:assert/strict";
 const base = "http://gateway:8080";
-for (const target of [base, "http://default-gateway:8080"]) {
-  let ready = false;
-  for (let attempt = 0; attempt < 60; attempt++) {
-    try { const response = await fetch(`${target}/gateway-healthz`); ready = response.ok && await response.text() === "ok"; } catch {}
-    if (ready) break;
-    await Bun.sleep(1000);
-  }
-  assert.ok(ready, `${target} starts with its optional legacy hostname set or unset`);
+let ready = false;
+for (let attempt = 0; attempt < 60; attempt++) {
+  try { const response = await fetch(`${base}/gateway-healthz`); ready = response.ok && await response.text() === "ok"; } catch {}
+  if (ready) break;
+  await Bun.sleep(1000);
 }
+assert.ok(ready, "gateway starts");
 for (const path of ["/rpc", "/rpc/", "/rpc/nested", "/api/auth", "/api/auth/", "/api/auth/session",
   "/api/v1", "/api/v1/", "/api/v1/admin/accounts/example/role", "/api/openapi.json", "/readyz",
-  "/", "/rpc-other", "/rpcish/foo", "/api/authentication", "/api/auth-other/foo", "/api/v10/system/ping",
+  "/", "/rpc-other", "/rpcish/foo", "/api/authentication", "/api/auth-other/foo",
+  "/api/v2/system/ping", "/api/v10/system/ping",
   "/api/openapi.json-other", "/readyz/", "/readyz-other", "/api/locality"]) {
   const name = /^(\/rpc(?:\/|$)|\/api\/(?:auth|v1)(?:\/|$)|\/api\/openapi\.json$|\/readyz$)/.test(path) ? "api" : "web";
   const response = await fetch(`${base}${path}?a=1&a=2&encoded=a%2Fb`, { method: "POST", body: "payload=hello",
@@ -96,18 +93,16 @@ assert.equal(compressed.headers.get("content-encoding"), "gzip", "SSR HTML is co
 assert.match(compressed.headers.get("vary") ?? "", /accept-encoding/i);
 assert.equal(compressed.headers.get("x-upstream"), "web");
 assert.equal(await compressed.text(), "<!doctype html><html><body>" + "Kipivo SSR content. ".repeat(100) + "</body></html>");
-for (const [host, expected, body] of [["app.example.test", "web", "ok\n"], ["api.example.test", "api", "ok"]]) {
+for (const host of ["app.example.test", "api.example.test"]) {
   const response = await fetch(`${base}/healthz`, { headers: { Host: host } });
-  assert.equal(response.headers.get("x-upstream"), expected);
-  assert.equal(await response.text(), body);
+  assert.equal(response.headers.get("x-upstream"), "web");
+  assert.equal(await response.text(), "ok\n");
 }
-for (const path of ["/missing", "/api/local/runs", "/anything", "/readyz/"]) {
-  const response = await fetch(`${base}${path}`, { headers: { Host: "api.example.test" } });
-  assert.equal(response.headers.get("x-upstream"), "api", `legacy ${path}`);
-  assert.equal(response.headers.get("x-content-type-options"), "nosniff");
-  assert.equal(response.status, path === "/missing" ? 404 : 200);
-}
-console.log("Gateway smoke passed: routing, boundaries, local isolation, legacy host, HTTPS forwarding, HTML compression, request and response preservation.");
+const missing = await fetch(`${base}/missing`);
+assert.equal(missing.status, 404);
+assert.equal(missing.headers.get("x-upstream"), "web");
+assert.equal(missing.headers.get("x-content-type-options"), "nosniff");
+console.log("Gateway smoke passed: routing, boundaries, local isolation, HTTPS forwarding, HTML compression, request and response preservation.");
 JS
 docker cp "$work_dir/test.mjs" "$mock:/smoke/test.mjs"
 docker exec "$mock" bun /smoke/test.mjs

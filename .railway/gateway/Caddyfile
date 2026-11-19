@@ -14,14 +14,6 @@
 		respond "ok" 200
 	}
 
-	# An unset optional hostname can never match a public request.
-	@legacy host {$LEGACY_API_HOST:legacy-api.invalid}
-	handle @legacy {
-		reverse_proxy {$API_UPSTREAM} {
-			header_up X-Forwarded-Proto https
-		}
-	}
-
 	@local path /api/local /api/local/*
 	handle @local {
 		respond 404

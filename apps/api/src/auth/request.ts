@@ -1,6 +1,9 @@
 import { ORPCError } from "@orpc/server";
 import type { AppServices } from "../context";
-type Endpoint = { method?: string; path?: string };
+export type AuthEndpoint = {
+  method: "GET" | "POST" | "PUT" | "DELETE";
+  path: `/auth/${string}`;
+};
 const errorsByStatus: Record<number, string> = {
   400: "BAD_REQUEST",
   401: "UNAUTHORIZED",
@@ -15,16 +18,17 @@ const errorsByStatus: Record<number, string> = {
 // Go through the HTTP handler, not auth.api: both transports must run Better Auth's
 // origin checks, rate limiter, plugin hooks and session-cookie lifecycle.
 export function bindAuthRequest(request: Request, services: AppServices, outgoing: Headers) {
-  return async ({ method, path }: Endpoint, input: unknown) => {
+  return async ({ method, path }: AuthEndpoint, input: unknown) => {
     if (!services.handleAuth || !services.access) throw new ORPCError("SERVICE_UNAVAILABLE");
-    if (!path?.startsWith("/auth/") || (method !== "POST" && method !== "GET"))
-      throw new ORPCError("INTERNAL_SERVER_ERROR");
     const { trustedOrigin } = services.access;
-    if (method === "POST") {
-      if (request.method !== "POST") throw new ORPCError("METHOD_NOT_SUPPORTED");
+    const isWrite = method !== "GET";
+    if (isWrite) {
+      if (request.method !== "POST" && request.method !== method)
+        throw new ORPCError("METHOD_NOT_SUPPORTED");
       if (
+        method !== "DELETE" &&
         request.headers.get("content-type")?.split(";", 1)[0]?.trim().toLowerCase() !==
-        "application/json"
+          "application/json"
       )
         throw new ORPCError("UNSUPPORTED_MEDIA_TYPE");
       if (path !== "/auth/native/exchange" && request.headers.get("origin") !== trustedOrigin)
@@ -36,10 +40,10 @@ export function bindAuthRequest(request: Request, services: AppServices, outgoin
     headers.set("content-type", "application/json");
     const response = await services.handleAuth(
       new Request(new URL(`/api${path}`, trustedOrigin), {
-        method,
+        method: isWrite ? "POST" : "GET",
         headers,
         signal: request.signal,
-        body: method === "POST" ? JSON.stringify(input ?? {}) : undefined,
+        body: isWrite ? JSON.stringify(input ?? {}) : undefined,
       }),
     );
     for (const cookie of response.headers.getSetCookie()) outgoing.append("set-cookie", cookie);

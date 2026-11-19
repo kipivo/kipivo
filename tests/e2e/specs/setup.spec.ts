@@ -29,7 +29,7 @@ test("only one anonymous installer can create the first administrator", async ({
   }
   const data = { email: "first@example.com", name: "First", password: randomUUID() };
   const install = (port: number) =>
-    request.post(`http://127.0.0.1:${port}/api/v1/setup/install`, { data, headers });
+    request.post(`http://127.0.0.1:${port}/api/v1/setup`, { data, headers });
   try {
     const [api] = await Promise.all([start(4385), start(4387)]);
     const web = launch([".output/server/index.mjs"], join(repoRoot, "apps/web"), {
@@ -66,7 +66,7 @@ test("only one anonymous installer can create the first administrator", async ({
     ).toBe(409);
     expect(
       (
-        await request.post(origin + "/api/v1/auth/sign-in/social", {
+        await request.post(origin + "/api/v1/auth/social/authorizations", {
           data: { provider: "google", callbackURL: "/", errorCallbackURL: "/sign-in" },
           headers,
         })
@@ -80,13 +80,13 @@ test("only one anonymous installer can create the first administrator", async ({
     await page.getByLabel("Password", { exact: true }).fill(data.password);
     // Race the browser's actual RPC against a REST submission on a different API replica.
     let status: number | undefined;
-    await page.route("**/rpc/setup/install", async (route) => {
+    await page.route("**/rpc/setup/create", async (route) => {
       const [rpc, rest] = await Promise.all([route.fetch(), install(4387)]);
       status = rest.status();
       await route.fulfill({ response: rpc });
     });
     const [rpc] = await Promise.all([
-      page.waitForResponse((r) => r.url().endsWith("/rpc/setup/install")),
+      page.waitForResponse((r) => r.url().endsWith("/rpc/setup/create")),
       page.getByRole("button", { name: "Create administrator" }).click(),
     ]);
     expect([rpc.status(), status].sort()).toEqual([200, 409]);

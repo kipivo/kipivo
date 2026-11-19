@@ -37,7 +37,7 @@ export function RoleChange({
     setError("");
     try {
       const api = await accountClient();
-      const updated = await api.admin.accounts.setRole({ id: account.id, role });
+      const updated = await api.admin.accounts.role.update({ id: account.id, role });
       onChange(updated);
       setOpen(false);
     } catch (cause) {

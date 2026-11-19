@@ -29,7 +29,6 @@ export default defineRailway(() => {
       PORT: "8080",
       WEB_UPSTREAM: "${{web.RAILWAY_PRIVATE_DOMAIN}}:8080",
       API_UPSTREAM: "${{api.RAILWAY_PRIVATE_DOMAIN}}:3001",
-      LEGACY_API_HOST: preserve(),
     },
     healthcheck: "/gateway-healthz",
     replicas: 1,

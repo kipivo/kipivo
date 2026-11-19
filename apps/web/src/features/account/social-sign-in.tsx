@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { afterSignIn, type AuthSearch, type socialAuthSearch } from "./auth-navigation";
 import { accountClient, errorStatus } from "./client";
 
-type Provider = Awaited<ReturnType<ApiClient["auth"]["socialMethods"]>>["providers"][number];
+type Provider = Awaited<ReturnType<ApiClient["auth"]["providers"]["list"]>>["providers"][number];
 const providerNames = { google: "Google", github: "GitHub" } satisfies Record<Provider, string>;
 const callbackErrors = {
   access_denied: "Authorization was canceled. Try again or use your email.",
@@ -33,7 +33,7 @@ export function SocialSignIn({
   useEffect(() => {
     const abort = new AbortController();
     void accountClient()
-      .then((client) => client.auth.socialMethods(undefined, { signal: abort.signal }))
+      .then((client) => client.auth.providers.list(undefined, { signal: abort.signal }))
       .then(({ providers }) => setProviders(providers))
       .catch(() => {});
     return () => abort.abort();
@@ -49,7 +49,7 @@ export function SocialSignIn({
     try {
       const { url } = await (
         await accountClient()
-      ).auth.signInSocial({
+      ).auth.social.authorizations.create({
         provider,
         callbackURL: router.buildLocation(afterSignIn(search)).href,
         errorCallbackURL: router.buildLocation({ to: returnTo, search }).href,

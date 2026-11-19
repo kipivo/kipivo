@@ -29,7 +29,7 @@ test("unconfigured auth reports unavailable while health stays live", async ({ r
   expect((await request.get(`${origin}/healthz`)).status()).toBe(200);
   expect((await request.get(`${origin}/readyz`)).status()).toBe(503);
   expect((await request.get(`${origin}/api/auth/get-session`)).status()).toBe(503);
-  const account = await request.get(`${origin}/api/v1/account/me`);
+  const account = await request.get(`${origin}/api/v1/accounts/me`);
   expect(account.status()).toBe(503);
   expect(await account.json()).toMatchObject({ code: "SERVICE_UNAVAILABLE" });
 });
@@ -49,6 +49,9 @@ test("the API serves health and ping over HTTP", async ({ request }) => {
   expect((await request.get(`${origin}/unknown`)).status()).toBe(404);
   expect((await request.post(`${origin}/rpc/unknown`, { data: {} })).status()).toBe(404);
   expect((await request.get(`${origin}/api/v1/unknown`)).status()).toBe(404);
+  expect((await request.get(`${origin}/api/v1/account/me`)).status()).toBe(404);
+  expect((await request.get(`${origin}/api/v1/auth/get-session`)).status()).toBe(404);
+  expect((await request.post(`${origin}/rpc/auth/getSession`, { data: {} })).status()).toBe(404);
 });
 
 test("OpenAPI describes the cookie and Origin requirements without a session", async ({
@@ -56,21 +59,26 @@ test("OpenAPI describes the cookie and Origin requirements without a session", a
 }) => {
   const response = await request.get(`${origin}/api/openapi.json`);
   expect(response.status()).toBe(200);
-  const { paths } = await response.json();
+  const { info, paths, servers } = await response.json();
+  expect(info.version).toBe("1.0.0");
+  expect(servers).toEqual([{ url: "/api/v1" }]);
   const cookie = [{ sessionCookie: [] }, { secureSessionCookie: [] }];
   const originHeader = expect.objectContaining({ in: "header", name: "Origin", required: true });
   expect(paths["/system/ping"].get.security ?? []).toEqual([]);
-  for (const path of ["/account/me", "/admin/accounts"]) {
+  for (const path of ["/accounts/me", "/admin/accounts"]) {
     expect(paths[path].get.security).toEqual(cookie);
     expect(paths[path].get.parameters ?? []).not.toContainEqual(originHeader);
   }
-  expect(paths["/auth/native/authorize"].post.security).toEqual(cookie);
-  expect(paths["/auth/native/authorize"].post.parameters).toContainEqual(originHeader);
-  expect(paths["/auth/sign-in/email"].post.parameters).toContainEqual(originHeader);
-  expect(paths["/auth/native/exchange"].post.parameters ?? []).not.toContainEqual(originHeader);
-  expect(paths["/setup/status"].get.security ?? []).toEqual([]);
-  expect(paths["/setup/install"].post.security ?? []).toEqual([]);
-  expect(paths["/setup/install"].post.parameters).toContainEqual(originHeader);
+  expect(paths["/auth/native/authorizations"].post.security).toEqual(cookie);
+  expect(paths["/auth/native/authorizations"].post.parameters).toContainEqual(originHeader);
+  expect(paths["/auth/session"].post.parameters).toContainEqual(originHeader);
+  expect(paths["/auth/session"].delete.parameters).toContainEqual(originHeader);
+  expect(paths["/auth/session"].delete.requestBody?.required ?? false).toBe(false);
+  expect(paths["/auth/password"].put.parameters).toContainEqual(originHeader);
+  expect(paths["/auth/native/sessions"].post.parameters ?? []).not.toContainEqual(originHeader);
+  expect(paths["/setup"].get.security ?? []).toEqual([]);
+  expect(paths["/setup"].post.security ?? []).toEqual([]);
+  expect(paths["/setup"].post.parameters).toContainEqual(originHeader);
   for (const operation of [paths["/admin/accounts/{id}/role"].put]) {
     expect(operation.security).toEqual(cookie);
     expect(operation.parameters).toContainEqual(originHeader);

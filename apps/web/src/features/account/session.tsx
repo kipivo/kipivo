@@ -32,12 +32,16 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     let next: AccountSession;
     try {
       const api = await accountClient();
-      const options = { signal: controller.signal };
-      if (await api.auth.getSession(undefined, options)) {
-        const account = await api.account.me(undefined, options);
-        next = { status: "signed-in", account };
-      } else {
+      const current = await api.auth.session.get(
+        { includeAccount: true },
+        { signal: controller.signal },
+      );
+      if (!current) {
         next = { status: "signed-out" };
+      } else {
+        next = current.account
+          ? { status: "signed-in", account: current.account }
+          : { status: "unavailable" };
       }
     } catch (error) {
       next = { status: errorStatus(error) === 401 ? "signed-out" : "unavailable" };

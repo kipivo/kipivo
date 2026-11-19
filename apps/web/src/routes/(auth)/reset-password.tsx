@@ -46,7 +46,7 @@ function ResetPassword() {
     setBusy(true);
     setError("");
     try {
-      await (await accountClient()).auth.resetPassword({ token, newPassword: password });
+      await (await accountClient()).auth.password.update({ token, newPassword: password });
       setToken("");
       setDone(true);
       await refresh();

@@ -81,7 +81,7 @@ export function DirectorySettingsForm() {
   useEffect(() => {
     const controller = new AbortController();
     void accountClient()
-      .then((api) => api.settings.directory(undefined, { signal: controller.signal }))
+      .then((api) => api.admin.settings.directory.get(undefined, { signal: controller.signal }))
       .then(
         (result) => {
           if (!controller.signal.aborted) setSize(result.pageSize);
@@ -106,7 +106,7 @@ export function DirectorySettingsForm() {
       description="Applies to all administrators using this instance."
       save={async (data) => {
         const api = await accountClient();
-        await api.settings.saveDirectory({ pageSize: Number(data.get("size")) });
+        await api.admin.settings.directory.update({ pageSize: Number(data.get("size")) });
       }}
     >
       <Field className="max-w-fit">
@@ -138,7 +138,7 @@ export function PersonalSettingsForm({ account }: { account: CurrentAccount }) {
       description="These preferences follow your account across devices."
       save={async (data) => {
         const api = await accountClient();
-        await api.settings.savePersonal({
+        await api.accounts.me.settings.update({
           menuLabel: data.get("label") === "email" ? "email" : "name",
         });
         await refresh();
@@ -173,13 +173,14 @@ export function PersonalSettingsForm({ account }: { account: CurrentAccount }) {
 }
 
 export function EmailSettingsForm() {
-  const [settings, setSettings] = useState<Awaited<ReturnType<ApiClient["settings"]["email"]>>>();
+  const [settings, setSettings] =
+    useState<Awaited<ReturnType<ApiClient["admin"]["settings"]["email"]["get"]>>>();
   const [failed, setFailed] = useState(false);
   const keyField = useRef<HTMLInputElement>(null);
   useEffect(() => {
     const abort = new AbortController();
     void accountClient()
-      .then((api) => api.settings.email(undefined, { signal: abort.signal }))
+      .then((api) => api.admin.settings.email.get(undefined, { signal: abort.signal }))
       .then((result) => {
         if (!abort.signal.aborted) setSettings(result);
       })
@@ -204,7 +205,7 @@ export function EmailSettingsForm() {
         const remove = data.get("removeKey") === "on";
         const result = await (
           await accountClient()
-        ).settings.saveEmail({
+        ).admin.settings.email.update({
           enabled: data.get("enabled") === "on",
           from,
           ...(remove ? { apiKey: null } : replacement ? { apiKey: replacement } : {}),

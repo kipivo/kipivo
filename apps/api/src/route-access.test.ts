@@ -35,32 +35,32 @@ function restRead(path: string) {
 
 const requests = {
   RPC: {
-    email: () => rpc("/settings/email"),
-    saveEmail: () => rpc("/settings/saveEmail", emailSettingsInput),
-    personal: () => rpc("/settings/personal"),
-    directory: () => rpc("/settings/directory"),
-    savePersonal: (input: object = personalSettings) => rpc("/settings/savePersonal", input),
-    saveDirectory: () => rpc("/settings/saveDirectory", directorySettings),
+    email: () => rpc("/admin/settings/email/get"),
+    saveEmail: () => rpc("/admin/settings/email/update", emailSettingsInput),
+    personal: () => rpc("/accounts/me/settings/get"),
+    directory: () => rpc("/admin/settings/directory/get"),
+    savePersonal: (input: object = personalSettings) => rpc("/accounts/me/settings/update", input),
+    saveDirectory: () => rpc("/admin/settings/directory/update", directorySettings),
     ping: () => rpc("/system/ping"),
-    me: () => rpc("/account/me"),
-    status: () => rpc("/setup/status"),
+    me: () => rpc("/accounts/me/get"),
+    status: () => rpc("/setup/get"),
     list: () => rpc("/admin/accounts/list", {}),
-    install: () => rpc("/setup/install", administrator),
-    setRole: () => rpc("/admin/accounts/setRole", roleChange),
+    install: () => rpc("/setup/create", administrator),
+    setRole: () => rpc("/admin/accounts/role/update", roleChange),
   },
   REST: {
     email: () => restRead("/admin/settings/email"),
     saveEmail: () => jsonRequest("/api/v1/admin/settings/email", "PUT", emailSettingsInput),
-    personal: () => restRead("/settings/personal"),
+    personal: () => restRead("/accounts/me/settings"),
     directory: () => restRead("/admin/settings/directory"),
     savePersonal: (input: object = personalSettings) =>
-      jsonRequest("/api/v1/settings/personal", "PUT", input),
+      jsonRequest("/api/v1/accounts/me/settings", "PUT", input),
     saveDirectory: () => jsonRequest("/api/v1/admin/settings/directory", "PUT", directorySettings),
     ping: () => restRead("/system/ping"),
-    me: () => restRead("/account/me"),
-    status: () => restRead("/setup/status"),
+    me: () => restRead("/accounts/me"),
+    status: () => restRead("/setup"),
     list: () => restRead("/admin/accounts"),
-    install: () => jsonRequest("/api/v1/setup/install", "POST", administrator),
+    install: () => jsonRequest("/api/v1/setup", "POST", administrator),
     setRole: () =>
       jsonRequest(`/api/v1/admin/accounts/${roleChange.id}/role`, "PUT", {
         role: roleChange.role,
@@ -442,8 +442,8 @@ it.each(["RPC", "REST"])(
     const body = { email: administrator.email, password: administrator.password };
     const request =
       transport === "RPC"
-        ? rpc("/auth/signIn", body)
-        : jsonRequest("/api/v1/auth/sign-in/email", "POST", body);
+        ? rpc("/auth/session/create", body)
+        : jsonRequest("/api/v1/auth/session", "POST", body);
     request.headers.set("Origin", trustedOrigin);
     const response = await createApp({ access, handleAuth }).request(request);
     expect(response.status).toBe(200);
@@ -457,31 +457,90 @@ it.each(["RPC", "REST"])(
   },
 );
 
-it("rejects untrusted RPC auth writes and retains upstream throttling on trusted requests", async () => {
-  const handleAuth = vi.fn(async () =>
-    Response.json(
-      { private: "upstream failure" },
-      { status: 429, headers: { "Retry-After": "30" } },
-    ),
-  );
-  const app = createApp({ access: stubAccess(), handleAuth });
-  for (const origin of [null, wrongOrigin, trustedOrigin]) {
-    const req = rpc("/auth/signOut", {});
-    if (origin) req.headers.set("origin", origin);
-    const res = await app.request(req);
-    expect(res.status).toBe(origin === trustedOrigin ? 429 : 403);
-    if (origin === trustedOrigin) expect(res.headers.get("retry-after")).toBe("30");
-  }
-  expect(handleAuth).toHaveBeenCalledTimes(1);
-});
+it.each(["RPC", "REST"])(
+  "%s checks Origin and forwards session deletion as a Better Auth sign-out",
+  async (transport) => {
+    const handleAuth = vi.fn(async (request: Request) => {
+      expect(request.method).toBe("POST");
+      expect(new URL(request.url).pathname).toBe("/api/auth/sign-out");
+      expect(await request.json()).toEqual({});
+      return Response.json(
+        { private: "upstream failure" },
+        { status: 429, headers: { "Retry-After": "30" } },
+      );
+    });
+    const app = createApp({ access: stubAccess(), handleAuth });
+    for (const origin of [null, wrongOrigin, trustedOrigin]) {
+      const req =
+        transport === "RPC"
+          ? new Request(new URL("/rpc/auth/session/delete", trustedOrigin), { method: "POST" })
+          : new Request(new URL("/api/v1/auth/session", trustedOrigin), { method: "DELETE" });
+      if (origin) req.headers.set("origin", origin);
+      const res = await app.request(req);
+      expect(res.status).toBe(origin === trustedOrigin ? 429 : 403);
+      if (origin === trustedOrigin) expect(res.headers.get("retry-after")).toBe("30");
+    }
+    expect(handleAuth).toHaveBeenCalledTimes(1);
+  },
+);
 
 it("projects RPC session reads to public fields and fails closed without configured auth", async () => {
-  const read = () => rpc("/auth/getSession");
+  const read = () => rpc("/auth/session/get");
   expect((await createApp().request(read())).status).toBe(503);
   const session = { id: "s", expiresAt: "2026-12-01T00:00:00.000Z" };
   const user = { id: "u", name: "Test", email: "me@example.com" };
   const handleAuth = async () =>
     Response.json({ user, session: { ...session, token: "secret", ipAddress: "private" } });
-  const response = await createApp({ access: stubAccess(), handleAuth }).request(read());
+  const access = stubAccess();
+  const response = await createApp({ access, handleAuth }).request(read());
   expect(await response.json()).toEqual({ json: { user, session } });
+  expectNoBusinessCalls(access);
 });
+
+it.each(["RPC", "REST"] as const)(
+  "%s includes the account only for a valid session",
+  async (transport) => {
+    const read = () =>
+      transport === "RPC"
+        ? rpc("/auth/session/get", { includeAccount: true })
+        : restRead("/auth/session?includeAccount=true");
+    const payload = (body: unknown) => (transport === "RPC" ? { json: body } : body);
+    const user = { id: actorId, name: "Test", email: "me@example.com" };
+    const session = { id: "s", expiresAt: "2026-12-01T00:00:00.000Z" };
+    const account = { ...user, role: "member", permissions: ["account.read"] } as const;
+    const access = stubAccess();
+    access.accounts.getMe.mockResolvedValue({
+      status: "ok",
+      value: { ...account, permissions: [...account.permissions] },
+    });
+    access.settings.personal.mockResolvedValue(personalSettings);
+    const handleAuth = vi.fn(async (request: Request) =>
+      request.headers.get("cookie") === sessionCookie
+        ? Response.json(
+            { user, session: { ...session, token: "secret" } },
+            {
+              headers: { "Set-Cookie": sessionCookie },
+            },
+          )
+        : Response.json(null),
+    );
+    const app = createApp({ access, handleAuth });
+    const anonymous = await app.request(read());
+    expect(anonymous.status).toBe(200);
+    expect(await anonymous.json()).toEqual(payload(null));
+    expectNoBusinessCalls(access);
+
+    const request = read();
+    request.headers.set("Cookie", sessionCookie);
+    const signedIn = await app.request(request);
+    expect(signedIn.status).toBe(200);
+    expect(signedIn.headers.get("set-cookie")).toBe(sessionCookie);
+    expect(signedIn.headers.get("cache-control")).toBe("no-store");
+    expect(await signedIn.json()).toEqual(
+      payload({ user, session, account: { ...account, settings: personalSettings } }),
+    );
+    expect(access.accounts.getMe).toHaveBeenCalledExactlyOnceWith(actorId);
+    expect(access.settings.personal).toHaveBeenCalledExactlyOnceWith(actorId);
+    expect(access.getActorId).not.toHaveBeenCalled();
+  },
+);

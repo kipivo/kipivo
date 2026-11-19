@@ -1,9 +1,10 @@
 import { contract } from "@kipivo/api/contract";
-import { SmartCoercionPlugin } from "@orpc/json-schema";
+import { SmartCoercionHandlerPlugin } from "@orpc/json-schema";
 import { OpenAPIGenerator } from "@orpc/openapi";
 import { OpenAPIHandler } from "@orpc/openapi/fetch";
+import { COMMON_ERROR_STATUS_MAP } from "@orpc/server";
 import { RPCHandler } from "@orpc/server/fetch";
-import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
+import { ZodToJsonSchemaConverter } from "@orpc/zod";
 import { Hono } from "hono";
 import { bindAuthRequest } from "../auth/request";
 import { requestServices, type AppEnv } from "../context";
@@ -11,16 +12,20 @@ import { createProcedureRouter } from "../procedures";
 
 const rpcPrefix = "/rpc";
 const restPrefix = "/api/v1";
+const errorStatusMap = { ...COMMON_ERROR_STATUS_MAP, SETUP_CLOSED: 409 };
 
 export function createProcedureRoutes() {
   const router = createProcedureRouter();
-  const schemaConverters = [new ZodToJsonSchemaConverter()];
-  const generator = new OpenAPIGenerator({ schemaConverters });
+  const converters = [new ZodToJsonSchemaConverter()];
+  const generator = new OpenAPIGenerator({ converters });
   const handlers = [
-    [rpcPrefix, new RPCHandler(router)],
+    [rpcPrefix, new RPCHandler(router, { errorStatusMap })],
     [
       restPrefix,
-      new OpenAPIHandler(router, { plugins: [new SmartCoercionPlugin({ schemaConverters })] }),
+      new OpenAPIHandler(router, {
+        errorStatusMap,
+        plugins: [new SmartCoercionHandlerPlugin({ converters })],
+      }),
     ],
   ] as const;
   const routes = new Hono<AppEnv>();
@@ -53,15 +58,19 @@ export function createProcedureRoutes() {
   routes.get("/api/openapi.json", async (context) => {
     document ??= generator
       .generate(contract, {
-        info: { title: "Kipivo API", version: "1.0.0" },
-        servers: [{ url: restPrefix }],
-        components: {
-          securitySchemes: {
-            sessionCookie: { type: "apiKey", in: "cookie", name: "kipivo.session_token" },
-            secureSessionCookie: {
-              type: "apiKey",
-              in: "cookie",
-              name: "__Secure-kipivo.session_token",
+        version: "3.1.1",
+        errorStatusMap,
+        base: {
+          info: { title: "Kipivo API", version: "1.0.0" },
+          servers: [{ url: restPrefix }],
+          components: {
+            securitySchemes: {
+              sessionCookie: { type: "apiKey", in: "cookie", name: "kipivo.session_token" },
+              secureSessionCookie: {
+                type: "apiKey",
+                in: "cookie",
+                name: "__Secure-kipivo.session_token",
+              },
             },
           },
         },

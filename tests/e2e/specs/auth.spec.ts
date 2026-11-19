@@ -54,9 +54,7 @@ test.beforeAll(async ({ playwright }) => {
     email: `first-${randomUUID()}@example.com`,
     password: randomUUID(),
   };
-  expect((await firstAdmin.post("/api/v1/setup/install", { data: credentials })).status()).toBe(
-    200,
-  );
+  expect((await firstAdmin.post("/api/v1/setup", { data: credentials })).status()).toBe(200);
   expect((await firstAdmin.post("/api/auth/sign-in/email", { data: credentials })).status()).toBe(
     200,
   );
@@ -181,22 +179,22 @@ test("email authentication persists and revokes sessions through Web", async ({ 
   expect(wrongPassword.status()).toBe(401);
   // The typed transport and the native Better Auth endpoints share the same cookie jar.
   const rpc = `${origin}/rpc/auth`;
-  const login = await request.post(`${rpc}/signIn`, {
+  const login = await request.post(`${rpc}/session/create`, {
     headers,
     data: { json: { email, password } },
   });
   expect(await login.json()).toEqual({ json: { ok: true } });
   expect((await (await request.get(`${url}/get-session`)).json()).user.email).toBe(email);
-  const readSession = async () => (await request.post(`${rpc}/getSession`, { data: {} })).json();
+  const readSession = async () => (await request.post(`${rpc}/session/get`, { data: {} })).json();
   expect(await readSession()).toEqual({
     json: {
       user: { id: expect.any(String), name: "Kipivo E2E", email },
       session: { id: expect.any(String), expiresAt: expect.any(String) },
     },
   });
-  expect((await request.post(`${rpc}/signOut`, { headers, data: { json: {} } })).status()).toBe(
-    200,
-  );
+  expect(
+    (await request.post(`${rpc}/session/delete`, { headers, data: { json: {} } })).status(),
+  ).toBe(200);
   expect(await readSession()).toEqual({ json: null });
 });
 
@@ -231,13 +229,14 @@ test("RPC and REST enforce roles and publish the same API contract through Web",
   try {
     const publicClient = createApiClient(origin);
     expect(await publicClient.system.ping()).toEqual({ ok: true });
-    await expect(publicClient.account.me()).rejects.toMatchObject({
+    await expect(publicClient.accounts.me.get()).rejects.toMatchObject({
       code: "UNAUTHORIZED",
       defined: true,
     });
-    const anonymous = await admin.get(`${rest}/account/me`);
+    const anonymous = await admin.get(`${rest}/accounts/me`);
     expect(anonymous.status()).toBe(401);
     expect(anonymous.headers()["cache-control"]).toBe("no-store");
+    expect((await admin.get(`${rest}/account/me`)).status()).toBe(404);
 
     const specification = await admin.get(`${origin}/api/openapi.json`);
     expect(specification.status(), await specification.text()).toBe(200);
@@ -246,7 +245,7 @@ test("RPC and REST enforce roles and publish the same API contract through Web",
       servers: [{ url: "/api/v1" }],
       paths: {
         "/system/ping": { get: { responses: { "200": expect.any(Object) } } },
-        "/account/me": {
+        "/accounts/me": {
           get: {
             security: [{ sessionCookie: [] }, { secureSessionCookie: [] }],
             responses: { "401": expect.any(Object) },
@@ -271,7 +270,7 @@ test("RPC and REST enforce roles and publish the same API contract through Web",
 
     const adminAccount = await signUp(admin, "owner");
     const memberAccount = await signUp(member, "M%_\\");
-    expect(await (await member.get(`${rest}/account/me`)).json()).toEqual({
+    expect(await (await member.get(`${rest}/accounts/me`)).json()).toEqual({
       ...memberAccount,
       settings: { menuLabel: "name" },
       role: "member",
@@ -285,7 +284,7 @@ test("RPC and REST enforce roles and publish the same API contract through Web",
       (await member.put(roleUrl(adminAccount.id), { headers, data: { role: "admin" } })).status(),
     ).toBe(403);
 
-    const personal = `${rest}/settings/personal`;
+    const personal = `${rest}/accounts/me/settings`;
     expect((await member.put(personal, { headers, data: { menuLabel: "email" } })).status()).toBe(
       200,
     );
@@ -311,15 +310,15 @@ test("RPC and REST enforce roles and publish the same API contract through Web",
         Cookie: cookies.map(({ name, value }) => `${name}=${value}`).join("; "),
       },
     });
-    expect(await adminClient.account.me()).toMatchObject({
+    expect(await adminClient.accounts.me.get()).toMatchObject({
       ...adminAccount,
       role: "admin",
       permissions: ["account.read", "accounts.read", "accounts.roles.update", "settings.manage"],
     });
-    expect(await adminClient.settings.directory()).toEqual({ pageSize: 25 });
-    await adminClient.settings.saveDirectory({ pageSize: 1 });
+    expect(await adminClient.admin.settings.directory.get()).toEqual({ pageSize: 25 });
+    await adminClient.admin.settings.directory.update({ pageSize: 1 });
     expect((await adminClient.admin.accounts.list({})).items).toHaveLength(1);
-    await adminClient.settings.saveDirectory({ pageSize: 25 });
+    await adminClient.admin.settings.directory.update({ pageSize: 25 });
     const firstPage = await admin.get(`${accounts}?limit=1`);
     expect(firstPage.status(), await firstPage.text()).toBe(200);
     const { items, nextCursor } = await firstPage.json();
@@ -368,7 +367,7 @@ test("RPC and REST enforce roles and publish the same API contract through Web",
     ).toBe(400);
 
     await expect(
-      adminClient.admin.accounts.setRole({ id: memberAccount.id, role: "admin" }),
+      adminClient.admin.accounts.role.update({ id: memberAccount.id, role: "admin" }),
     ).resolves.toEqual({
       ...memberAccount,
       role: "admin",
@@ -396,7 +395,7 @@ test("administration can retry an unavailable account without exposing its links
   page,
 }) => {
   await page.context().addCookies((await firstAdmin.storageState()).cookies);
-  await page.route("**/rpc/account/me", (route) => route.abort(), { times: 1 });
+  await page.route("**/rpc/auth/session/get", (route) => route.abort(), { times: 1 });
   await page.goto(`${origin}/admin`);
   await expect(page.getByRole("alert")).toHaveText("Unable to load your account.");
   await expect(page.getByRole("link", { name: "Manage accounts" })).toHaveCount(0);
@@ -419,20 +418,47 @@ test("administration can retry an unavailable account without exposing its links
   await expect(nav.getByRole("link", { name: "Settings" })).toHaveAttribute("aria-current", "page");
 });
 
-test("opening sign-in while signed out checks the session without requesting the account", async ({
+test("the browser resolves guest and signed-in sessions without a separate account request", async ({
   page,
 }) => {
   const accountRequests: string[] = [];
   page.on("request", (request) => {
-    if (new URL(request.url()).pathname === "/rpc/account/me") accountRequests.push(request.url());
+    if (new URL(request.url()).pathname === "/rpc/accounts/me/get")
+      accountRequests.push(request.url());
   });
   const [sessionResponse] = await Promise.all([
-    page.waitForResponse("**/rpc/auth/getSession"),
+    page.waitForResponse("**/rpc/auth/session/get"),
     page.goto(`${origin}/sign-in`),
   ]);
   expect(sessionResponse.status()).toBe(200);
   expect(await sessionResponse.json()).toEqual({ json: null });
   await expect(page.getByRole("button", { name: "Sign in", exact: true })).toBeEnabled();
+
+  await page.context().addCookies((await firstAdmin.storageState()).cookies);
+  const [signedInResponse] = await Promise.all([
+    page.waitForResponse("**/rpc/auth/session/get"),
+    page.reload(),
+  ]);
+  expect(signedInResponse.status()).toBe(200);
+  expect(await signedInResponse.json()).toMatchObject({
+    json: { account: { role: "admin", permissions: expect.arrayContaining(["accounts.read"]) } },
+  });
+  await expect(page.getByRole("button", { name: "Account menu" })).toBeVisible();
+  expect(accountRequests).toEqual([]);
+
+  await page.route(
+    "**/rpc/auth/session/get",
+    async (route) => {
+      const response = await route.fetch();
+      const {
+        json: { user, session },
+      } = await response.json();
+      await route.fulfill({ response, json: { json: { user, session } } });
+    },
+    { times: 1 },
+  );
+  await page.goto(`${origin}/admin`);
+  await expect(page.getByRole("alert")).toHaveText("Unable to load your account.");
   expect(accountRequests).toEqual([]);
 });
 
@@ -487,7 +513,7 @@ test("account management recovers from sign-in and permission changes in the bro
     await expect(page.getByRole("menu").getByText("Member", { exact: true })).toBeVisible();
     await expect(page.getByRole("menuitem", { name: "Administration" })).toHaveCount(0);
 
-    const me = await page.request.get(`${origin}/api/v1/account/me`);
+    const me = await page.request.get(`${origin}/api/v1/accounts/me`);
     expect(me.status()).toBe(200);
     const { id } = (await me.json()) as { id: string };
     await assignAdminRole(id);
@@ -586,7 +612,7 @@ test("account management recovers from sign-in and permission changes in the bro
     await expect(page.getByRole("list", { name: "Accounts" })).toHaveCount(0);
     await page.getByRole("button", { name: "Account menu" }).click();
     await expect(page.getByRole("menuitem", { name: "Administration" })).toHaveCount(0);
-    expect(await (await target.get(`${origin}/api/v1/account/me`)).json()).toMatchObject({
+    expect(await (await target.get(`${origin}/api/v1/accounts/me`)).json()).toMatchObject({
       role: "admin",
     });
   } finally {
@@ -620,7 +646,7 @@ test("native authorization requires Web consent and exchanges a client-bound pro
   await page.getByRole("button", { name: "Create account", exact: true }).click();
   await expect(page.getByText(email, { exact: true })).toBeVisible();
   const authorize = page.waitForResponse((response) =>
-    response.url().endsWith("/rpc/auth/native/authorize"),
+    response.url().endsWith("/rpc/auth/native/authorizations/create"),
   );
   await page.getByRole("button", { name: "Authorize app" }).click();
   const response = await authorize;
@@ -632,7 +658,7 @@ test("native authorization requires Web consent and exchanges a client-bound pro
   expect([...callback.searchParams.keys()].sort()).toEqual(["code", "state"]);
   expect(callback.searchParams.get("state")).toBe(flow.state);
   const exchange = (data: Record<string, string>, headers?: Record<string, string>) =>
-    request.post(`${origin}/rpc/auth/native/exchange`, { data: { json: data }, headers });
+    request.post(`${origin}/rpc/auth/native/sessions/create`, { data: { json: data }, headers });
   const body = {
     client_id: "expo",
     code: callback.searchParams.get("code")!,
@@ -643,19 +669,19 @@ test("native authorization requires Web consent and exchanges a client-bound pro
   expect((await exchange({ ...body, code_verifier: nativeProof().verifier })).status()).toBe(400);
   const results = await Promise.all([exchange(body), exchange(body)]);
   expect(results.map((r) => r.status()).sort()).toEqual([200, 400]);
-  expect(await (await request.get(`${origin}/api/v1/account/me`)).json()).toMatchObject({ email });
+  expect(await (await request.get(`${origin}/api/v1/accounts/me`)).json()).toMatchObject({ email });
   expect(
     (
       await request.post(`${origin}/api/auth/sign-out`, { data: {}, headers: { Origin: origin } })
     ).status(),
   ).toBe(200);
-  expect((await request.get(`${origin}/api/v1/account/me`)).status()).toBe(401);
-  expect((await page.request.get(`${origin}/api/v1/account/me`)).status()).toBe(200);
+  expect((await request.get(`${origin}/api/v1/accounts/me`)).status()).toBe(401);
+  expect((await page.request.get(`${origin}/api/v1/accounts/me`)).status()).toBe(200);
 });
 
 test("desktop authorization pins its callback and rejects expired grants", async ({ request }) => {
   const { verifier, challenge } = nativeProof();
-  const account = await (await firstAdmin.get("/api/v1/account/me")).json();
+  const account = await (await firstAdmin.get("/api/v1/accounts/me")).json();
   const body = {
     client_id: "desktop",
     code_challenge: challenge,
@@ -704,7 +730,7 @@ test("desktop authorization pins its callback and rejects expired grants", async
       })
     ).status(),
   ).toBe(400);
-  expect((await request.get(`${origin}/api/v1/account/me`)).status()).toBe(401);
+  expect((await request.get(`${origin}/api/v1/accounts/me`)).status()).toBe(401);
 });
 
 test("email code, sign-in link, and password recovery work through their Web pages", async ({
@@ -749,7 +775,7 @@ test("email code, sign-in link, and password recovery work through their Web pag
     await sql.end();
   }
   await page.context().clearCookies();
-  const methods = await request.post(`${origin}/rpc/auth/emailMethods`, { data: {} });
+  const methods = await request.post(`${origin}/rpc/auth/methods/email/get`, { data: {} });
   expect(await methods.json()).toEqual({ json: { enabled: true } });
   const email = `flows-${randomUUID()}@example.com`;
   const headers = { Origin: origin, "X-Forwarded-For": "198.51.100.86" };
@@ -812,7 +838,7 @@ test("email code, sign-in link, and password recovery work through their Web pag
   await expect(page.getByRole("heading", { name: "Password updated" })).toBeVisible();
   expect(
     (
-      await request.get(`${origin}/api/v1/account/me`, { headers: { Cookie: beforeReset } })
+      await request.get(`${origin}/api/v1/accounts/me`, { headers: { Cookie: beforeReset } })
     ).status(),
   ).toBe(401);
   expect(
@@ -910,7 +936,7 @@ for (const [provider, name, authorizeURL, authPage] of [
     cancel = false;
     await button.click();
     await expect(page).toHaveURL(`${origin}/settings`);
-    expect(await (await page.request.get(`${origin}/api/v1/account/me`)).json()).toMatchObject({
+    expect(await (await page.request.get(`${origin}/api/v1/accounts/me`)).json()).toMatchObject({
       email: `${provider}-oauth@example.com`,
       role: "member",
     });

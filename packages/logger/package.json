@@ -19,12 +19,12 @@
   },
   "devDependencies": {
     "@kipivo/tsconfig": "workspace:*",
-    "@orpc/server": "1.16.2",
+    "@orpc/server": "2.0.0-beta.52",
     "@types/node": "22.20.5",
     "hono": "4.13.19"
   },
   "peerDependencies": {
-    "@orpc/server": "1.16.2",
+    "@orpc/server": "2.0.0-beta.52",
     "hono": "4.13.19"
   },
   "peerDependenciesMeta": {

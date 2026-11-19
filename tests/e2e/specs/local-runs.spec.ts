@@ -200,7 +200,7 @@ test("home has a header and auth pages have standalone theme controls", async ({
   localWeb,
 }) => {
   // Keep setup visible without a database: an unavailable session is not a signed-out one.
-  await page.route("**/rpc/auth/getSession", (route) => route.fulfill({ status: 503 }));
+  await page.route("**/rpc/auth/session/get", (route) => route.fulfill({ status: 503 }));
   await page.goto(localWeb.origin);
   const header = page.locator("header");
   const main = page.getByRole("main");
@@ -316,7 +316,7 @@ test.describe("with touch navigation", () => {
     const lookup = new Promise<void>((resolve) => {
       finishLookup = resolve;
     });
-    await page.route("**/rpc/auth/getSession", async (route) => {
+    await page.route("**/rpc/auth/session/get", async (route) => {
       await lookup;
       await route.fulfill({ json: { json: null } });
     });
@@ -342,9 +342,9 @@ for (const width of [1600, 360, 320]) {
     localWeb,
   }) => {
     await page.setViewportSize({ width, height: 780 });
-    await page.route("**/rpc/auth/getSession", (route) => route.fulfill({ status: 503 }));
+    await page.route("**/rpc/auth/session/get", (route) => route.fulfill({ status: 503 }));
 
-    await page.route("**/rpc/auth/emailMethods", (route) =>
+    await page.route("**/rpc/auth/methods/email/get", (route) =>
       route.fulfill({ json: { json: { enabled: true } } }),
     );
 

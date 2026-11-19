@@ -27,7 +27,7 @@ export default function AccountMenu({
   className?: string;
   side?: "top" | "bottom";
 }) {
-  const { refresh } = useAccountSession();
+  const { clearSession, refresh } = useAccountSession();
   const navigate = useNavigate();
   const [signingOut, setSigningOut] = useState(false);
   const [error, setError] = useState(false);
@@ -38,9 +38,9 @@ export default function AccountMenu({
     setError(false);
     setSigningOut(true);
     try {
-      await (await accountClient()).auth.signOut({});
+      await (await accountClient()).auth.session.delete();
       await navigate({ to: "/", replace: true });
-      await refresh();
+      clearSession();
     } catch {
       setError(true);
     } finally {

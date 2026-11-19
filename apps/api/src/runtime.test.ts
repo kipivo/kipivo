@@ -59,7 +59,7 @@ describe("API resource lifecycle", () => {
     });
     const resources = await createRuntime(resolveResourceConfig(env));
     const statuses = await Promise.all(
-      ["/healthz", "/readyz", "/api/auth/get-session", "/api/v1/account/me"].map(async (path) => {
+      ["/healthz", "/readyz", "/api/auth/get-session", "/api/v1/accounts/me"].map(async (path) => {
         const response = await resources.fetch(new Request(`http://localhost${path}`));
         return response.status;
       }),

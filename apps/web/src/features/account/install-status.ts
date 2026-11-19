@@ -9,7 +9,7 @@ const installClient = createIsomorphicFn().server(getInstallClient).client(accou
 export async function readInstallStatus() {
   try {
     const api = await installClient();
-    if (api) return (await api.setup.status(undefined, { signal: AbortSignal.timeout(2500) })).open;
+    if (api) return (await api.setup.get(undefined, { signal: AbortSignal.timeout(2500) })).open;
   } catch {
     // An unreachable API is not evidence of a new installation.
   }

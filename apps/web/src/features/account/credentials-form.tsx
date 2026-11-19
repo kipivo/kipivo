@@ -95,9 +95,9 @@ export function CredentialsForm({ creating, passwordAction }: CredentialOptions)
     setError("");
     try {
       if (creating) {
-        await (await accountClient()).auth.signUp({ ...credentials, name });
+        await (await accountClient()).auth.registrations.create({ ...credentials, name });
       } else {
-        await (await accountClient()).auth.signIn(credentials);
+        await (await accountClient()).auth.session.create(credentials);
       }
       const current = await refresh();
       if (current && current.status !== "signed-in") {

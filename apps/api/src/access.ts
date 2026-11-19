@@ -10,7 +10,7 @@ export interface RequestAccess {
   setup: {
     isOpen(): Promise<boolean | undefined>;
     install(
-      input: Parameters<ApiClient["setup"]["install"]>[0],
+      input: Parameters<ApiClient["setup"]["create"]>[0],
     ): Promise<"ok" | "closed" | "unavailable">;
   };
   getActorId(headers: Headers): Promise<string | undefined>;
@@ -25,4 +25,13 @@ export function readAccountResult<T>(
 ): T {
   if (result.status === "ok") return result.value;
   throw result.status === "unauthorized" ? errors.UNAUTHORIZED() : errors.FORBIDDEN();
+}
+
+export async function readCurrentAccount(
+  access: RequestAccess,
+  actorId: string,
+  errors: AccessErrors,
+) {
+  const account = readAccountResult(await access.accounts.getMe(actorId), errors);
+  return { ...account, settings: await access.settings.personal(actorId) };
 }

@@ -47,7 +47,7 @@ function Authorization({ request }: { request: NativeAuthorization }) {
     try {
       const { callback: url } = await (
         await accountClient()
-      ).auth.native.authorize({ ...request, account_id: session.account.id });
+      ).auth.native.authorizations.create({ ...request, account_id: session.account.id });
       if (typeof url !== "string" || !readNativeCode(url, request))
         throw new Error("Invalid callback");
       setCallback(url);

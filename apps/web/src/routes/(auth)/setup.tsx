@@ -30,7 +30,7 @@ function SetupRoute() {
     try {
       await (
         await accountClient()
-      ).setup.install({
+      ).setup.create({
         name: String(data.get("name")).trim(),
         email: String(data.get("email")).trim(),
         password: String(data.get("password")),
