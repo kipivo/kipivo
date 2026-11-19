@@ -419,6 +419,23 @@ test("administration can retry an unavailable account without exposing its links
   await expect(nav.getByRole("link", { name: "Settings" })).toHaveAttribute("aria-current", "page");
 });
 
+test("opening sign-in while signed out checks the session without requesting the account", async ({
+  page,
+}) => {
+  const accountRequests: string[] = [];
+  page.on("request", (request) => {
+    if (new URL(request.url()).pathname === "/rpc/account/me") accountRequests.push(request.url());
+  });
+  const [sessionResponse] = await Promise.all([
+    page.waitForResponse("**/rpc/auth/getSession"),
+    page.goto(`${origin}/sign-in`),
+  ]);
+  expect(sessionResponse.status()).toBe(200);
+  expect(await sessionResponse.json()).toEqual({ json: null });
+  await expect(page.getByRole("button", { name: "Sign in", exact: true })).toBeEnabled();
+  expect(accountRequests).toEqual([]);
+});
+
 test("account management recovers from sign-in and permission changes in the browser", async ({
   page,
   request: backupAdmin,
