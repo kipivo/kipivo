@@ -1,0 +1,27 @@
+apps/web/src/styles/globals.css
+  s_df762e5574b7c9::t_e02e3e6e03c944 2-4,68
+apps/web/AGENTS.md
+  s_df762e5574b7c9::t_e02e3e6e03c944 9
+apps/web/src/routes/__root.tsx
+  s_df762e5574b7c9::t_e02e3e6e03c944 8
+apps/web/src/styles/theme-transition.css
+  s_df762e5574b7c9::t_e02e3e6e03c944 1-82
+docs/design/README.md
+  s_df762e5574b7c9::t_e02e3e6e03c944 93
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "73968d539288c8e7f78c1d98e637987fcde0b99e",
+  "prompts": {},
+  "sessions": {
+    "s_df762e5574b7c9": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1f21a-e74e-7e71-98e5-b4eb8f0652ee",
+        "model": "gpt-6.2-astra"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
