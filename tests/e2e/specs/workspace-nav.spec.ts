@@ -49,7 +49,7 @@ test("the design guide has a shareable URL and returns to the live workbench", a
     "aria-current",
     "page",
   );
-  await page.getByRole("link", { name: "查看本地运行记录" }).click();
+  await page.getByRole("link", { name: "View local runs" }).click();
   await expectCurrentRuns(page);
   await page.goBack();
   await page.setViewportSize(narrow);
