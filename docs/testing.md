@@ -4,26 +4,26 @@
 
 ## CI job selection
 
-Every pull request runs `check` in parallel with a lightweight `changes` job. The planner passes the merge base and the PR head to Turborepo's `affectedPackages` query. Turbo reports the affected workspaces, their `ci:<job>` tags, and their transitive consumers in one query. Git paths drive repository-wide, documentation, and image rules, including deleted paths and both sides of renames. For a range mixing code with excluded workspace inputs, the planner uses the consumers already returned by Turbo to scope the selection.
+Every pull request runs `check` in parallel with a lightweight `changes` job. The planner uses `turbo run … --affected --dry=json` to select CI tasks from their inputs and dependency graph. The selected jobs run the same tasks with `--affected`. Both steps use the same Git range through `TURBO_SCM_BASE` and `TURBO_SCM_HEAD`, including the PR merge commit.
 
-| Affected consumer | Additional jobs                         |
-| ----------------- | --------------------------------------- |
-| Mobile            | `mobile` (iOS and Android Expo exports) |
-| Storybook         | `ui`                                    |
-| Web               | `ui`, `auth`, `e2e`, Web image          |
-| API               | `auth`, `e2e`, API image                |
-| CLI (`kipivo`)    | `cli`, `e2e`                            |
-| `tests/e2e`       | `auth`, `e2e`, API image                |
+| Affected consumer | Additional jobs                           |
+| ----------------- | ----------------------------------------- |
+| Mobile            | `mobile` (iOS and Android Expo exports)   |
+| Storybook         | `ui`                                      |
+| Web               | `ui`, `auth`, `e2e`, `web-e2e`, Web image |
+| API               | `auth`, `e2e`, `web-e2e`, API image       |
+| CLI (`kipivo`)    | `cli`, `e2e`, `web-e2e`                   |
+| `tests/e2e`       | `auth`, `e2e`, `web-e2e`, API image       |
 
-Changes to `@kipivo/cache` or `@kipivo/storage` follow their API and end-to-end consumers and select `auth`, `e2e`, and the API image. Changes to `@kipivo/runtime` follow the Web and CLI consumers and select `ui`, `cli`, `auth`, `e2e`, and the Web image. Changes combine these selections. Root and existing workspace `README.md` files and Markdown under `docs/` only require `check`. `apps/web/Dockerfile`, `scripts/smoke-web-image.sh`, and `scripts/smoke-web.mjs` select the Web image. `scripts/smoke-cli.sh` selects `cli`. The `scripts/smoke-api-image.sh` script selects the API image. `.railway/gateway/` and `scripts/smoke-gateway-image.sh` select the gateway image. `.dockerignore` selects all three images. `assets/logo.svg` selects Web and Storybook consumers. CI configuration, lockfiles, and shared root tooling select all jobs. A missing tag on an app or test workspace, an unknown CI tag, or an unmapped path triggers the full plan. If Git or Turbo cannot reliably determine the affected scope, the planner selects all jobs and reports the underlying problem.
+Declare CI task inputs and dependencies in the workspace's `turbo.json` with `"extends": ["//"]`. For example, Storybook's `ci:ui` depends on `web#transit` so changes to Web or its dependencies select the Storybook checks. Shared library changes follow their consumers through Turbo. Root and existing workspace `README.md` files and Markdown under `docs/` only require `check` when changed on their own. CI configuration, lockfiles, shared root tooling, and unmapped paths trigger a full task run. When Git or Turbo cannot determine the scope, the planner runs the full suite and reports the error.
 
-Declare a workspace's existing CI jobs in its own `turbo.json` with `"extends": ["//"]` and top-level `"tags"`, for example `"tags": ["ci:ui"]` in Storybook. Shared libraries use the root configuration unless they need custom tasks or CI tags.
+Git paths also select the hosted image checks for Dockerfiles, image smoke scripts, and gateway configuration. `.dockerignore` selects all three images. When hosted image checks are enabled, Turbo also selects the Web and API images through their affected build tasks.
 
 Pushes to `next` compare against the most recent ancestor with a successful `next` push CI run so that changes from failed or cancelled runs are included in the comparison. For ordinary changes, CI runs the selected tests and Railway builds the deployment images after CI succeeds. Changes to deployment Dockerfiles, `.dockerignore`, `.railway/`, or image smoke scripts also run the selected GitHub image checks. `next` runs the full suite when the workflow history is unavailable or no successful ancestor is found. Pushes to `main` and manual `workflow_dispatch` runs also run the full suite.
 
 A newer run cancels the older run on the same PR. Image builds use independent matrix entries with fail-fast disabled. The stable `CI result` check requires `changes`, `check`, and every selected blocking job to succeed. Configure branch protection to require `CI result`. The `changes` summary records the `next` baseline when available and explains which jobs were selected.
 
-Storybook component interactions and browser checks are required through `ui` for Web changes. The same selection that starts `e2e` for required API and resource integrations also starts `Web E2E (advisory)` for the Chromium application tests. Advisory failures retain traces in `web-playwright-results` and leave the workflow eligible for success. Railway's **Wait for CI** still waits for the workflow to finish.
+Storybook component interactions and browser checks are required through `ui` for Web changes. The `e2e` job gates CI on API and resource integrations. `Web E2E (advisory)` runs the Chromium application tests and uploads failure traces to `web-playwright-results`. Its result is advisory. Railway's **Wait for CI** still waits for the workflow to finish.
 
 Reproduce and test the plan locally:
 

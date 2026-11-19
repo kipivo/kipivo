@@ -4,6 +4,9 @@
   "type": "module",
   "scripts": {
     "test:e2e": "playwright test",
+    "ci:auth": "playwright test --project=auth",
+    "ci:integration": "playwright test --project=api --project=resources",
+    "ci:web-e2e": "playwright test --project=chromium",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {

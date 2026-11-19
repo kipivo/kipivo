@@ -12,7 +12,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { fullPlan, jobs, planForNextPush, planFromArgs } from "./ci-plan.mjs";
+import { ciTasks, fullPlan, jobs, planForNextPush, planFromArgs } from "./ci-plan.mjs";
 import { validateResults } from "./ci-result.mjs";
 
 const selected = (plan) => ["check", ...jobs.filter((job) => plan[job])];
@@ -31,7 +31,6 @@ describe("CI selection", () => {
     ["apps/api", "api", ["@kipivo/admin", "@kipivo/cache", "@kipivo/storage"]],
     ["apps/cli", "kipivo", ["@kipivo/runtime"]],
     ["apps/mobile", "mobile", []],
-    ["apps/new", "new", []],
     ["tests/e2e", "@kipivo/e2e", ["@kipivo/cache", "@kipivo/storage"]],
   ];
   let directory;
@@ -53,17 +52,19 @@ describe("CI selection", () => {
       packageManager,
       devDependencies: { turbo: devDependencies.turbo },
     });
-    writeJson("turbo.json", { globalDependencies: ["assets/logo.svg"], tasks: {} });
+    copyFileSync(new URL("../turbo.json", import.meta.url), join(directory, "turbo.json"));
     const lockWorkspaces = workspaces.map(([path, name, dependencies]) => {
       mkdirSync(join(directory, path), { recursive: true });
+      const source = new URL(`../${path}/package.json`, import.meta.url);
       const manifest = {
         name,
+        scripts: existsSync(source) ? JSON.parse(readFileSync(source, "utf8")).scripts : {},
         dependencies: Object.fromEntries(dependencies.map((dep) => [dep, "workspace:*"])),
       };
       writeJson(`${path}/package.json`, manifest);
       const config = new URL(`../${path}/turbo.json`, import.meta.url);
       if (existsSync(config)) copyFileSync(config, join(directory, path, "turbo.json"));
-      return [path, manifest];
+      return [path, { name, dependencies: manifest.dependencies }];
     });
     writeJson("bun.lock", {
       lockfileVersion: 2,
@@ -80,13 +81,11 @@ describe("CI selection", () => {
   });
   afterAll(() => rmSync(directory, { recursive: true, force: true }));
 
-  function planFor(paths, content) {
+  function planFor(paths) {
     git("checkout", "--quiet", "--detach", base);
     for (const path of paths) {
       mkdirSync(dirname(join(directory, path)), { recursive: true });
-      writeFileSync(join(directory, path), content ?? "\n", {
-        flag: content === undefined ? "a" : "w",
-      });
+      writeFileSync(join(directory, path), "\n", { flag: "a" });
     }
     git("add", ".");
     git("commit", "--quiet", "-m", "Change plan inputs");
@@ -111,6 +110,7 @@ describe("CI selection", () => {
       "ui",
       "auth",
       "e2e",
+      "web-e2e",
       "web-image",
     ]);
   });
@@ -120,6 +120,7 @@ describe("CI selection", () => {
       "ui",
       "auth",
       "e2e",
+      "web-e2e",
       "web-image",
       "api-image",
     ]);
@@ -129,12 +130,19 @@ describe("CI selection", () => {
     "packages/icons/src/index.tsx",
     "packages/shared/input.ts",
   ])("Turbo follows %s to its transitive UI and Web consumers", (path) => {
-    expect(selected(planFor([path]))).toEqual(["check", "ui", "auth", "e2e", "web-image"]);
+    expect(selected(planFor([path]))).toEqual([
+      "check",
+      "ui",
+      "auth",
+      "e2e",
+      "web-e2e",
+      "web-image",
+    ]);
   });
   test.each(["cache", "storage"])("Turbo selects the %s resource consumers", (resource) => {
     const plan = planFor([`packages/${resource}/src/factory.ts`]);
-    expect(selected(plan)).toEqual(["check", "auth", "e2e", "api-image"]);
-    expect(plan.reasons.e2e.toSorted()).toEqual(["@kipivo/e2e", "api"]);
+    expect(selected(plan)).toEqual(["check", "auth", "e2e", "web-e2e", "api-image"]);
+    expect(plan.reasons.e2e).toEqual([ciTasks.e2e]);
   });
   test("special inputs union with Turbo's scopes without expanding unrelated jobs", () => {
     expect(
@@ -149,6 +157,7 @@ describe("CI selection", () => {
       "cli",
       "auth",
       "e2e",
+      "web-e2e",
       "web-image",
     ]);
     expect(planFor([".dockerignore"]).images.map(({ app }) => app)).toEqual([
@@ -175,14 +184,15 @@ describe("CI selection", () => {
       "check",
       "cli",
       "e2e",
+      "web-e2e",
       "gateway-image",
     ]);
     expect(selected(planFor([".railway/railway.ts"]))).toEqual(["check", ...jobs]);
   });
   test("Turbo selects the Web and CLI consumers of runtime", () => {
     const plan = planFor(["packages/runtime/src/local/connection.ts"]);
-    expect(selected(plan)).toEqual(["check", "ui", "cli", "auth", "e2e", "web-image"]);
-    expect(plan.reasons.e2e.toSorted()).toEqual(["kipivo", "web"]);
+    expect(selected(plan)).toEqual(["check", "ui", "cli", "auth", "e2e", "web-e2e", "web-image"]);
+    expect(plan.reasons.e2e).toEqual([ciTasks.e2e]);
   });
   test("entry points select their declared jobs", () => {
     expect(selected(planFor(["apps/web/src/routes/index.tsx"]))).toEqual([
@@ -190,29 +200,30 @@ describe("CI selection", () => {
       "ui",
       "auth",
       "e2e",
+      "web-e2e",
       "web-image",
     ]);
     expect(selected(planFor(["apps/api/src/index.ts"]))).toEqual([
       "check",
       "auth",
       "e2e",
+      "web-e2e",
       "api-image",
     ]);
     expect(selected(planFor(["tests/e2e/playwright.config.ts"]))).toEqual([
       "check",
       "auth",
       "e2e",
+      "web-e2e",
       "api-image",
     ]);
-    expect(selected(planFor(["apps/cli/src/index.ts"]))).toEqual(["check", "cli", "e2e"]);
+    expect(selected(planFor(["apps/cli/src/index.ts"]))).toEqual([
+      "check",
+      "cli",
+      "e2e",
+      "web-e2e",
+    ]);
     expect(selected(planFor(["apps/mobile/src/app/index.tsx"]))).toEqual(["check", "mobile"]);
-  });
-  test("a workspace can declare its CI jobs through its own Turbo tags", () => {
-    const config = (tag) => JSON.stringify({ extends: ["//"], tags: [tag] });
-    expect(selected(planFor(["apps/new/turbo.json"], config("ci:cli")))).toEqual(["check", "cli"]);
-    const invalid = planFor(["apps/new/turbo.json"], config("ci:unknown"));
-    expect(selected(invalid)).toEqual(["check", ...jobs]);
-    expect(invalid.reasons.ui[0]).toContain("Unknown CI job tag ci:unknown on new");
   });
   test("shared and unmapped inputs conservatively select the full suite", () => {
     for (const path of [
@@ -228,9 +239,9 @@ describe("CI selection", () => {
       expect(selected(planFor([path]))).toEqual(["check", ...jobs]);
     }
     expect(planFor([".github/workflows/ci.yml"]).reasons.ui).toEqual([
-      "CI configuration changed: .github/workflows/ci.yml",
+      "Repository input changed: .github/workflows/ci.yml",
     ]);
-    expect(planFor(["bun.lock"]).reasons.ui).toEqual(["Shared repository input changed: bun.lock"]);
+    expect(planFor(["bun.lock"]).reasons.ui).toEqual(["Repository input changed: bun.lock"]);
   });
   test("full mode skips Git and Turbo, and a missing ref falls back to all jobs", () => {
     expect(selected(planFromArgs(["--full"]))).toEqual(["check", ...jobs]);
@@ -240,91 +251,37 @@ describe("CI selection", () => {
     ]);
   });
   test("replay uses the committed head graph even when the checkout and its manifests differ", () => {
-    const previous = process.cwd();
-    const dir = mkdtempSync(join(tmpdir(), "kipivo ci replay-"));
-    const git = (...args) => execFileSync("git", args, { cwd: dir, encoding: "utf8" }).trim();
-    const writeJson = (path, content) => writeFileSync(join(dir, path), JSON.stringify(content));
-    const web = (usesUI) =>
-      writeJson("apps/web/package.json", {
-        name: "web",
-        dependencies: usesUI ? { "@kipivo/ui": "workspace:*" } : {},
-      });
-    const commit = (message) => {
-      git("add", ".");
-      git("commit", "--quiet", "-m", message);
-      return git("rev-parse", "HEAD");
+    git("checkout", "--quiet", "--detach", base);
+    writeFileSync(join(directory, "packages/ui/button.ts"), "export const button = 1;\n");
+    git("add", ".");
+    git("commit", "--quiet", "-m", "Change a shared UI component");
+    const head = git("rev-parse", "HEAD");
+    const manifestPath = join(directory, "apps/web/package.json");
+    const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
+    const removeUIDependency = () => {
+      delete manifest.dependencies["@kipivo/ui"];
+      writeFileSync(manifestPath, JSON.stringify(manifest));
     };
+    removeUIDependency();
+    git("add", ".");
+    git("commit", "--quiet", "-m", "Remove Web dependency on UI");
+    const previous = process.cwd();
     try {
-      git("init", "--quiet");
-      git("config", "user.name", "CI test");
-      git("config", "user.email", "ci@example.test");
-      mkdirSync(join(dir, "apps/web"), { recursive: true });
-      mkdirSync(join(dir, "packages/ui"), { recursive: true });
-      const { devDependencies, packageManager } = JSON.parse(
-        readFileSync(new URL("../package.json", import.meta.url), "utf8"),
-      );
-      writeJson("package.json", {
-        name: "fixture",
-        workspaces: ["apps/*", "packages/*"],
-        packageManager,
-        devDependencies: { turbo: devDependencies.turbo },
-      });
-      writeJson("turbo.json", { tasks: {} });
-      copyFileSync(
-        new URL("../apps/web/turbo.json", import.meta.url),
-        join(dir, "apps/web/turbo.json"),
-      );
-      writeJson("packages/ui/package.json", { name: "@kipivo/ui" });
-      writeJson("bun.lock", {
-        lockfileVersion: 2,
-        workspaces: {
-          "": { name: "fixture" },
-          "apps/web": { name: "web" },
-          "packages/ui": { name: "@kipivo/ui" },
-        },
-        packages: {
-          web: ["web@workspace:apps/web"],
-          "@kipivo/ui": ["@kipivo/ui@workspace:packages/ui"],
-        },
-      });
-      web(true);
-      const base = commit("Add web dependency on UI");
-      mkdirSync(join(dir, ".railway/gateway"), { recursive: true });
-      writeFileSync(join(dir, ".railway/gateway/Caddyfile"), ":8080 { respond ok }\n");
-      const gatewayHead = commit("Add gateway config");
-      process.chdir(dir);
-      expect(selected(planFromArgs(["--base", base, "--head", gatewayHead]))).toEqual([
-        "check",
-        "gateway-image",
-      ]);
-      process.chdir(previous);
-
-      writeFileSync(join(dir, "packages/ui/button.ts"), "export const button = 1;\n");
-      const head = commit("Change a shared UI component");
-      web(false);
-      commit("Remove web dependency on UI");
-      process.chdir(dir);
-      const args = ["--base", gatewayHead, "--head", head];
-      const expected = ["check", "ui", "auth", "e2e", "web-image"];
+      process.chdir(directory);
+      const args = ["--base", base, "--head", head];
+      const expected = ["check", "ui", "auth", "e2e", "web-e2e", "web-image"];
       expect(selected(planFromArgs(args))).toEqual(expected);
       const nextPlan = planFromArgs(args, { useRailwayBuilds: true });
-      expect(selected(nextPlan)).toEqual(["check", "ui", "auth", "e2e"]);
+      expect(selected(nextPlan)).toEqual(["check", "ui", "auth", "e2e", "web-e2e"]);
+      expect(nextPlan.base).toBe(base);
       expect(nextPlan.images).toEqual([]);
 
       git("checkout", "--quiet", "--detach", head);
-      web(false);
+      removeUIDependency();
       expect(selected(planFromArgs(args))).toEqual(expected);
-
-      mkdirSync(join(dir, "apps/new"));
-      writeJson("apps/new/package.json", { name: "new" });
-      writeFileSync(join(dir, "bun.lock"), "{}\n");
-      const newHead = commit("Add a workspace and update the lockfile");
-      const plan = planFromArgs(["--base", head, "--head", newHead]);
-      expect(selected(plan)).toEqual(["check", ...jobs]);
-      expect(plan.reasons.ui[0]).toContain("New workspace manifest apps/new/package.json");
     } finally {
+      git("restore", "apps/web/package.json");
       process.chdir(previous);
-      rmSync(dir, { recursive: true, force: true });
     }
   });
   test("Turbo scopes renames across workspaces and deletions against the merge base", () => {
@@ -342,9 +299,9 @@ describe("CI selection", () => {
     try {
       process.chdir(directory);
       const plan = planFromArgs(["--base", git("rev-parse", "HEAD"), "--head", head]);
-      expect(selected(plan)).toEqual(["check", "ui", "cli", "auth", "e2e", "web-image"]);
-      expect(plan.reasons.ui.toSorted()).toEqual(["storybook", "web"]);
-      expect(plan.reasons.e2e.toSorted()).toEqual(["kipivo", "web"]);
+      expect(selected(plan)).toEqual(["check", "ui", "cli", "auth", "e2e", "web-e2e", "web-image"]);
+      expect(plan.reasons.ui).toEqual([ciTasks.ui]);
+      expect(plan.reasons.e2e).toEqual([ciTasks.e2e]);
     } finally {
       process.chdir(previous);
     }
@@ -429,9 +386,9 @@ describe("next push baseline", () => {
       const ciHead = commit(".github/workflows/ci.yml", "Change CI configuration");
       const ciPlan = await planForNextPush({ ...env, GITHUB_SHA: ciHead });
       expect(ciPlan.baseline).toBe(baseline);
-      expect(selected(ciPlan)).toEqual(["check", "ui", "cli", "mobile", "auth", "e2e"]);
+      expect(selected(ciPlan)).toEqual(["check", "ui", "cli", "mobile", "auth", "e2e", "web-e2e"]);
       expect(ciPlan.images).toEqual([]);
-      expect(ciPlan.reasons["api-image"]).toEqual(["Railway builds deployment images from next"]);
+      expect(ciPlan.base).toBe("");
     } finally {
       server?.stop(true);
       process.chdir(previous);
@@ -497,7 +454,15 @@ describe("CI result", () => {
     );
     const web = workflow.jobs["web-e2e"];
     expect(web["continue-on-error"]).toBe(true);
-    expect(web.if).toBe(workflow.jobs.e2e.if);
+    expect(web.if).toBe("needs.changes.outputs.web-e2e == 'true'");
+    expect(workflow.jobs.ui["continue-on-error"]).toBeUndefined();
+    for (const [job, task] of Object.entries(ciTasks)) {
+      expect(workflow.jobs[job].env.TURBO_SCM_BASE).toBe("${{ needs.changes.outputs.base }}");
+      const run = workflow.jobs[job].steps.find((step) =>
+        step.run?.includes(`turbo run '${task}'`),
+      );
+      expect(run?.run).toContain("--affected");
+    }
     expect(workflow.jobs.result.needs).toContain("ui");
     expect(workflow.jobs.result.needs).toContain("e2e");
     expect(workflow.jobs.result.needs).not.toContain("web-e2e");

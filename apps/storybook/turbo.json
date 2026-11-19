@@ -1,5 +1,15 @@
 {
   "$schema": "https://turborepo.dev/schema.json",
   "extends": ["//"],
-  "tags": ["ci:ui"]
+  "tasks": {
+    "transit": {
+      "inputs": ["$TURBO_EXTENDS$", "$TURBO_ROOT$/assets/logo.svg"]
+    },
+    "ci:ui": {
+      "dependsOn": ["transit", "web#transit"],
+      "inputs": [],
+      "cache": false,
+      "passThroughEnv": ["CI", "PLAYWRIGHT_*"]
+    }
+  }
 }

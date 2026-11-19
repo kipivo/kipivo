@@ -9,6 +9,9 @@ on:
 permissions:
   contents: read
 
+env:
+  TURBO_SCM_HEAD: ${{ github.sha }}
+
 concurrency:
   group: ci-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || format('run-{0}-{1}', github.run_id, github.run_attempt) }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
@@ -20,18 +23,19 @@ jobs:
       actions: read
       contents: read
     outputs:
+      base: ${{ steps.plan.outputs.base }}
       ui: ${{ steps.plan.outputs.ui }}
       cli: ${{ steps.plan.outputs.cli }}
       mobile: ${{ steps.plan.outputs.mobile }}
       auth: ${{ steps.plan.outputs.auth }}
       e2e: ${{ steps.plan.outputs.e2e }}
+      web-e2e: ${{ steps.plan.outputs.web-e2e }}
       has-images: ${{ steps.plan.outputs.has-images }}
       images: ${{ steps.plan.outputs.images }}
       plan: ${{ steps.plan.outputs.plan }}
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
           persist-credentials: false
       - uses: oven-sh/setup-bun@v2
@@ -45,11 +49,10 @@ jobs:
         id: plan
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
           GITHUB_TOKEN: ${{ github.event_name == 'push' && github.ref == 'refs/heads/next' && github.token || '' }}
         run: |
           if [ "$GITHUB_EVENT_NAME" = pull_request ]; then
-            bun run ci:plan --base "$BASE_SHA" --head "$HEAD_SHA"
+            bun run ci:plan --base "$BASE_SHA" --head "$GITHUB_SHA"
           elif [ "$GITHUB_EVENT_NAME" = push ] && [ "$GITHUB_REF" = refs/heads/next ]; then
             bun run ci:plan --next
           else
@@ -67,16 +70,19 @@ jobs:
     needs: changes
     if: needs.changes.outputs.ui == 'true'
     runs-on: ubuntu-26.04
+    env:
+      TURBO_SCM_BASE: ${{ needs.changes.outputs.base }}
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
       - uses: ./.github/actions/setup-workspace
         with:
           cache-scope: ui
       - uses: ./.github/actions/setup-playwright
         with:
           workspace: apps/storybook
-      - run: bun run test:stories
-      - run: bun run test:ui
+      - run: bun run turbo run 'storybook#ci:ui' ${{ needs.changes.outputs.base && '--affected' || '' }}
       - if: failure()
         uses: actions/upload-artifact@v5
         with:
@@ -88,24 +94,30 @@ jobs:
     needs: changes
     if: needs.changes.outputs.cli == 'true'
     runs-on: ubuntu-26.04
+    env:
+      TURBO_SCM_BASE: ${{ needs.changes.outputs.base }}
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
       - uses: ./.github/actions/setup-workspace
         with:
           cache-scope: cli
-      - run: bun run build --filter=kipivo
-      - name: Verify CLI commands
-        run: scripts/smoke-cli.sh
+      - run: bun run turbo run 'kipivo#ci:cli' ${{ needs.changes.outputs.base && '--affected' || '' }}
   mobile:
     needs: changes
     if: needs.changes.outputs.mobile == 'true'
     runs-on: ubuntu-26.04
+    env:
+      TURBO_SCM_BASE: ${{ needs.changes.outputs.base }}
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
       - uses: ./.github/actions/setup-workspace
         with:
           cache-scope: mobile
-      - run: bun run build --filter=mobile
+      - run: bun run turbo run 'mobile#build' ${{ needs.changes.outputs.base && '--affected' || '' }}
   images:
     needs: changes
     if: needs.changes.outputs.has-images == 'true'
@@ -161,15 +173,18 @@ jobs:
           --health-retries 10
     env:
       TEST_DATABASE_URL: postgresql://kipivo:kipivo_test@127.0.0.1:5432/kipivo_auth_test
+      TURBO_SCM_BASE: ${{ needs.changes.outputs.base }}
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
       - uses: ./.github/actions/setup-workspace
         with:
           cache-scope: auth
       - uses: ./.github/actions/setup-playwright
         with:
           workspace: tests/e2e
-      - run: bun run test:auth
+      - run: bun run turbo run '@kipivo/e2e#ci:auth' ${{ needs.changes.outputs.base && '--affected' || '' }}
       - if: failure()
         uses: actions/upload-artifact@v5
         with:
@@ -181,13 +196,16 @@ jobs:
     needs: changes
     if: needs.changes.outputs.e2e == 'true'
     runs-on: ubuntu-26.04
+    env:
+      TURBO_SCM_BASE: ${{ needs.changes.outputs.base }}
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
       - uses: ./.github/actions/setup-workspace
         with:
           cache-scope: e2e
-      - name: Run API and resource integration tests
-        run: bun run test:resources --project=api
+      - run: bun run turbo run '@kipivo/e2e#ci:integration' ${{ needs.changes.outputs.base && '--affected' || '' }}
       - if: failure()
         uses: actions/upload-artifact@v5
         with:
@@ -198,19 +216,22 @@ jobs:
   web-e2e:
     name: Web E2E (advisory)
     needs: changes
-    if: needs.changes.outputs.e2e == 'true'
+    if: needs.changes.outputs.web-e2e == 'true'
     runs-on: ubuntu-26.04
     continue-on-error: true
+    env:
+      TURBO_SCM_BASE: ${{ needs.changes.outputs.base }}
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
       - uses: ./.github/actions/setup-workspace
         with:
           cache-scope: web-e2e
       - uses: ./.github/actions/setup-playwright
         with:
           workspace: tests/e2e
-      - run: bun run build --filter=kipivo
-      - run: bun run --cwd tests/e2e test:e2e --project=chromium
+      - run: bun run turbo run '@kipivo/e2e#ci:web-e2e' ${{ needs.changes.outputs.base && '--affected' || '' }}
       - if: failure()
         uses: actions/upload-artifact@v5
         with:

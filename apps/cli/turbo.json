@@ -1,5 +1,11 @@
 {
   "$schema": "https://turborepo.dev/schema.json",
   "extends": ["//"],
-  "tags": ["ci:cli", "ci:e2e"]
+  "tasks": {
+    "ci:cli": {
+      "dependsOn": ["build"],
+      "inputs": ["$TURBO_ROOT$/scripts/smoke-cli.sh"],
+      "cache": false
+    }
+  }
 }

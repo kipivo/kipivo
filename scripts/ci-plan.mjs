@@ -11,52 +11,46 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const imageJobs = ["web-image", "api-image", "gateway-image"];
-export const jobs = ["ui", "cli", "mobile", "auth", "e2e", ...imageJobs];
-const sharedRootInputs = new Set([
-  ".gitignore",
-  ".oxfmtrc.json",
-  ".oxlintrc.json",
-  "bun.lock",
-  "bunfig.toml",
-  "knip.json",
-  "package.json",
-  "turbo.json",
-]);
+export const ciTasks = {
+  ui: "storybook#ci:ui",
+  cli: "kipivo#ci:cli",
+  mobile: "mobile#build",
+  auth: "@kipivo/e2e#ci:auth",
+  e2e: "@kipivo/e2e#ci:integration",
+  "web-e2e": "@kipivo/e2e#ci:web-e2e",
+};
+const imageDefinitions = {
+  "web-image": { app: "web", dockerfile: "apps/web/Dockerfile" },
+  "api-image": { app: "api", dockerfile: "apps/api/Dockerfile" },
+  "gateway-image": { app: "gateway", dockerfile: ".railway/gateway/Dockerfile" },
+};
+const imageJobs = Object.keys(imageDefinitions);
+export const jobs = [...Object.keys(ciTasks), ...imageJobs];
 const imageInputs = new Map([
   ["apps/web/Dockerfile", ["web-image"]],
+  ["apps/api/Dockerfile", ["api-image"]],
   ["scripts/smoke-web-image.sh", ["web-image"]],
   ["scripts/smoke-web.mjs", ["web-image"]],
   ["scripts/smoke-api-image.sh", ["api-image"]],
   ["scripts/smoke-gateway-image.sh", ["gateway-image"]],
   [".dockerignore", imageJobs],
 ]);
-const specialInputs = new Map([
-  ...imageInputs,
-  ["scripts/smoke-cli.sh", ["cli"]],
-  ["scripts/workspace-lint.mjs", []],
-  ["scripts/workspace-lint.test.mjs", []],
-  ["assets/logo.svg", ["ui", "auth", "e2e", "web-image"]],
+const knownRootInputs = new Set([
+  "assets/logo.svg",
+  "scripts/smoke-cli.sh",
+  "scripts/workspace-lint.mjs",
+  "scripts/workspace-lint.test.mjs",
 ]);
 const rootTurbo = fileURLToPath(new URL("../node_modules/.bin/turbo", import.meta.url));
 
-export function fullPlan(reason) {
-  return makePlan(Object.fromEntries(jobs.map((job) => [job, [reason]])));
-}
-
 export function imageMatrix(plan) {
-  return [
-    ...(plan["web-image"] ? [{ app: "web", dockerfile: "apps/web/Dockerfile" }] : []),
-    ...(plan["api-image"] ? [{ app: "api", dockerfile: "apps/api/Dockerfile" }] : []),
-    ...(plan["gateway-image"]
-      ? [{ app: "gateway", dockerfile: ".railway/gateway/Dockerfile" }]
-      : []),
-  ];
+  return imageJobs.filter((job) => plan[job]).map((job) => imageDefinitions[job]);
 }
 
-function makePlan(reasons) {
+function makePlan(reasons, base = "") {
   const selection = Object.fromEntries(jobs.map((job) => [job, Boolean(reasons[job]?.length)]));
   return {
+    base,
     check: true,
     ...selection,
     images: imageMatrix(selection),
@@ -64,121 +58,29 @@ function makePlan(reasons) {
   };
 }
 
-function deferImageChecks(plan) {
-  const results = { ...plan, images: [], reasons: { ...plan.reasons } };
-  for (const job of imageJobs) {
-    if (!plan[job]) continue;
-    results[job] = false;
-    results.reasons[job] = ["Railway builds deployment images from next"];
-  }
-  return results;
+export function fullPlan(reason, includeImages = true) {
+  const required = includeImages ? jobs : Object.keys(ciTasks);
+  return makePlan(Object.fromEntries(required.map((job) => [job, [reason]])));
 }
 
-function isRootDocumentation(path) {
-  return /^README\.md$/i.test(path) || /^docs\/.*\.md$/i.test(path);
-}
-
-function specialInputJobs(path) {
-  return (
-    specialInputs.get(path) ??
-    (path.startsWith(".railway/gateway/") ? ["gateway-image"] : undefined)
-  );
-}
-
-function sharedInputReason(path) {
-  if (specialInputJobs(path)) return;
-  if (path.startsWith(".github/") || /^scripts\/ci-[^/]+\.(?:mjs|sh)$/.test(path)) {
-    return `CI configuration changed: ${path}`;
-  }
-  if (sharedRootInputs.has(path) || path.startsWith(".railway/")) {
-    return `Shared repository input changed: ${path}`;
-  }
-}
-
-function isUnmappedWorkspace({ path, ciJobs }) {
-  return path && !path.startsWith("packages/") && !ciJobs.length;
-}
-
-function selectJobs(paths, base, head) {
-  const reasons = {};
-  const add = (job, reason) => (reasons[job] ??= []).push(reason);
-  const workspacePaths = [];
-  for (const path of paths) {
-    if (isRootDocumentation(path)) continue;
-    const special = specialInputJobs(path);
-    if (special) {
-      for (const job of special) add(job, path);
-    } else {
-      workspacePaths.push(path);
-    }
-  }
-  if (!workspacePaths.length) return makePlan(reasons);
-
-  return withCheckout(head, (directory, turbo, version) => {
-    const affected = readAffectedPackages(directory, turbo, version, base, head);
-    const workspaces = affected
-      .filter(({ path }) => path)
-      .sort((a, b) => b.path.length - a.path.length);
-    const ownerOf = (file) => workspaces.find(({ path }) => file.startsWith(`${path}/`));
-    const scopes = new Set();
-    let hasExcludedInputs = paths.some(
-      (path) => specialInputJobs(path) && (path === "assets/logo.svg" || ownerOf(path)),
-    );
-    for (const file of workspacePaths) {
-      const owner = ownerOf(file);
-      if (!owner) return fullPlan(`Unmapped path ${file}; update the CI mapping`);
-      if (isUnmappedWorkspace(owner)) {
-        return fullPlan(`Workspace ${owner.name} has no CI job tags in turbo.json`);
-      }
-      if (/^readme\.md$/i.test(file.slice(owner.path.length + 1))) {
-        hasExcludedInputs = true;
-      } else {
-        scopes.add(owner);
-      }
-    }
-    if (!scopes.size) return makePlan(reasons);
-
-    // Re-scope mixed ranges so workspace READMEs and image-only inputs don't select extra jobs.
-    let packages = affected;
-    if (hasExcludedInputs) {
-      const names = new Set([...scopes].flatMap(({ name, dependents }) => [name, ...dependents]));
-      packages = affected.filter(({ name }) => names.has(name));
-      if (packages.length !== names.size)
-        throw new Error("Incomplete affected-package scope from Turbo");
-    }
-    let hasConsumer = false;
-    for (const workspace of packages) {
-      if (isUnmappedWorkspace(workspace)) {
-        return fullPlan(`Workspace ${workspace.name} has no CI job tags in turbo.json`);
-      }
-      for (const job of workspace.ciJobs) {
-        add(job, workspace.name);
-        hasConsumer = true;
-      }
-    }
-    return hasConsumer
-      ? makePlan(reasons)
-      : fullPlan("No CI jobs mapped to the affected workspaces");
+function run(command, args, options = {}) {
+  const result = spawnSync(command, args, {
+    encoding: "utf8",
+    maxBuffer: 8 * 1024 * 1024,
+    ...options,
   });
-}
-
-function run(command, args, cwd) {
-  const result = spawnSync(command, args, { cwd, encoding: "utf8", maxBuffer: 8 * 1024 * 1024 });
   if (result.error) throw result.error;
   if (result.status !== 0) throw new Error(`${command} failed: ${result.stderr.trim()}`);
   return result.stdout;
 }
 
-function changedPaths(base, head, filters = []) {
-  // No rename detection means both old and new names are always included,
-  // including a rename crossing workspace boundaries and deleted files.
+function changedPaths(base, head) {
   return run("git", [
     "diff",
     "--name-only",
     "--no-renames",
     "--no-relative",
     "-z",
-    ...filters,
     base,
     head,
     "--",
@@ -187,31 +89,38 @@ function changedPaths(base, head, filters = []) {
     .filter(Boolean);
 }
 
-function readAffectedPackages(directory, turbo, version, base, head) {
-  const query = `{
-    affectedPackages(base: ${JSON.stringify(base)}, head: ${JSON.stringify(head)}) {
-      items { name path tags allDependents { items { name } } }
-    }
-  }`;
-  const result = JSON.parse(run(process.execPath, [turbo, "query", query], directory));
-  if (result.version !== version || result.errors?.length) {
-    throw new Error("Expected an affected-package result from the pinned Turbo version");
+function imageInputJobs(path) {
+  return imageInputs.get(path) ?? (path.startsWith(".railway/gateway/") ? ["gateway-image"] : []);
+}
+
+function isRootDocumentation(path) {
+  return /^README\.md$/i.test(path) || /^docs\/.*\.md$/i.test(path);
+}
+
+function fullRunReason(paths, head) {
+  const workspaces = new Set();
+  for (const path of paths) {
+    if (isRootDocumentation(path)) continue;
+    if (knownRootInputs.has(path) || imageInputJobs(path).length) continue;
+    const workspace = /^(?:apps|packages|tests)\/[^/]+(?=\/)/.exec(path)?.[0];
+    if (!workspace) return `Repository input changed: ${path}`;
+    workspaces.add(`${workspace}/package.json`);
   }
-  return result.data.affectedPackages.items.map(({ name, path, tags, allDependents }) => {
-    const ciJobs = [
-      ...new Set(tags.filter((tag) => tag.startsWith("ci:")).map((tag) => tag.slice(3))),
-    ];
-    const unknown = ciJobs.find((job) => !jobs.includes(job));
-    if (unknown !== undefined) throw new Error(`Unknown CI job tag ci:${unknown} on ${name}`);
-    return { name, path, ciJobs, dependents: allDependents.items.map(({ name }) => name) };
-  });
+  if (!workspaces.size) return;
+  const manifests = new Set(
+    run("git", ["ls-tree", "-r", "--name-only", head, "--", ...workspaces])
+      .trim()
+      .split("\n"),
+  );
+  const missing = [...workspaces].find((path) => !manifests.has(path));
+  if (missing) return `Unmapped path in ${missing.replace(/\/package\.json$/, "")}`;
 }
 
 function turboVersion(directory) {
   const version = JSON.parse(readFileSync(join(directory, "package.json"), "utf8")).devDependencies
     ?.turbo;
   if (typeof version !== "string" || !/^\d+\.\d+\.\d+(?:-[\w.-]+)?$/.test(version)) {
-    throw new Error("Expected an exact Turbo version in the root package.json");
+    throw new Error("Expected an exact Turbo version in package.json");
   }
   return version;
 }
@@ -221,20 +130,18 @@ function withCheckout(head, visit) {
   const current = run("git", ["rev-parse", "HEAD"]).trim();
   if (
     head === current &&
-    !run("git", ["status", "--porcelain", "--untracked-files=normal"], root)
+    !run("git", ["status", "--porcelain", "--untracked-files=normal"], { cwd: root })
   ) {
     return visit(root, rootTurbo, turboVersion(root));
   }
 
-  const temp = mkdtempSync(join(tmpdir(), "kipivo-ci-graph-"));
+  const temp = mkdtempSync(join(tmpdir(), "kipivo-ci-plan-"));
   try {
     const checkout = join(temp, "checkout");
-    run("git", ["clone", "--quiet", "--shared", "--no-checkout", "--", root, checkout], root);
-    run(
-      "git",
-      ["-c", "core.hooksPath=/dev/null", "checkout", "--quiet", "--detach", head],
-      checkout,
-    );
+    run("git", ["clone", "--quiet", "--shared", "--no-checkout", "--", root, checkout]);
+    run("git", ["-c", "core.hooksPath=/dev/null", "checkout", "--quiet", "--detach", head], {
+      cwd: checkout,
+    });
     const version = turboVersion(checkout);
     let turbo = rootTurbo;
     if (
@@ -255,6 +162,19 @@ function withCheckout(head, visit) {
   }
 }
 
+function affectedTasks(directory, turbo, version, base, head, tasks) {
+  const summary = JSON.parse(
+    run(process.execPath, [turbo, "run", ...tasks, "--affected", "--dry=json"], {
+      cwd: directory,
+      env: { ...process.env, TURBO_SCM_BASE: base, TURBO_SCM_HEAD: head },
+    }),
+  );
+  if (summary.turboVersion !== version) throw new Error("Expected the pinned Turbo version");
+  return new Set(
+    summary.tasks.filter(({ command }) => command !== "<NONEXISTENT>").map(({ taskId }) => taskId),
+  );
+}
+
 export function planFromArgs(args, { useRailwayBuilds = false } = {}) {
   if (args.length === 1 && args[0] === "--full") return fullPlan("Full run requested");
   if (args.length !== 4 || args[0] !== "--base" || args[2] !== "--head") {
@@ -269,30 +189,45 @@ export function planFromArgs(args, { useRailwayBuilds = false } = {}) {
     ]).trim();
     const base = run("git", ["merge-base", "--", args[1], head]).trim();
     const paths = changedPaths(base, head);
-    let plan;
-    for (const path of paths) {
-      const reason = sharedInputReason(path);
-      if (!reason) continue;
-      const manifest = /^(?:apps|packages|tests)\/[^/]+\/package\.json$/;
-      const added = paths.some((changed) => manifest.test(changed))
-        ? changedPaths(base, head, ["--diff-filter=A"]).find((changed) => manifest.test(changed))
-        : undefined;
-      plan = fullPlan(
-        added ? `${reason}. New workspace manifest ${added}. Update the CI mapping.` : reason,
-      );
-      break;
+    const includeImages =
+      !useRailwayBuilds ||
+      paths.some((path) => path.startsWith(".railway/") || imageInputJobs(path).length);
+    const full = fullRunReason(paths, head);
+    if (full) return fullPlan(full, includeImages);
+
+    const reasons = {};
+    if (includeImages) {
+      for (const path of paths) {
+        for (const job of imageInputJobs(path)) (reasons[job] ??= []).push(path);
+        if (path.startsWith("tests/e2e/") && !/^tests\/e2e\/readme\.md$/i.test(path)) {
+          (reasons["api-image"] ??= []).push(path);
+        }
+      }
     }
-    if (!plan) plan = selectJobs(paths, base, head);
-    const deferImages =
-      useRailwayBuilds &&
+    if (
       !paths.some(
         (path) =>
-          imageInputs.has(path) || path === "apps/api/Dockerfile" || path.startsWith(".railway/"),
-      );
-    return deferImages ? deferImageChecks(plan) : plan;
+          path === "apps/api/Dockerfile" ||
+          (!isRootDocumentation(path) && !imageInputJobs(path).length),
+      )
+    ) {
+      return makePlan(reasons, base);
+    }
+
+    return withCheckout(head, (directory, turbo, version) => {
+      const runAffected = (tasks) => affectedTasks(directory, turbo, version, base, head, tasks);
+      const selected = runAffected(Object.values(ciTasks));
+      for (const [job, task] of Object.entries(ciTasks)) {
+        if (selected.has(task)) reasons[job] = [task];
+      }
+      if (includeImages) {
+        const builds = runAffected(["build"]);
+        if (builds.has("web#build")) (reasons["web-image"] ??= []).push("web#build");
+        if (builds.has("api#build")) (reasons["api-image"] ??= []).push("api#build");
+      }
+      return makePlan(reasons, base);
+    });
   } catch (error) {
-    if (error.code === "ENOBUFS")
-      return fullPlan("Changed path list or Turbo output exceeded the planner size limit");
     return fullPlan(
       `Cannot reliably select jobs: ${error.message.replace(/\s+/g, " ").slice(0, 500)}`,
     );
@@ -367,6 +302,7 @@ export function writePlan(plan) {
   if (process.env.GITHUB_OUTPUT) {
     const selection = Object.fromEntries(jobs.map((job) => [job, plan[job]]));
     const outputs = [
+      `base=${plan.base}`,
       ...jobs.map((job) => `${job}=${plan[job]}`),
       `has-images=${plan.images.length > 0}`,
       `images=${JSON.stringify({ include: plan.images })}`,
@@ -375,7 +311,8 @@ export function writePlan(plan) {
     appendFileSync(process.env.GITHUB_OUTPUT, `${outputs.join("\n")}\n`);
   }
   if (process.env.GITHUB_STEP_SUMMARY) {
-    const baseline = plan.baseline ? `Baseline commit \`${plan.baseline}\`.\n\n` : "";
+    const baseline =
+      (plan.baseline ?? plan.base) ? `Baseline commit \`${plan.baseline ?? plan.base}\`.\n\n` : "";
     appendFileSync(
       process.env.GITHUB_STEP_SUMMARY,
       `## CI plan\n\n${baseline}| Task | Selected | Reason |\n| --- | --- | --- |\n${[

@@ -8,6 +8,7 @@
     "preview": "vite preview --host 127.0.0.1 --port 6006 --strictPort",
     "test:stories": "vitest run",
     "test:ui": "playwright test",
+    "ci:ui": "bun run test:stories && bun run test:ui",
     "test:ui:install": "playwright install chromium --only-shell",
     "typecheck": "tsc --noEmit"
   },

@@ -1,5 +1,24 @@
 {
   "$schema": "https://turborepo.dev/schema.json",
   "extends": ["//"],
-  "tags": ["ci:auth", "ci:e2e", "ci:api-image"]
+  "tasks": {
+    "ci:auth": {
+      "dependsOn": ["transit", "api#build", "web#build"],
+      "inputs": [],
+      "cache": false,
+      "passThroughEnv": ["CI", "PLAYWRIGHT_*", "TEST_DATABASE_URL"]
+    },
+    "ci:integration": {
+      "dependsOn": ["transit", "api#build", "web#transit", "kipivo#transit"],
+      "inputs": [],
+      "cache": false,
+      "passThroughEnv": ["CI", "DOCKER_*", "E2E_API_ORIGIN"]
+    },
+    "ci:web-e2e": {
+      "dependsOn": ["transit", "kipivo#build", "web#transit", "api#transit"],
+      "inputs": [],
+      "cache": false,
+      "passThroughEnv": ["CI", "PLAYWRIGHT_*"]
+    }
+  }
 }

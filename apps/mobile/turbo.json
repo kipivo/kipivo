@@ -1,10 +1,9 @@
 {
   "$schema": "https://turborepo.dev/schema.json",
   "extends": ["//"],
-  "tags": ["ci:mobile"],
   "tasks": {
     "build": {
-      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "inputs": ["$TURBO_EXTENDS$", ".env*"],
       "outputs": ["dist/**"]
     }
   }
