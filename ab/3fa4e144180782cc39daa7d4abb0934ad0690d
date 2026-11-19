@@ -1,0 +1,61 @@
+knip.json
+  s_5b0ad29f5a4d17::t_6da0834b221616 9-10
+  s_5b0ad29f5a4d17::t_e1a2a316123071 5-8,11-12
+.railway/topology/compose.yml
+  s_5b0ad29f5a4d17::t_ff66d7622b3d28 75-86
+  s_5b0ad29f5a4d17::t_f0921bcbc731b5 1-27,30-74,87-89
+  s_5b0ad29f5a4d17::t_8b19c607b75bd3 28-29
+README.md
+  s_5b0ad29f5a4d17::t_18fc660402d9d1 59
+docs/testing.md
+  s_5b0ad29f5a4d17::t_ff66d7622b3d28 127
+  s_5b0ad29f5a4d17::t_18fc660402d9d1 107,114
+  s_5b0ad29f5a4d17::t_99c557528f0051 118
+  s_5b0ad29f5a4d17::t_6da0834b221616 48-49,115-117,119-126
+.github/workflows/ci.yml
+  s_5b0ad29f5a4d17::t_6da0834b221616 145-146
+scripts/ci-plan.test.mjs
+  s_5b0ad29f5a4d17::t_cdde437f7191e1 163,170
+  s_5b0ad29f5a4d17::t_948270229206cc 164-169
+.railway/gateway/smoke/upstreams.mjs
+  s_5b0ad29f5a4d17::t_7adae237cd224b 41
+  s_5b0ad29f5a4d17::t_ddca9688eb2abd 1-40
+.railway/topology/smoke.mjs
+  s_5b0ad29f5a4d17::t_8b19c607b75bd3 47-49,68-70
+  s_5b0ad29f5a4d17::t_f0921bcbc731b5 1-46,50-67
+scripts/smoke-gateway-image.sh
+  s_5b0ad29f5a4d17::t_4b2ac48d494092 22-24
+  s_5b0ad29f5a4d17::t_7adae237cd224b 9-17,19,21,31-32
+scripts/ci-plan.mjs
+  s_5b0ad29f5a4d17::t_cdde437f7191e1 36
+.railway/gateway/smoke/compose.yml
+  s_5b0ad29f5a4d17::t_18fc660402d9d1 1-38
+.github/workflows/topology-smoke.yml
+  s_5b0ad29f5a4d17::t_f0921bcbc731b5 1-18,30-31
+  s_5b0ad29f5a4d17::t_99c557528f0051 19-29
+scripts/smoke-topology.sh
+  s_5b0ad29f5a4d17::t_ff66d7622b3d28 16,25-26
+  s_5b0ad29f5a4d17::t_f0921bcbc731b5 1-15,17-24
+.railway/gateway/smoke/test.mjs
+  s_5b0ad29f5a4d17::t_7adae237cd224b 1-5,45-47,67-76,81-89
+  s_5b0ad29f5a4d17::t_ddca9688eb2abd 6-44,48-66,77-80,90-92
+scripts/check-image.sh
+  s_5b0ad29f5a4d17::t_7cba640791f872 9
+  s_5b0ad29f5a4d17::t_6da0834b221616 1-8,10-21
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "ab3fa4e144180782cc39daa7d4abb0934ad0690d",
+  "prompts": {},
+  "sessions": {
+    "s_5b0ad29f5a4d17": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1f3ce-2e2d-7b72-9d22-76b8b8fc80e9",
+        "model": "gpt-6.2-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
