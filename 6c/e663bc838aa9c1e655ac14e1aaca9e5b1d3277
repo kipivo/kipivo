@@ -1,0 +1,25 @@
+.railway/gateway/smoke/compose.yml
+  s_5b0ad29f5a4d17::t_99749540f89215 19
+docs/testing.md
+  s_5b0ad29f5a4d17::t_98bc8288822f91 127
+scripts/smoke-topology.sh
+  s_5b0ad29f5a4d17::t_98bc8288822f91 11
+.github/workflows/topology-smoke.yml
+  s_5b0ad29f5a4d17::t_538bfc8e271234 20
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "6ce663bc838aa9c1e655ac14e1aaca9e5b1d3277",
+  "prompts": {},
+  "sessions": {
+    "s_5b0ad29f5a4d17": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1f3ce-2e2d-7b72-9d22-76b8b8fc80e9",
+        "model": "gpt-6.2-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
