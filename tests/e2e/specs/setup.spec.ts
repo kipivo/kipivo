@@ -20,6 +20,8 @@ test("only one anonymous installer can create the first administrator", async ({
       DB_MIGRATE_ON_START: "true",
       BETTER_AUTH_URL: origin,
       BETTER_AUTH_SECRET: "same-secret-for-both-disposable-servers",
+      GOOGLE_CLIENT_ID: "test-google",
+      GOOGLE_CLIENT_SECRET: "test-google-secret",
     });
     processes.push(api);
     await api.waitFor(async () => (await fetch(`http://127.0.0.1:${port}/readyz`)).ok);
@@ -62,6 +64,17 @@ test("only one anonymous installer can create the first administrator", async ({
     expect(
       (await request.post(origin + "/api/auth/sign-up/email", { data, headers })).status(),
     ).toBe(409);
+    expect(
+      (
+        await request.post(origin + "/api/v1/auth/sign-in/social", {
+          data: { provider: "google", callbackURL: "/", errorCallbackURL: "/sign-in" },
+          headers,
+        })
+      ).status(),
+    ).toBe(409);
+    expect((await request.get(origin + "/api/auth/callback/google?code=unused")).status()).toBe(
+      409,
+    );
     await page.getByLabel("Name", { exact: true }).fill(data.name);
     await page.getByLabel("Email").fill(data.email);
     await page.getByLabel("Password", { exact: true }).fill(data.password);

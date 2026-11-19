@@ -8,7 +8,7 @@ import { magicLink } from "better-auth/plugins/magic-link";
 import { emailOTP } from "better-auth/plugins/email-otp";
 import { createEmailSender } from "@kipivo/email/factory";
 import { createEmailRepository } from "@kipivo/db/email";
-import { validateAuthSecret } from "./env";
+import { validateAuthSecret, type AuthSettings } from "./env";
 import { nativeLogin } from "./native/plugin";
 
 const mailPaths = new Set([
@@ -20,7 +20,12 @@ const mailPaths = new Set([
   "/reset-password",
 ]);
 
-export function createAuth(options: { database: Database; baseURL: string; secret: string }) {
+export function createAuth(
+  options: Omit<AuthSettings, "socialProviders"> & {
+    database: Database;
+    socialProviders?: AuthSettings["socialProviders"];
+  },
+) {
   validateAuthSecret(options.secret);
   const setup = createSetupRepository(options.database);
   const mail = createEmailRepository(options.database, options.secret);
@@ -38,6 +43,12 @@ export function createAuth(options: { database: Database; baseURL: string; secre
     basePath: "/api/auth",
     secret: options.secret,
     trustedOrigins: [options.baseURL],
+    socialProviders: options.socialProviders,
+    account: {
+      encryptOAuthTokens: true,
+      accountLinking: { requireLocalEmailVerified: true },
+    },
+    onAPIError: { errorURL: new URL("/sign-in", options.baseURL).href },
     verification: {
       storeIdentifier: { default: "plain", overrides: { "reset-password:": "hashed" } },
     },
@@ -49,6 +60,9 @@ export function createAuth(options: { database: Database; baseURL: string; secre
         endpoints: {
           emailMethods: createAuthEndpoint("/email-methods", { method: "GET" }, async (ctx) =>
             ctx.json({ enabled: await mail.enabled() }),
+          ),
+          socialMethods: createAuthEndpoint("/social-methods", { method: "GET" }, async (ctx) =>
+            ctx.json({ providers: Object.keys(options.socialProviders ?? {}) }),
           ),
         },
       },
@@ -101,7 +115,12 @@ export function createAuth(options: { database: Database; baseURL: string; secre
           throw new APIError("SERVICE_UNAVAILABLE", { message: "Email delivery is disabled." });
         if (ctx.path === "/email-otp/send-verification-otp" && ctx.body?.type !== "sign-in")
           throw new APIError("BAD_REQUEST");
-        if (ctx.path !== "/sign-up/email") return;
+        if (
+          ctx.path !== "/sign-up/email" &&
+          ctx.path !== "/sign-in/social" &&
+          ctx.path !== "/callback/:id"
+        )
+          return;
         const open = await setup.isOpen();
         if (open === undefined) throw new APIError("SERVICE_UNAVAILABLE");
         if (open)

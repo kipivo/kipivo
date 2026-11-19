@@ -72,6 +72,19 @@ Kipivo forms call the typed auth RPC client. Integrations using Better Auth dire
 
 Use browser `fetch` with JSON content headers and the default same-origin credentials. The session endpoint returns the current user and session, or `null` for a signed-out browser. Server-side API handlers can read a session through the injected auth instance's `api.getSession({ headers })` method.
 
+## Google and GitHub sign-in
+
+Create a [Google Web OAuth client](https://better-auth.com/docs/authentication/google) or [GitHub OAuth App](https://better-auth.com/docs/authentication/github) for each deployment. Use the Web origin from `BETTER_AUTH_URL` when registering the callback URL. On Railway, set the matching variables on the API service and redeploy it.
+
+| Provider | API variables                              | Callback URL                                 |
+| -------- | ------------------------------------------ | -------------------------------------------- |
+| Google   | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | `<BETTER_AUTH_URL>/api/auth/callback/google` |
+| GitHub   | `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` | `<BETTER_AUTH_URL>/api/auth/callback/github` |
+
+Each configured provider appears on `/sign-in` and `/sign-up`. GitHub requests `read:user` and `user:email` so private email addresses can be read during sign-in. Use separate OAuth apps for local development and production when the provider requires a single callback URL.
+
+After administrator setup, the first successful social sign-in creates a member account. An existing account can be linked automatically only when both the Kipivo email and the returned provider email are verified and match. If an email is already in use and cannot be linked, sign in with the original method. Keep client secrets in the API's secret store.
+
 ## Email sign-in and password recovery
 
 `/sign-in` and `/sign-up` are separate password flows. To offer `/magic-link`, `/email-code` and `/forgot-password`, open **Settings → Email delivery** as an administrator, enter a verified Resend sender address and sending API key, enable delivery and save. Changes apply across API instances without a restart. New installations default to password-only. When upgrading, re-enter any previously deployed mail environment variables here; the API no longer reads them. The credential is write-only and encrypted in PostgreSQL with a key derived from `BETTER_AUTH_SECRET`. Keep that secret stable and backed up separately from the database. If it changes, replace the Resend key in Settings. Disabling preserves the key unless you explicitly remove it. `/api/auth/email-methods` reports availability, not credentials or provider health. Keep `BETTER_AUTH_URL` set to the public Web origin used in emails.

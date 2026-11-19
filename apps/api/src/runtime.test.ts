@@ -83,6 +83,9 @@ describe("API resource lifecycle", () => {
     await expect(createConfiguredRuntime({ BETTER_AUTH_SECRET: "short" })).rejects.toThrow(
       "BETTER_AUTH_SECRET must be at least 32 characters.",
     );
+    await expect(createConfiguredRuntime({ GOOGLE_CLIENT_ID: "test-google" })).rejects.toThrow(
+      "Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET together.",
+    );
     await expect(createConfiguredRuntime({ REDIS_URL: "https://cache.example" })).rejects.toThrow(
       "REDIS_URL must be a Redis TCP URL",
     );
@@ -95,13 +98,19 @@ describe("API resource lifecycle", () => {
   });
 
   it("normalizes the auth origin and passes the configured inputs to the factories", async () => {
-    const resources = await createConfiguredRuntime();
+    const resources = await createConfiguredRuntime({
+      GITHUB_CLIENT_ID: "test-github",
+      GITHUB_CLIENT_SECRET: "test-github-secret",
+    });
     try {
       expect(factories.database).toHaveBeenCalledWith(configuredEnv.DATABASE_URL);
       expect(factories.auth).toHaveBeenCalledWith({
         database: db,
         baseURL: "https://app.example",
         secret: configuredEnv.BETTER_AUTH_SECRET,
+        socialProviders: {
+          github: { clientId: "test-github", clientSecret: "test-github-secret" },
+        },
       });
       expect(factories.cache).toHaveBeenCalledWith(configuredEnv.REDIS_URL);
       expect(factories.storage).toHaveBeenCalledWith({

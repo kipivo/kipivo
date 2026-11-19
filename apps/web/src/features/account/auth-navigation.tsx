@@ -18,6 +18,29 @@ export function authSearch({ next, authorize }: Record<string, unknown>): AuthSe
     : {};
 }
 
+type SocialCallbackError =
+  | "access_denied"
+  | "account_not_linked"
+  | "email_not_found"
+  | "social_sign_in_failed";
+
+export function socialAuthSearch(
+  input: Record<string, unknown>,
+): AuthSearch & { error?: SocialCallbackError } {
+  const { error } = input;
+  const search = authSearch(input);
+  switch (error) {
+    case "access_denied":
+    case "account_not_linked":
+    case "email_not_found":
+      return { ...search, error };
+    default:
+      return typeof error === "string" && error
+        ? { ...search, error: "social_sign_in_failed" }
+        : search;
+  }
+}
+
 export function afterSignIn({ next, authorize }: AuthSearch) {
   return authorize
     ? { to: "/authorize" as const, search: authorize }

@@ -114,7 +114,7 @@ export function CredentialsForm({ creating, passwordAction }: CredentialOptions)
     <form
       method="post"
       key={String(creating)}
-      className="mt-7 grid gap-4"
+      className="mt-7 grid gap-4 [&_input]:h-11 [&_input]:ps-3.5"
       onSubmit={(event) => void submit(event)}
       aria-busy={busy}
     >
@@ -122,7 +122,7 @@ export function CredentialsForm({ creating, passwordAction }: CredentialOptions)
       <FieldError>{error}</FieldError>
       <Button
         type="submit"
-        className="mt-1 h-10 w-full"
+        className="mt-1 h-11 w-full"
         disabled={busy || session.status === "loading" || session.status === "signed-in"}
       >
         {busy

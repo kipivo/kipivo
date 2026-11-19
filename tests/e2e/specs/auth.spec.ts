@@ -28,9 +28,13 @@ test.beforeAll(async ({ playwright }) => {
       DB_MIGRATE_ON_START: "true",
       BETTER_AUTH_URL: origin,
       BETTER_AUTH_SECRET: authSecret,
+      GOOGLE_CLIENT_ID: "test-google",
+      GOOGLE_CLIENT_SECRET: "test-google-secret",
+      GITHUB_CLIENT_ID: "test-github",
+      GITHUB_CLIENT_SECRET: "test-github-secret",
       E2E_MAIL_FILE: join(inbox, "last.json"),
     },
-    join(repoRoot, "tests/e2e/fixtures/resend-preload.mjs"),
+    join(repoRoot, "tests/e2e/fixtures/auth-preload.mjs"),
   );
   await api.waitFor(
     async () => (await fetch(`${apiOrigin}/readyz`, { signal: AbortSignal.timeout(2000) })).ok,
@@ -857,3 +861,41 @@ test("workbench sign-in returns to a separate account board", async ({ page }) =
       .getByRole("link", { name: "Administration" }),
   ).toBeVisible();
 });
+
+for (const [provider, name, authorizeURL, authPage] of [
+  ["google", "Google", "https://accounts.google.com/o/oauth2/v2/auth", "/sign-in"],
+  ["github", "GitHub", "https://github.com/login/oauth/authorize", "/sign-up"],
+] as const) {
+  test(`${name} returns to the requested page with a member session`, async ({ page }) => {
+    // Exercise two attempts per provider without sharing one test client's rate-limit bucket.
+    await page.setExtraHTTPHeaders({
+      "X-Forwarded-For": provider === "google" ? "198.51.100.75" : "198.51.100.76",
+    });
+    let cancel = true;
+    await page.route(`${authorizeURL}?**`, async (route) => {
+      const { searchParams } = new URL(route.request().url());
+      const callback = new URL(searchParams.get("redirect_uri")!);
+      expect(callback.href).toBe(`${origin}/api/auth/callback/${provider}`);
+      expect(searchParams.get("client_id")).toBe(`test-${provider}`);
+      expect(searchParams.get("code_challenge_method")).toBe("S256");
+      callback.searchParams.set("state", searchParams.get("state")!);
+      callback.searchParams.set(cancel ? "error" : "code", cancel ? "access_denied" : "test-code");
+      await route.fulfill({ status: 302, headers: { location: callback.href } });
+    });
+
+    await page.goto(`${origin}${authPage}?next=/settings`);
+    const button = page.getByRole("button", { name: `Continue with ${name}` });
+    await button.click();
+    await expect(page.getByRole("alert")).toContainText("Authorization was canceled");
+    await expect(page).toHaveURL(
+      (url) => url.pathname === authPage && url.searchParams.get("next") === "/settings",
+    );
+    cancel = false;
+    await button.click();
+    await expect(page).toHaveURL(`${origin}/settings`);
+    expect(await (await page.request.get(`${origin}/api/v1/account/me`)).json()).toMatchObject({
+      email: `${provider}-oauth@example.com`,
+      role: "member",
+    });
+  });
+}

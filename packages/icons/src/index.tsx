@@ -14,6 +14,7 @@ import eyeGlyph from "@hugeicons/core-free-icons/ViewIcon";
 import eyeOffGlyph from "@hugeicons/core-free-icons/ViewOffSlashIcon";
 import folderGlyph from "@hugeicons/core-free-icons/Folder01Icon";
 import githubGlyph from "@hugeicons/core-free-icons/GithubIcon";
+import googleGlyph from "@hugeicons/core-free-icons/GoogleIcon";
 import homeGlyph from "@hugeicons/core-free-icons/Home01Icon";
 import menuGlyph from "@hugeicons/core-free-icons/Menu01Icon";
 import loginGlyph from "@hugeicons/core-free-icons/Login01Icon";
@@ -58,6 +59,7 @@ export const EyeIcon = (props: IconProps) => <HugeiconsIcon {...props} icon={eye
 export const EyeOffIcon = (props: IconProps) => <HugeiconsIcon {...props} icon={eyeOffGlyph} />;
 export const FolderIcon = (props: IconProps) => <HugeiconsIcon {...props} icon={folderGlyph} />;
 export const GitHubIcon = (props: IconProps) => <HugeiconsIcon {...props} icon={githubGlyph} />;
+export const GoogleIcon = (props: IconProps) => <HugeiconsIcon {...props} icon={googleGlyph} />;
 export const HomeIcon = (props: IconProps) => <HugeiconsIcon {...props} icon={homeGlyph} />;
 export const BookBookmarkIcon = (props: IconProps) => (
   <HugeiconsIcon {...props} icon={bookBookmarkGlyph} />

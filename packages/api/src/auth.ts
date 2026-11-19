@@ -24,6 +24,7 @@ const ok = z.object({ ok: z.literal(true) });
 const email = z.email().max(254);
 const password = z.string().min(1).max(128);
 const credentials = z.strictObject({ email, password });
+const socialProvider = z.enum(["google", "github"]);
 
 export const authContract = {
   signUp: post("/auth/sign-up/email", "Create an account with a password")
@@ -32,6 +33,15 @@ export const authContract = {
     )
     .output(ok),
   signIn: post("/auth/sign-in/email", "Sign in with a password").input(credentials).output(ok),
+  signInSocial: post("/auth/sign-in/social", "Start Google or GitHub sign-in")
+    .input(
+      z.strictObject({
+        provider: socialProvider,
+        callbackURL: z.string().min(1),
+        errorCallbackURL: z.string().min(1),
+      }),
+    )
+    .output(z.object({ url: z.url({ protocol: /^https$/ }) })),
   signOut: post("/auth/sign-out", "Sign out and clear the session cookie")
     .input(z.strictObject({}))
     .output(ok),
@@ -56,6 +66,13 @@ export const authContract = {
       summary: "Check whether email sign-in methods are available",
     })
     .output(z.object({ enabled: z.boolean() })),
+  socialMethods: auth
+    .route({
+      method: "GET",
+      path: "/auth/social-methods",
+      summary: "List configured social sign-in providers",
+    })
+    .output(z.object({ providers: z.array(socialProvider) })),
   sendMagicLink: post("/auth/sign-in/magic-link", "Request a sign-in link")
     .input(
       z.strictObject({

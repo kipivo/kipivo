@@ -7,7 +7,7 @@ export function getRouter() {
 
 declare module "@tanstack/react-router" {
   interface StaticDataRouteOption {
-    brandPanel?: "desktop" | "responsive";
+    brandPanel?: boolean;
   }
 
   interface Register {

@@ -1,31 +1,39 @@
+import { ChevronRightIcon } from "@kipivo/icons";
 import { buttonVariants } from "@kipivo/ui/components/button";
 import { PageTitle } from "@kipivo/ui/blocks/page";
+import { cn } from "@kipivo/ui/lib/utils";
 import { requireInstallation } from "@/features/account/install-status";
 import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
-import { afterSignIn, authSearch, useEmailMethods } from "@/features/account/auth-navigation";
+import { afterSignIn, socialAuthSearch, useEmailMethods } from "@/features/account/auth-navigation";
 import { CredentialsForm } from "@/features/account/credentials-form";
 import { useAccountSession } from "@/features/account/session";
+import { SocialSignIn } from "@/features/account/social-sign-in";
+
+const emailMethodLink = cn(
+  buttonVariants({ variant: "outline" }),
+  "h-auto min-h-11 justify-between gap-2 border-input px-3.5 py-2 whitespace-normal",
+);
 
 export const Route = createFileRoute("/(auth)/sign-in")({
   beforeLoad: requireInstallation,
-  staticData: { brandPanel: "desktop" },
-  validateSearch: authSearch,
+  staticData: { brandPanel: true },
+  validateSearch: socialAuthSearch,
   head: () => ({ meta: [{ title: "Sign in | Kipivo" }] }),
   component: SignInRoute,
 });
 
 function SignInRoute() {
-  const search = Route.useSearch();
+  const { error, ...search } = Route.useSearch();
   const { session } = useAccountSession();
   const emailMethods = useEmailMethods();
   if (session.status === "signed-in") return <Navigate {...afterSignIn(search)} replace />;
 
   return (
     <>
-      <PageTitle className="text-[clamp(2.1rem,3.6vw,3rem)] leading-[1.05]">
+      <PageTitle className="text-[clamp(2rem,4vw,2.5rem)] leading-[1.08]">
         Sign in to Kipivo
       </PageTitle>
-      <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+      <p className="mt-2.5 text-sm leading-relaxed text-muted-foreground">
         {search.authorize
           ? "Sign in to continue authorizing your device."
           : search.next === "/workbench"
@@ -43,33 +51,30 @@ function SignInRoute() {
             <Link
               to="/forgot-password"
               search={search}
-              className="control-focus rounded-sm text-sm font-normal text-muted-foreground underline underline-offset-4 hover:text-foreground"
+              className="control-focus rounded-sm text-sm font-medium text-muted-foreground underline underline-offset-4 hover:text-foreground"
             >
               Forgot password?
             </Link>
           )
         }
       />
+      <SocialSignIn returnTo="/sign-in" search={search} callbackError={error} />
       {emailMethods && (
-        <nav aria-label="Other sign-in methods" className="mt-6 grid gap-2">
-          <p className="mb-1 text-sm text-muted-foreground">Or sign in without a password</p>
-          <Link
-            to="/magic-link"
-            search={search}
-            className={buttonVariants({ variant: "outline", className: "h-10" })}
-          >
+        <nav aria-label="Other sign-in methods" className="mt-6 grid gap-2.5">
+          <p className="mb-0.5 flex items-center gap-3 text-center text-xs font-medium text-muted-foreground before:h-px before:flex-1 before:bg-border after:h-px after:flex-1 after:bg-border">
+            Sign in by email
+          </p>
+          <Link to="/magic-link" search={search} className={emailMethodLink}>
             Email me a sign-in link
+            <ChevronRightIcon aria-hidden="true" className="text-muted-foreground" />
           </Link>
-          <Link
-            to="/email-code"
-            search={search}
-            className={buttonVariants({ variant: "outline", className: "h-10" })}
-          >
+          <Link to="/email-code" search={search} className={emailMethodLink}>
             Sign in with an email code
+            <ChevronRightIcon aria-hidden="true" className="text-muted-foreground" />
           </Link>
         </nav>
       )}
-      <p className="mt-6 flex flex-wrap items-baseline gap-x-2 border-t border-border pt-5 text-sm text-muted-foreground">
+      <p className="mt-6 border-t border-border pt-5 text-center text-sm leading-relaxed text-muted-foreground">
         New to Kipivo?{" "}
         <Link
           to="/sign-up"

@@ -9,6 +9,6 @@
       "bun": { "entry": ["**/*.test.mjs"] },
       "ignoreDependencies": ["expo-updates"]
     },
-    "tests/e2e": { "entry": ["fixtures/check.mjs", "fixtures/resend-preload.mjs"] }
+    "tests/e2e": { "entry": ["fixtures/check.mjs", "fixtures/auth-preload.mjs"] }
   }
 }

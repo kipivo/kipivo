@@ -1,3 +1,4 @@
+import { cn } from "@kipivo/ui/lib/utils";
 import type { ComponentProps } from "react";
 
 import assembly from "./motion/src/assembly.svg?no-inline";
@@ -5,9 +6,12 @@ import assembly from "./motion/src/assembly.svg?no-inline";
 // Browsers can reuse an SVG image when only its fragment changes.
 const intro = `${assembly}${assembly.includes("?") ? "&" : "?"}motion=intro#intro`;
 
-export function Assembly({ fetchPriority }: Pick<ComponentProps<"img">, "fetchPriority">) {
+export function Assembly({
+  className,
+  fetchPriority,
+}: Pick<ComponentProps<"img">, "className" | "fetchPriority">) {
   return (
-    <figure className="overflow-hidden rounded-xl border border-border bg-card">
+    <figure className={cn("overflow-hidden rounded-xl border border-border bg-card", className)}>
       <picture>
         <source media="(prefers-reduced-motion: no-preference)" srcSet={intro} />
         <img

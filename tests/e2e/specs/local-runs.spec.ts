@@ -247,35 +247,31 @@ test("brand illustrations play once and respect reduced motion", async ({ page, 
   }
 });
 
-test("sign-up aligns the animation with the form at intermediate widths", async ({
+test("sign-in and sign-up share the responsive brand panel and form widths", async ({
   page,
   localWeb,
 }) => {
-  await page.setViewportSize({ width: 665, height: 987 });
-  await page.goto(`${localWeb.origin}/sign-up`);
   const form = page.locator("form");
   const panel = page.getByRole("complementary", { name: "About Kipivo" });
-  const bounds = async () => {
-    const [fields, art] = await Promise.all([form.boundingBox(), panel.boundingBox()]);
-    if (!fields || !art) throw new Error("Expected both the form and the brand panel");
-    return { fields, art };
-  };
-  for (const width of [588, 600, 665]) {
-    await page.setViewportSize({ width, height: 987 });
-    const { fields, art } = await bounds();
-    expect(art.x).toBeGreaterThan(fields.x + fields.width);
-    expect(art.y).toBeLessThan(fields.y + fields.height);
-    expect(art.x + art.width).toBeLessThanOrEqual(width);
-  }
-
-  for (const width of [320, 390, 520]) {
-    await page.setViewportSize({ width, height: 780 });
-    const { fields, art } = await bounds();
-    expect(art.y).toBeGreaterThan(fields.y + fields.height);
-    expect(art.x).toBeCloseTo(fields.x);
-    expect(art.width).toBeCloseTo(fields.width);
-    expect(art.height).toBeLessThan(160);
-    await expect(panel.locator("img")).toBeVisible();
+  for (const width of [320, 390, 665, 768, 1280]) {
+    await page.setViewportSize({ width, height: 800 });
+    let left: number | undefined;
+    for (const path of ["/sign-in", "/sign-up"]) {
+      await page.goto(`${localWeb.origin}${path}`);
+      const fields = await form.boundingBox();
+      if (!fields) throw new Error(`Expected a visible form on ${path}`);
+      if (left !== undefined) expect(fields.x).toBeCloseTo(left);
+      left = fields.x;
+      if (width < 768) {
+        await expect(panel).toBeHidden();
+      } else {
+        const art = await panel.boundingBox();
+        if (!art) throw new Error(`Expected a visible brand panel on ${path}`);
+        expect(art.x).toBeGreaterThan(fields.x + fields.width);
+        expect(art.y).toBeLessThan(fields.y + fields.height);
+        expect(art.x + art.width).toBeLessThanOrEqual(width);
+      }
+    }
   }
 });
 
