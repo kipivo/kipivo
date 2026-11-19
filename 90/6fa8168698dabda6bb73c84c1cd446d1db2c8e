@@ -1,0 +1,36 @@
+apps/web/src/features/home/navigation.tsx
+  s_ede7f0ca7c4b93::t_c337d768d88b37 97-106
+  s_ede7f0ca7c4b93::t_b81d3bb8786626 2,7-13,15,51,61,73,113-120,125,129-137
+  s_ede7f0ca7c4b93::t_7e5bcf2c5441f5 4,6,16-18,27-28,34-35,37,40,52-60,62-72,74-96,107-112,121-124,126-128,138-161,169
+apps/web/src/features/home/run-example.tsx
+  s_ede7f0ca7c4b93::t_7e5bcf2c5441f5 38
+apps/web/src/routes/index.tsx
+  s_ede7f0ca7c4b93::t_55b84fe592de46 9-14,31
+apps/web/src/features/home/quickstart.tsx
+  s_ede7f0ca7c4b93::t_7e5bcf2c5441f5 61
+apps/web/src/features/home/workspace-guide.tsx
+  s_ede7f0ca7c4b93::t_7e5bcf2c5441f5 25
+tests/e2e/specs/local-runs.spec.ts
+  s_ede7f0ca7c4b93::t_5a82c5d1246e1a 277-278,286,289-293,296,303,318-337,414-424,427,430-431
+apps/web/src/layout/frame.tsx
+  s_ede7f0ca7c4b93::t_7e5bcf2c5441f5 8,10,14,16,24-25,29-32,34
+apps/web/src/layout/header-actions.tsx
+  s_ede7f0ca7c4b93::t_7e5bcf2c5441f5 1,5-11,14
+  s_ede7f0ca7c4b93::t_5a82c5d1246e1a 13
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "906fa8168698dabda6bb73c84c1cd446d1db2c8e",
+  "prompts": {},
+  "sessions": {
+    "s_ede7f0ca7c4b93": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1eeda-d4f1-7f53-87ef-ae4cec611e36",
+        "model": "gpt-6.2-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
