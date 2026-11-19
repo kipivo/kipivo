@@ -1,0 +1,26 @@
+scripts/ci-plan.mjs
+  s_5b0ad29f5a4d17::t_439cf53312c5a9 51,57,65,225-230,310
+.github/workflows/ci.yml
+  s_5b0ad29f5a4d17::t_439cf53312c5a9 34,164-165
+scripts/ci-plan.test.mjs
+  s_5b0ad29f5a4d17::t_439cf53312c5a9 84,95,101-111
+  s_5b0ad29f5a4d17::t_4a79cea49dac26 112
+docs/testing.md
+  s_5b0ad29f5a4d17::t_439cf53312c5a9 118
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "6865b09110f9904ffabc73a1eee90583c75e03e5",
+  "prompts": {},
+  "sessions": {
+    "s_5b0ad29f5a4d17": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1f3ce-2e2d-7b72-9d22-76b8b8fc80e9",
+        "model": "gpt-6.2-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
