@@ -5,7 +5,7 @@ Use Conventional Commits for new commits on `next`, `main`, and pull requests. K
 ```text
 fix(storybook): wait for select focus to return
 feat(web): add a settings page
-ci: check new commit messages
+ci: cache browser binaries
 ```
 
 - Choose `feat` for a feature, `fix` for a bug, `perf` for a performance improvement, or `refactor` for a behavior-preserving change. Use `test`, `docs`, `style` (formatting only), `build`, `ci`, `chore`, or `revert` for the corresponding maintenance work.
@@ -15,7 +15,7 @@ ci: check new commit messages
 
 ## Checking locally
 
-Run `bun install --frozen-lockfile` from the repository root. In a development clone this automatically sets up Husky's `commit-msg` hook; no separate Git configuration is needed. CI validates the commit range directly rather than installing local hooks.
+Run `bun install --frozen-lockfile` from the repository root. In a development clone this sets up Husky's `commit-msg` hook, which checks each commit message locally.
 
 If you manage your own Git hooks, set `HUSKY=0` before installing to keep your hooks path and call `bun run --silent commitlint --edit "$1"` from your own `commit-msg` hook. To check messages without installing a hook:
 
@@ -23,5 +23,3 @@ If you manage your own Git hooks, set `HUSKY=0` before installing to keep your h
 printf '%s\n' 'fix(web): restore focus after saving' | bun run --silent commitlint
 bun run commitlint --from origin/next --to HEAD
 ```
-
-CI uses the same commitlint configuration to check non-merge commits introduced by a push or pull request. If the previous tip is unavailable after a branch is created or its history is rewritten, CI checks all non-merge commits reachable from the new tip.

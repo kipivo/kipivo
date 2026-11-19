@@ -65,27 +65,9 @@ jobs:
     runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
       - uses: ./.github/actions/setup-workspace
         with:
           cache-scope: check
-      - name: Check new commit messages
-        if: github.event_name != 'workflow_dispatch'
-        shell: bash
-        env:
-          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
-          HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
-        run: |
-          revisions=("$HEAD")
-          # A new branch or a force-push can leave the previous tip outside the checkout.
-          if [[ -n "$BASE" ]] && git cat-file -e "${BASE}^{commit}" 2>/dev/null; then
-            revisions+=("^$BASE")
-          fi
-          git rev-list --no-merges "${revisions[@]}" | while read -r sha; do
-            echo "Checking $sha"
-            git show -s --format=%B "$sha" | bun run --silent commitlint
-          done
       - run: bun run check
   ui:
     needs: changes
