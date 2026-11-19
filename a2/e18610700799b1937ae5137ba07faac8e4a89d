@@ -1,0 +1,25 @@
+docs/testing.md
+  s_5b0ad29f5a4d17::t_b8ec8829e07ef2 7
+scripts/ci-plan.mjs
+  s_5b0ad29f5a4d17::t_b8ec8829e07ef2 136,142-145,148,193,200,206
+  s_5b0ad29f5a4d17::t_7d21bd60a648b0 146-147
+scripts/ci-plan.test.mjs
+  s_5b0ad29f5a4d17::t_c7fce1ec18e132 109,115
+  s_5b0ad29f5a4d17::t_f8330bea672c52 110-114
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "a2e18610700799b1937ae5137ba07faac8e4a89d",
+  "prompts": {},
+  "sessions": {
+    "s_5b0ad29f5a4d17": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1f3ce-2e2d-7b72-9d22-76b8b8fc80e9",
+        "model": "gpt-6.2-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
