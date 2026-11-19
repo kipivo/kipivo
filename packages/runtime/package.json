@@ -1,0 +1,20 @@
+{
+  "name": "@kipivo/runtime",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./local/connection": "./src/local/connection.ts",
+    "./env": "./src/env.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@kipivo/env": "workspace:*",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@kipivo/tsconfig": "workspace:*",
+    "@types/node": "22.20.5"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "name": "@kipivo/core",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./access": "./src/access.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@kipivo/account": "workspace:*",
+    "@kipivo/admin": "workspace:*",
+    "@kipivo/rbac": "workspace:*"
+  },
+  "devDependencies": {
+    "@kipivo/tsconfig": "workspace:*",
+    "vitest": "catalog:"
+  }
+}

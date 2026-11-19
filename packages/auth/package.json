@@ -1,0 +1,28 @@
+{
+  "name": "@kipivo/auth",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./native": "./src/native/contract.ts",
+    "./factory": "./src/factory.ts",
+    "./env": "./src/env.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@better-auth/drizzle-adapter": "1.7.25",
+    "@kipivo/db": "workspace:*",
+    "@kipivo/email": "workspace:*",
+    "@kipivo/env": "workspace:*",
+    "better-auth": "1.7.25",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@kipivo/tsconfig": "workspace:*",
+    "@types/node": "22.20.5",
+    "vitest": "catalog:"
+  }
+}

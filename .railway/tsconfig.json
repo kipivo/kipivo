@@ -1,0 +1,5 @@
+{
+  "extends": "@kipivo/tsconfig/base.json",
+  "compilerOptions": { "types": [] },
+  "include": ["railway.ts"]
+}

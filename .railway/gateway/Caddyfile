@@ -1,0 +1,42 @@
+{
+	admin off
+	auto_https off
+	persist_config off
+}
+
+# Railway terminates public TLS; the private listener accepts IPv4 and IPv6.
+:{$PORT:8080} {
+	# Route CSS is inlined into SSR HTML, so compress dynamic responses too.
+	encode zstd gzip
+
+	@gatewayHealth path /gateway-healthz
+	handle @gatewayHealth {
+		respond "ok" 200
+	}
+
+	# An unset optional hostname can never match a public request.
+	@legacy host {$LEGACY_API_HOST:legacy-api.invalid}
+	handle @legacy {
+		reverse_proxy {$API_UPSTREAM} {
+			header_up X-Forwarded-Proto https
+		}
+	}
+
+	@local path /api/local /api/local/*
+	handle @local {
+		respond 404
+	}
+
+	@api path /rpc /rpc/* /api/auth /api/auth/* /api/v1 /api/v1/* /api/openapi.json /readyz
+	handle @api {
+		reverse_proxy {$API_UPSTREAM} {
+			header_up X-Forwarded-Proto https
+		}
+	}
+
+	handle {
+		reverse_proxy {$WEB_UPSTREAM} {
+			header_up X-Forwarded-Proto https
+		}
+	}
+}

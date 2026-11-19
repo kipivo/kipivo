@@ -1,0 +1,16 @@
+{
+  "name": "@kipivo/rbac",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@kipivo/tsconfig": "workspace:*",
+    "vitest": "catalog:"
+  }
+}

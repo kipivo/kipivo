@@ -1,0 +1,859 @@
+import { createHash, randomBytes, randomUUID } from "node:crypto";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { createApiClient } from "@kipivo/api/client";
+import { expect, test, type APIRequestContext } from "@playwright/test";
+import postgres from "postgres";
+import { createTestDatabase } from "../fixtures/database";
+import { healthy, launch, launchBuiltApi, repoRoot } from "../fixtures/process";
+
+const origin = "http://127.0.0.1:4383";
+const apiOrigin = "http://127.0.0.1:4382";
+const authSecret = "kipivo-auth-e2e-disposable-database-secret";
+let api: ReturnType<typeof launch> | undefined;
+let web: ReturnType<typeof launch> | undefined;
+
+let database: Awaited<ReturnType<typeof createTestDatabase>>;
+let firstAdmin: APIRequestContext;
+let inbox: string;
+
+test.beforeAll(async ({ playwright }) => {
+  inbox = await mkdtemp(join(tmpdir(), "kipivo-email-test-"));
+  database = await createTestDatabase();
+  api = launchBuiltApi(
+    4382,
+    {
+      DATABASE_URL: database.url,
+      DB_MIGRATE_ON_START: "true",
+      BETTER_AUTH_URL: origin,
+      BETTER_AUTH_SECRET: authSecret,
+      E2E_MAIL_FILE: join(inbox, "last.json"),
+    },
+    join(repoRoot, "tests/e2e/fixtures/resend-preload.mjs"),
+  );
+  await api.waitFor(
+    async () => (await fetch(`${apiOrigin}/readyz`, { signal: AbortSignal.timeout(2000) })).ok,
+  );
+  web = launch([".output/server/index.mjs"], join(repoRoot, "apps/web"), {
+    PORT: "4383",
+    HOST: "127.0.0.1",
+    API_ORIGIN: apiOrigin,
+  });
+  await web.waitFor(() => healthy(origin));
+  firstAdmin = await playwright.request.newContext({
+    baseURL: origin,
+    extraHTTPHeaders: { Origin: origin, "X-Forwarded-For": "198.51.100.30" },
+  });
+  const credentials = {
+    name: "First Administrator",
+    email: `first-${randomUUID()}@example.com`,
+    password: randomUUID(),
+  };
+  expect((await firstAdmin.post("/api/v1/setup/install", { data: credentials })).status()).toBe(
+    200,
+  );
+  expect((await firstAdmin.post("/api/auth/sign-in/email", { data: credentials })).status()).toBe(
+    200,
+  );
+});
+
+test.afterAll(async () => {
+  await firstAdmin?.dispose();
+  await web?.stop();
+  await api?.stop();
+  await database?.drop();
+  if (inbox) await rm(inbox, { recursive: true, force: true });
+});
+
+async function assignAdminRole(id: string) {
+  const response = await firstAdmin.put(`/api/v1/admin/accounts/${id}/role`, {
+    data: { role: "admin" },
+  });
+  expect(response.status(), await response.text()).toBe(200);
+}
+
+test("standalone database and authentication use the configured pool", async () => {
+  const probe = launch(
+    [
+      "--no-env-file",
+      "-e",
+      `import assert from "node:assert/strict";
+import { createAuth } from "@kipivo/auth/factory";
+import { createDatabase } from "@kipivo/db/factory";
+
+assert.equal(typeof createAuth, "function");
+assert.equal(typeof createDatabase, "function");
+process.env.DATABASE_URL = process.env.TEST_DATABASE_URL;
+
+const { database } = await import("@kipivo/db");
+assert.ok(database);
+try {
+  const leases = await Promise.all(Array.from({ length: 10 }, () => database.db.$client.reserve()));
+  try {
+    await assert.rejects(database.db.$client.begin(async () => {}), { code: "QUEUE_TIMEOUT" });
+  } finally {
+    for (const lease of leases) lease.release();
+  }
+  const { auth } = await import("@kipivo/auth");
+  assert.ok(auth);
+  assert.equal(await database.ready(), true);
+  const { configApp,configKey } = await import("@kipivo/db/schema");
+  const definitions=await database.db.select().from(configKey);
+  assert.ok(definitions.some(row=>row.key==="admin_setup" && row.scope==="instance" && row.editor==="system" && row.defaultValue===null));
+  for (const key of ["not_registered", "account_display"]) {
+    await assert.rejects(database.db.insert(configApp).values({key,value:{}}).execute(), err=>err.cause?.code==="23503");
+  }
+  const email = \`e2e-\${crypto.randomUUID()}@example.com\`;
+  const result = await auth.api.signUpEmail({
+    body: { name: "Kipivo E2E", email, password: "kipivo-test-password-123" },
+  });
+  assert.equal(result.user.email, email);
+} finally {
+  await database.close();
+}`,
+    ],
+    join(repoRoot, "apps/api"),
+    {
+      TEST_DATABASE_URL: database.url,
+      DATABASE_URL: "invalid-database-config",
+      BETTER_AUTH_URL: origin,
+      BETTER_AUTH_SECRET: authSecret,
+    },
+  );
+  try {
+    const { code, output } = await probe.waitForExit();
+    expect(code, output).toBe(0);
+  } finally {
+    await probe.stop();
+  }
+});
+
+test("email authentication persists and revokes sessions through Web", async ({ request }) => {
+  const url = `${origin}/api/auth`;
+  const email = `e2e-${randomUUID()}@example.com`;
+  const password = "kipivo-test-password-123";
+  const headers = { Origin: origin, "X-Forwarded-For": "198.51.100.10" };
+  const requestId = `auth-${randomUUID()}`;
+
+  expect(await (await request.get(`${url}/get-session`)).json()).toBeNull();
+  const signUp = await request.post(`${url}/sign-up/email`, {
+    headers: { ...headers, "X-Request-Id": requestId },
+    data: { name: "Kipivo E2E", email, password },
+  });
+  expect(signUp.status(), await signUp.text()).toBe(200);
+  expect(signUp.headers()["x-request-id"]).toBe(requestId);
+  expect(
+    signUp
+      .headersArray()
+      .some(({ name, value }) => name.toLowerCase() === "set-cookie" && value.includes("HttpOnly")),
+  ).toBe(true);
+  const signedIn = await (await request.get(`${url}/get-session`)).json();
+  expect(signedIn.user.email).toBe(email);
+  expect(signedIn.session.ipAddress).toBe("198.51.100.10");
+  const { cookies } = await request.storageState();
+  const authenticatedCookie = cookies.map(({ name, value }) => `${name}=${value}`).join("; ");
+
+  const rejected = await request.post(`${url}/sign-out`, {
+    headers: { Origin: "https://untrusted.example" },
+    data: {},
+  });
+  expect(rejected.status()).toBe(403);
+  expect((await (await request.get(`${url}/get-session`)).json()).user.email).toBe(email);
+
+  expect((await request.post(`${url}/sign-out`, { headers, data: {} })).status()).toBe(200);
+  expect(await (await request.get(`${url}/get-session`)).json()).toBeNull();
+  expect(
+    await (
+      await request.get(`${url}/get-session`, {
+        headers: { Cookie: authenticatedCookie },
+      })
+    ).json(),
+  ).toBeNull();
+  const wrongPassword = await request.post(`${url}/sign-in/email`, {
+    headers,
+    data: { email, password: "wrong-password-123" },
+  });
+  expect(wrongPassword.status()).toBe(401);
+  // The typed transport and the native Better Auth endpoints share the same cookie jar.
+  const rpc = `${origin}/rpc/auth`;
+  const login = await request.post(`${rpc}/signIn`, {
+    headers,
+    data: { json: { email, password } },
+  });
+  expect(await login.json()).toEqual({ json: { ok: true } });
+  expect((await (await request.get(`${url}/get-session`)).json()).user.email).toBe(email);
+  const readSession = async () => (await request.post(`${rpc}/getSession`, { data: {} })).json();
+  expect(await readSession()).toEqual({
+    json: {
+      user: { id: expect.any(String), name: "Kipivo E2E", email },
+      session: { id: expect.any(String), expiresAt: expect.any(String) },
+    },
+  });
+  expect((await request.post(`${rpc}/signOut`, { headers, data: { json: {} } })).status()).toBe(
+    200,
+  );
+  expect(await readSession()).toEqual({ json: null });
+});
+
+test("RPC and REST enforce roles and publish the same API contract through Web", async ({
+  request: admin,
+  playwright,
+}) => {
+  const rest = `${origin}/api/v1`;
+  const accounts = `${rest}/admin/accounts`;
+  const roleUrl = (id: string) => `${accounts}/${id}/role`;
+  const headers = { Origin: origin };
+  const member = await playwright.request.newContext();
+
+  const directoryName = `Directory ${randomUUID()}`;
+  async function signUp(request: APIRequestContext, suffix: string) {
+    const response = await request.post(`${origin}/api/auth/sign-up/email`, {
+      headers,
+      data: {
+        name: `${directoryName} ${suffix}`,
+        email: `rbac-${randomUUID()}@example.com`,
+        password: "kipivo-test-password-123",
+        role: "admin",
+      },
+    });
+    expect(response.status(), await response.text()).toBe(200);
+    const { user } = (await response.json()) as {
+      user: { id: string; email: string; name: string };
+    };
+    return { id: user.id, email: user.email, name: user.name };
+  }
+
+  try {
+    const publicClient = createApiClient(origin);
+    expect(await publicClient.system.ping()).toEqual({ ok: true });
+    await expect(publicClient.account.me()).rejects.toMatchObject({
+      code: "UNAUTHORIZED",
+      defined: true,
+    });
+    const anonymous = await admin.get(`${rest}/account/me`);
+    expect(anonymous.status()).toBe(401);
+    expect(anonymous.headers()["cache-control"]).toBe("no-store");
+
+    const specification = await admin.get(`${origin}/api/openapi.json`);
+    expect(specification.status(), await specification.text()).toBe(200);
+    expect(await specification.json()).toMatchObject({
+      openapi: expect.stringMatching(/^3\.1\./),
+      servers: [{ url: "/api/v1" }],
+      paths: {
+        "/system/ping": { get: { responses: { "200": expect.any(Object) } } },
+        "/account/me": {
+          get: {
+            security: [{ sessionCookie: [] }, { secureSessionCookie: [] }],
+            responses: { "401": expect.any(Object) },
+          },
+        },
+        "/admin/accounts": {
+          get: {
+            parameters: expect.arrayContaining([
+              expect.objectContaining({ name: "limit", in: "query" }),
+              expect.objectContaining({ name: "query", in: "query" }),
+            ]),
+          },
+        },
+        "/admin/accounts/{id}/role": {
+          put: {
+            requestBody: expect.any(Object),
+            responses: { "403": expect.any(Object), "404": expect.any(Object) },
+          },
+        },
+      },
+    });
+
+    const adminAccount = await signUp(admin, "owner");
+    const memberAccount = await signUp(member, "M%_\\");
+    expect(await (await member.get(`${rest}/account/me`)).json()).toEqual({
+      ...memberAccount,
+      settings: { menuLabel: "name" },
+      role: "member",
+      permissions: ["account.read"],
+    });
+    expect((await admin.get(accounts)).status()).toBe(403);
+    expect((await member.get(accounts, { params: { query: memberAccount.email } })).status()).toBe(
+      403,
+    );
+    expect(
+      (await member.put(roleUrl(adminAccount.id), { headers, data: { role: "admin" } })).status(),
+    ).toBe(403);
+
+    const personal = `${rest}/settings/personal`;
+    expect((await member.put(personal, { headers, data: { menuLabel: "email" } })).status()).toBe(
+      200,
+    );
+    expect(await (await member.get(personal)).json()).toEqual({ menuLabel: "email" });
+    expect(await (await admin.get(personal)).json()).toEqual({ menuLabel: "name" });
+    expect(
+      (
+        await member.put(personal, {
+          headers,
+          data: { menuLabel: "email", userId: adminAccount.id },
+        })
+      ).status(),
+    ).toBe(400);
+    const directory = `${rest}/admin/settings/directory`;
+    expect((await member.get(directory)).status()).toBe(403);
+    expect((await member.put(directory, { headers, data: { pageSize: 1 } })).status()).toBe(403);
+    await assignAdminRole(adminAccount.id);
+
+    const { cookies } = await admin.storageState();
+    const adminClient = createApiClient(origin, {
+      headers: {
+        ...headers,
+        Cookie: cookies.map(({ name, value }) => `${name}=${value}`).join("; "),
+      },
+    });
+    expect(await adminClient.account.me()).toMatchObject({
+      ...adminAccount,
+      role: "admin",
+      permissions: ["account.read", "accounts.read", "accounts.roles.update", "settings.manage"],
+    });
+    expect(await adminClient.settings.directory()).toEqual({ pageSize: 25 });
+    await adminClient.settings.saveDirectory({ pageSize: 1 });
+    expect((await adminClient.admin.accounts.list({})).items).toHaveLength(1);
+    await adminClient.settings.saveDirectory({ pageSize: 25 });
+    const firstPage = await admin.get(`${accounts}?limit=1`);
+    expect(firstPage.status(), await firstPage.text()).toBe(200);
+    const { items, nextCursor } = await firstPage.json();
+    expect(items).toHaveLength(1);
+    expect(nextCursor).toBe(items[0].id);
+    const secondPage = await adminClient.admin.accounts.list({ cursor: nextCursor, limit: 1 });
+    expect(secondPage.items).toHaveLength(1);
+    expect(secondPage.items[0]?.id).not.toBe(nextCursor);
+    expect((await admin.get(`${accounts}?limit=0`)).status()).toBe(400);
+    const query = `  ${directoryName.toUpperCase()}  `;
+    const filtered = await adminClient.admin.accounts.list({ query, limit: 1 });
+    expect(filtered.items).toHaveLength(1);
+    expect(filtered.nextCursor).toBe(filtered.items[0]!.id);
+    const last = await adminClient.admin.accounts.list({
+      query,
+      limit: 1,
+      cursor: filtered.nextCursor!,
+    });
+    expect(last.items).toHaveLength(1);
+    expect(last.nextCursor).toBeNull();
+    expect([filtered.items[0]!.id, last.items[0]!.id]).toEqual(
+      [adminAccount.id, memberAccount.id].sort(),
+    );
+    for (const text of [memberAccount.email.toUpperCase(), "%", "_", "\\"]) {
+      const response = await admin.get(accounts, { params: { query: text } });
+      expect(await response.json()).toEqual({
+        items: [{ ...memberAccount, role: "member" }],
+        nextCursor: null,
+      });
+    }
+    expect((await admin.get(accounts, { params: { query: "x".repeat(129) } })).status()).toBe(400);
+
+    const promote = { role: "admin" };
+    const crossOrigin = await admin.put(roleUrl(memberAccount.id), {
+      headers: { Origin: "https://untrusted.example" },
+      data: promote,
+    });
+    expect(crossOrigin.status()).toBe(403);
+    expect((await admin.put(roleUrl(memberAccount.id), { data: promote })).status()).toBe(403);
+    expect(
+      (await admin.put(roleUrl(adminAccount.id), { headers, data: { role: "member" } })).status(),
+    ).toBe(403);
+    expect((await admin.put(roleUrl(randomUUID()), { headers, data: promote })).status()).toBe(404);
+    expect(
+      (await admin.put(roleUrl(memberAccount.id), { headers, data: { role: "owner" } })).status(),
+    ).toBe(400);
+
+    await expect(
+      adminClient.admin.accounts.setRole({ id: memberAccount.id, role: "admin" }),
+    ).resolves.toEqual({
+      ...memberAccount,
+      role: "admin",
+    });
+    expect((await member.get(accounts)).status()).toBe(200);
+    expect(
+      (await admin.put(roleUrl(memberAccount.id), { headers, data: { role: "member" } })).status(),
+    ).toBe(200);
+    expect((await member.get(accounts)).status()).toBe(403);
+
+    expect((await admin.put(roleUrl(memberAccount.id), { headers, data: promote })).status()).toBe(
+      200,
+    );
+    const competingDemotions = await Promise.all([
+      admin.put(roleUrl(memberAccount.id), { headers, data: { role: "member" } }),
+      member.put(roleUrl(adminAccount.id), { headers, data: { role: "member" } }),
+    ]);
+    expect(competingDemotions.map((response) => response.status()).sort()).toEqual([200, 403]);
+  } finally {
+    await member.dispose();
+  }
+});
+
+test("administration can retry an unavailable account without exposing its links", async ({
+  page,
+}) => {
+  await page.context().addCookies((await firstAdmin.storageState()).cookies);
+  await page.route("**/rpc/account/me", (route) => route.abort(), { times: 1 });
+  await page.goto(`${origin}/admin`);
+  await expect(page.getByRole("alert")).toHaveText("Unable to load your account.");
+  await expect(page.getByRole("link", { name: "Manage accounts" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Try again" }).click();
+  await expect(page.getByRole("link", { name: "Manage accounts" })).toBeVisible();
+  await expect(page).toHaveURL(`${origin}/admin`);
+  const nav = page.getByRole("navigation", { name: "Workspace" });
+  await expect(nav.getByRole("link", { name: "Administration" })).toHaveAttribute(
+    "aria-current",
+    "page",
+  );
+  await expect(nav.getByRole("link", { name: "Local runs" })).toHaveCount(0);
+  await page.getByRole("link", { name: "Manage accounts" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Accounts" })).toBeVisible();
+  await expect(nav.getByRole("link", { name: "Administration" })).toHaveAttribute(
+    "aria-current",
+    "page",
+  );
+  await nav.getByRole("link", { name: "Settings" }).click();
+  await expect(nav.getByRole("link", { name: "Settings" })).toHaveAttribute("aria-current", "page");
+});
+
+test("account management recovers from sign-in and permission changes in the browser", async ({
+  page,
+  request: backupAdmin,
+  playwright,
+}) => {
+  const headers = { Origin: origin };
+  const adminUrl = `${origin}/admin/accounts`;
+  const email = `browser-${randomUUID()}@example.com`;
+  const name = "Browser Administrator";
+  const targetName = "Browser Member";
+  const password = "kipivo-test-password-123";
+  const target = await playwright.request.newContext();
+
+  async function register(request: APIRequestContext, name: string) {
+    const response = await request.post(`${origin}/api/auth/sign-up/email`, {
+      headers: { ...headers, "X-Forwarded-For": "198.51.100.20" },
+      data: { name, email: `seed-${randomUUID()}@example.com`, password },
+    });
+    expect(response.status(), await response.text()).toBe(200);
+    const { user } = (await response.json()) as { user: { id: string } };
+    return user.id;
+  }
+
+  try {
+    await page.setViewportSize({ width: 390, height: 844 });
+    const landingUrl = `${origin}/admin`;
+    await page.goto(landingUrl);
+    await expect(page).toHaveURL(
+      (url) => url.pathname === "/sign-in" && url.searchParams.get("next") === "/admin",
+    );
+    await page.getByRole("link", { name: "Create an account" }).click();
+    await expect(page).toHaveURL(
+      (url) => url.pathname === "/sign-up" && url.searchParams.get("next") === "/admin",
+    );
+    await page.getByLabel("Name", { exact: true }).fill(name);
+    await page.getByLabel("Email").fill(email);
+    await page.getByLabel("Password", { exact: true }).fill(password);
+    await page.getByRole("button", { name: "Create account", exact: true }).click();
+    await expect(page).toHaveURL(landingUrl);
+    await expect(
+      page.getByRole("heading", { name: "Administrator access required" }),
+    ).toBeVisible();
+    await expect(page.getByRole("link", { name: "Manage accounts" })).toHaveCount(0);
+    await page.goto(adminUrl);
+    await expect(
+      page.getByRole("heading", { name: "Administrator access required" }),
+    ).toBeVisible();
+    await page.getByRole("button", { name: "Account menu" }).click();
+    await expect(page.getByRole("menu").getByText("Member", { exact: true })).toBeVisible();
+    await expect(page.getByRole("menuitem", { name: "Administration" })).toHaveCount(0);
+
+    const me = await page.request.get(`${origin}/api/v1/account/me`);
+    expect(me.status()).toBe(200);
+    const { id } = (await me.json()) as { id: string };
+    await assignAdminRole(id);
+    await assignAdminRole(await register(backupAdmin, "Backup Administrator"));
+    await register(target, targetName);
+
+    await page.getByRole("menuitem", { name: "Settings", exact: true }).click();
+    const menuLabel = page.getByRole("combobox", { name: "Show in account menu" });
+    await expect(menuLabel).toHaveJSProperty("tagName", "BUTTON");
+    await menuLabel.click();
+    const options = page.getByRole("listbox");
+    await expect(options).toBeVisible();
+    await expect(async () => {
+      const trigger = await menuLabel.boundingBox();
+      const list = await options.boundingBox();
+      expect(list!.y).toBeGreaterThanOrEqual(trigger!.y + trigger!.height);
+    }).toPass();
+    await options.getByRole("option", { name: "Email address" }).click();
+    await page.getByRole("button", { name: "Save changes" }).first().click();
+    await expect(page.getByRole("status").filter({ hasText: "Changes saved." })).toBeVisible();
+    await page.reload();
+    await expect(menuLabel).toHaveText("Email address");
+    await expect(page.getByLabel("Accounts per page")).toHaveValue("25");
+    await page.getByRole("button", { name: "Account menu" }).click();
+    await page.getByRole("menuitem", { name: "Sign out" }).click();
+    await expect(page).toHaveURL(`${origin}/`);
+    await page.getByRole("link", { name: "Sign in" }).click();
+    await page.getByLabel("Email").fill(email);
+    await page.getByLabel("Password", { exact: true }).fill("wrong-password-123");
+    await page.getByRole("button", { name: "Sign in", exact: true }).click();
+    await expect(page.getByRole("alert")).toHaveText("The email or password is incorrect.");
+    await page.getByLabel("Password", { exact: true }).fill(password);
+    await page.getByRole("button", { name: "Sign in", exact: true }).click();
+    await expect(page).toHaveURL(`${origin}/`);
+    await page.getByRole("button", { name: "Account menu" }).click();
+    await page.getByRole("menuitem", { name: "Administration" }).click();
+    await expect(page).toHaveURL(landingUrl);
+    await expect(page.getByRole("heading", { name: "Administration", exact: true })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Open settings" })).toBeVisible();
+    await page.getByRole("link", { name: "Manage accounts" }).click();
+    await expect(page).toHaveURL(adminUrl);
+    await expect(page.getByRole("heading", { name: "Accounts" })).toBeVisible();
+
+    const ownRow = page.getByRole("listitem").filter({ hasText: email });
+    await expect(ownRow.getByText("You", { exact: true })).toBeVisible();
+    await expect(ownRow.getByRole("button", { name: /Change role/ })).toHaveCount(0);
+    const targetRow = page.getByRole("listitem").filter({ hasText: targetName });
+    const search = page.getByLabel("Search by name or email");
+    await search.fill("no-such-account@example.invalid");
+    await search.press("Enter");
+    await expect(page.getByText("No accounts match your search.")).toBeVisible();
+    await page.getByRole("button", { name: "Clear", exact: true }).click();
+    await expect(ownRow).toBeVisible();
+    await search.fill(targetName.toLowerCase());
+    await search.press("Enter");
+    await expect(targetRow).toBeVisible();
+    await expect(ownRow).toHaveCount(0);
+    const edit = targetRow.getByRole("button", { name: `Change role for ${targetName}` });
+    await edit.click();
+    const dialog = page.getByRole("dialog", { name: "Change account role" });
+    await expect(dialog.getByText("Permissions added")).toBeVisible();
+    await expect(dialog.getByText("Change account roles")).toBeVisible();
+    await dialog.getByRole("button", { name: "Cancel" }).click();
+    await expect(targetRow.getByText("Member", { exact: true })).toBeVisible();
+    await edit.click();
+    await dialog.getByRole("button", { name: "Make administrator" }).click();
+    await expect(targetRow.getByText("Administrator", { exact: true })).toBeVisible();
+    await expect(
+      page.getByRole("status").filter({ hasText: `${targetName} is now an administrator.` }),
+    ).toBeVisible();
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+    ).toBe(true);
+
+    await edit.click();
+    expect(
+      (await page.request.post(`${origin}/api/auth/sign-out`, { headers, data: {} })).status(),
+    ).toBe(200);
+    await dialog.getByRole("button", { name: "Make member" }).click();
+    await expect(page).toHaveURL(/\/sign-in\?next=/);
+    await page.getByLabel("Email").fill(email);
+    await page.getByLabel("Password", { exact: true }).fill(password);
+    await page.getByRole("button", { name: "Sign in", exact: true }).click();
+    await expect(page).toHaveURL(adminUrl);
+    await expect(targetRow.getByText("Administrator", { exact: true })).toBeVisible();
+
+    await edit.click();
+    await expect(dialog.getByText("Permissions removed")).toBeVisible();
+    const demotion = await backupAdmin.put(`${origin}/api/v1/admin/accounts/${id}/role`, {
+      headers,
+      data: { role: "member" },
+    });
+    expect(demotion.status(), await demotion.text()).toBe(200);
+    await dialog.getByRole("button", { name: "Make member" }).click();
+    await expect(page.getByRole("alert")).toContainText("Your permissions changed.");
+    await expect(page.getByRole("list", { name: "Accounts" })).toHaveCount(0);
+    await page.getByRole("button", { name: "Account menu" }).click();
+    await expect(page.getByRole("menuitem", { name: "Administration" })).toHaveCount(0);
+    expect(await (await target.get(`${origin}/api/v1/account/me`)).json()).toMatchObject({
+      role: "admin",
+    });
+  } finally {
+    await target.dispose();
+  }
+});
+
+const nativeProof = () => {
+  const verifier = randomBytes(32).toString("base64url");
+  return { verifier, challenge: createHash("sha256").update(verifier).digest("base64url") };
+};
+
+test("native authorization requires Web consent and exchanges a client-bound proof once", async ({
+  page,
+  request,
+}) => {
+  const { verifier, challenge } = nativeProof();
+  const flow = {
+    client_id: "expo",
+    state: randomUUID(),
+    code_challenge: challenge,
+    code_challenge_method: "S256",
+  };
+  const email = `mobile-${randomUUID()}@example.com`;
+  await page.setExtraHTTPHeaders({ "X-Forwarded-For": "198.51.100.73" });
+  await page.goto(`${origin}/authorize?${new URLSearchParams(flow)}`);
+  await page.getByRole("link", { name: "Create an account" }).click();
+  await page.getByLabel("Name", { exact: true }).fill("Mobile tester");
+  await page.getByLabel("Email").fill(email);
+  await page.getByLabel("Password", { exact: true }).fill(randomUUID());
+  await page.getByRole("button", { name: "Create account", exact: true }).click();
+  await expect(page.getByText(email, { exact: true })).toBeVisible();
+  const authorize = page.waitForResponse((response) =>
+    response.url().endsWith("/rpc/auth/native/authorize"),
+  );
+  await page.getByRole("button", { name: "Authorize app" }).click();
+  const response = await authorize;
+  expect(response.status(), await response.text()).toBe(200);
+  const callback = new URL((await response.json()).json.callback);
+  expect(`${callback.protocol}//${callback.host}${callback.pathname}`).toBe(
+    "kipivo://auth/callback",
+  );
+  expect([...callback.searchParams.keys()].sort()).toEqual(["code", "state"]);
+  expect(callback.searchParams.get("state")).toBe(flow.state);
+  const exchange = (data: Record<string, string>, headers?: Record<string, string>) =>
+    request.post(`${origin}/rpc/auth/native/exchange`, { data: { json: data }, headers });
+  const body = {
+    client_id: "expo",
+    code: callback.searchParams.get("code")!,
+    code_verifier: verifier,
+  };
+  expect((await exchange(body, { Origin: origin })).status()).toBe(403);
+  expect((await exchange({ ...body, client_id: "desktop" })).status()).toBe(400);
+  expect((await exchange({ ...body, code_verifier: nativeProof().verifier })).status()).toBe(400);
+  const results = await Promise.all([exchange(body), exchange(body)]);
+  expect(results.map((r) => r.status()).sort()).toEqual([200, 400]);
+  expect(await (await request.get(`${origin}/api/v1/account/me`)).json()).toMatchObject({ email });
+  expect(
+    (
+      await request.post(`${origin}/api/auth/sign-out`, { data: {}, headers: { Origin: origin } })
+    ).status(),
+  ).toBe(200);
+  expect((await request.get(`${origin}/api/v1/account/me`)).status()).toBe(401);
+  expect((await page.request.get(`${origin}/api/v1/account/me`)).status()).toBe(200);
+});
+
+test("desktop authorization pins its callback and rejects expired grants", async ({ request }) => {
+  const { verifier, challenge } = nativeProof();
+  const account = await (await firstAdmin.get("/api/v1/account/me")).json();
+  const body = {
+    client_id: "desktop",
+    code_challenge: challenge,
+    code_challenge_method: "S256",
+    state: randomUUID(),
+    account_id: account.id,
+  };
+  const path = "/api/auth/native/authorize";
+  expect(
+    (await request.post(`${origin}${path}`, { data: body, headers: { Origin: origin } })).status(),
+  ).toBe(401);
+  expect(
+    (
+      await firstAdmin.post(path, { data: body, headers: { Origin: "https://wrong.example" } })
+    ).status(),
+  ).toBe(403);
+  for (const invalid of [
+    { client_id: "unknown" },
+    { code_challenge_method: "plain" },
+    { redirect_uri: "https://wrong.example" },
+  ]) {
+    expect((await firstAdmin.post(path, { data: { ...body, ...invalid } })).ok()).toBe(false);
+  }
+  const issued = await firstAdmin.post(path, { data: body });
+  expect(issued.status(), await issued.text()).toBe(200);
+  const callback = new URL((await issued.json()).callback);
+  expect(`${callback.protocol}//${callback.host}${callback.pathname}`).toBe(
+    "kipivo-desktop://auth/callback",
+  );
+  const sql = postgres(database.url, { max: 1 });
+  try {
+    const updated =
+      await sql`UPDATE auth_verification SET expires_at = now() - interval '1 second' WHERE identifier LIKE ${`native-login:desktop:%:${challenge}`}`;
+    expect(updated.count).toBe(1);
+  } finally {
+    await sql.end();
+  }
+  expect(
+    (
+      await request.post(`${origin}/api/auth/native/exchange`, {
+        data: {
+          client_id: "desktop",
+          code: callback.searchParams.get("code"),
+          code_verifier: verifier,
+        },
+      })
+    ).status(),
+  ).toBe(400);
+  expect((await request.get(`${origin}/api/v1/account/me`)).status()).toBe(401);
+});
+
+test("email code, sign-in link, and password recovery work through their Web pages", async ({
+  page,
+  request,
+}) => {
+  const path = "/api/v1/admin/settings/email";
+  const key = randomUUID();
+  expect(await (await firstAdmin.get(path)).json()).toEqual({
+    enabled: false,
+    from: null,
+    hasApiKey: false,
+  });
+  expect(
+    (
+      await firstAdmin.put(path, { data: { enabled: true, from: "accounts@example.com" } })
+    ).status(),
+  ).toBe(400);
+  // Manage delivery through the same form an administrator would use; no API restart.
+  await page.context().addCookies((await firstAdmin.storageState()).cookies);
+  await page.goto(`${origin}/settings`);
+  const mailForm = page
+    .locator("form")
+    .filter({ has: page.getByRole("heading", { name: "Email delivery" }) });
+  await mailForm.getByLabel("Sender email").fill("accounts@example.com");
+  await mailForm.getByLabel("Resend API key").fill(key);
+  await mailForm.getByLabel("Enable email delivery").check();
+  await mailForm.getByRole("button", { name: "Save changes" }).click();
+  await expect(mailForm.getByRole("status")).toHaveText("Changes saved.");
+  await expect(mailForm.getByLabel("Resend API key")).toHaveValue("");
+  expect(await (await firstAdmin.get(path)).json()).toEqual({
+    enabled: true,
+    from: "accounts@example.com",
+    hasApiKey: true,
+  });
+  const sql = postgres(database.url, { max: 1 });
+  try {
+    const [row] = await sql`select value from config_app where key='email_delivery'`;
+    expect(row?.value.sealedKey).toBeTruthy();
+    expect(JSON.stringify(row)).not.toContain(key);
+  } finally {
+    await sql.end();
+  }
+  await page.context().clearCookies();
+  const methods = await request.post(`${origin}/rpc/auth/emailMethods`, { data: {} });
+  expect(await methods.json()).toEqual({ json: { enabled: true } });
+  const email = `flows-${randomUUID()}@example.com`;
+  const headers = { Origin: origin, "X-Forwarded-For": "198.51.100.86" };
+  await page.setExtraHTTPHeaders({ "X-Forwarded-For": "198.51.100.87" });
+  expect(
+    (
+      await request.post(`${origin}/api/auth/sign-up/email`, {
+        headers,
+        data: { email, name: "Mail tester", password: randomUUID() },
+      })
+    ).status(),
+  ).toBe(200);
+  async function readMessage(subject: string) {
+    const latest = async () =>
+      JSON.parse(await readFile(join(inbox, "last.json"), "utf8")) as {
+        to: string;
+        text: string;
+        subject: string;
+      };
+    await expect
+      .poll(async () => {
+        try {
+          const m = await latest();
+          return m.to === email && m.subject === subject;
+        } catch {
+          return false;
+        }
+      })
+      .toBe(true);
+    return (await latest()).text;
+  }
+  await page.goto(`${origin}/sign-in?next=/settings`);
+  await page.getByRole("link", { name: "Sign in with an email code" }).click();
+  await expect(page.getByRole("heading", { name: "Sign in with a code" })).toBeVisible();
+  await page.getByLabel("Email", { exact: true }).fill(email);
+  await page.getByRole("button", { name: "Send sign-in code" }).click();
+  const otp = (await readMessage("Your Kipivo sign-in code")).match(/\b\d{6}\b/)![0];
+  await page.getByLabel("Sign-in code", { exact: true }).fill(otp);
+  await page.getByRole("button", { name: "Verify and sign in" }).click();
+  await expect(page).toHaveURL(`${origin}/settings`);
+  await page.context().clearCookies();
+  await page.goto(`${origin}/magic-link?next=/settings`);
+  await page.getByLabel("Email").fill(email);
+  await page.getByRole("button", { name: "Send sign-in link" }).click();
+  const magic = (await readMessage("Sign in to Kipivo")).split("\n")[1]!;
+  await page.goto(magic);
+  await expect(page).toHaveURL(`${origin}/settings`);
+  const beforeReset = (await page.context().cookies())
+    .map((c) => `${c.name}=${c.value}`)
+    .join("; ");
+  await page.goto(`${origin}/forgot-password`);
+  await page.getByLabel("Email").fill(email);
+  await page.getByRole("button", { name: "Send reset link" }).click();
+  const reset = (await readMessage("Reset your Kipivo password")).split("\n")[1]!;
+  const newPassword = randomUUID();
+  await page.goto(reset);
+  await page.getByLabel("New password", { exact: true }).fill(newPassword);
+  await page.getByLabel("Confirm new password").fill(newPassword);
+  await page.getByRole("button", { name: "Update password" }).click();
+  await expect(page.getByRole("heading", { name: "Password updated" })).toBeVisible();
+  expect(
+    (
+      await request.get(`${origin}/api/v1/account/me`, { headers: { Cookie: beforeReset } })
+    ).status(),
+  ).toBe(401);
+  expect(
+    (
+      await request.post(`${origin}/api/auth/sign-in/email`, {
+        headers,
+        data: { email, password: newPassword },
+      })
+    ).status(),
+  ).toBe(200);
+  expect(
+    (
+      await request.post(`${origin}/api/auth/reset-password`, {
+        headers,
+        data: { token: new URL(reset).hash.slice(1), newPassword: randomUUID() },
+      })
+    ).ok(),
+  ).toBe(false);
+  expect((await request.get(`${origin}${path}`)).status()).toBe(403);
+  expect(
+    (
+      await request.put(`${origin}${path}`, { headers, data: { from: null, enabled: false } })
+    ).status(),
+  ).toBe(403);
+  const disabled = await firstAdmin.put(path, {
+    data: { from: "accounts@example.com", enabled: false },
+  });
+  expect(await disabled.json()).toMatchObject({ enabled: false, hasApiKey: true });
+  expect(await (await request.get(`${origin}/api/auth/email-methods`)).json()).toEqual({
+    enabled: false,
+  });
+  expect(
+    (
+      await request.post(`${origin}/api/auth/sign-in/magic-link`, { headers, data: { email } })
+    ).status(),
+  ).toBe(503);
+  const cleared = await firstAdmin.put(path, {
+    data: { enabled: false, from: null, apiKey: null },
+  });
+  expect(await cleared.json()).toEqual({ enabled: false, from: null, hasApiKey: false });
+});
+
+test("workbench sign-in returns to a separate account board", async ({ page }) => {
+  await page.goto(`${origin}/workbench`);
+  await page.getByRole("button", { name: "New task", exact: true }).click();
+  await page.getByLabel("Title", { exact: true }).fill("Guest draft");
+  await page.getByRole("button", { name: "Create task", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Guest draft" })).toBeVisible();
+  await page.getByRole("link", { name: "Sign in", exact: true }).click();
+  await expect(page).toHaveURL(
+    (url) => url.pathname === "/sign-in" && url.searchParams.get("next") === "/workbench",
+  );
+  // Reuse the fixture session instead of consuming the suite's shared sign-up rate limit.
+  await page.context().addCookies((await firstAdmin.storageState()).cookies);
+  await page.reload();
+  await expect(page).toHaveURL(`${origin}/workbench`);
+  await expect(page.getByRole("button", { name: "Account menu" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "New task", exact: true })).toBeEnabled();
+  await expect(page.getByRole("button", { name: "Guest draft" })).toHaveCount(0);
+  await expect(
+    page
+      .getByRole("navigation", { name: "Workspace", exact: true })
+      .getByRole("link", { name: "Administration" }),
+  ).toBeVisible();
+});

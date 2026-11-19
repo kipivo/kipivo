@@ -1,0 +1,14 @@
+@import "@kipivo/ui/globals.css";
+@source ".";
+
+/* Let centered previews shrink below the example's preferred width on phones. */
+.sb-main-centered #storybook-root {
+  min-width: 0;
+  max-width: 100%;
+}
+
+@layer components {
+  .docs-select {
+    @apply h-8 rounded-lg border border-input bg-background px-2 text-sm text-foreground control-focus;
+  }
+}

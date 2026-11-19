@@ -1,0 +1,5 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "associations": [{ "files": ["assets/*.svg"], "language": "html" }],
+  "ignorePatterns": ["bun.lock", "**/.output/", "**/dist/", "**/routeTree.gen.ts"]
+}

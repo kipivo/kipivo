@@ -1,0 +1,41 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "globalDependencies": ["assets/logo.svg", ".node-version"],
+  "tasks": {
+    "transit": {
+      "dependsOn": ["^transit"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "build": {
+      "dependsOn": ["^build", "transit"],
+      "outputs": [".output/**", "dist/**"]
+    },
+    "mobile#build": {
+      "dependsOn": ["^build", "transit"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "outputs": ["dist/**"]
+    },
+    "web#build": {
+      "dependsOn": ["^build", "transit", "generate:routes"],
+      "env": ["VITE_CLOUDFLARE_ANALYTICS_TOKEN", "VITE_UMAMI_WEBSITE_ID"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "outputs": [".output/**"]
+    },
+    "generate:routes": {
+      "dependsOn": ["transit"],
+      "outputs": ["src/routeTree.gen.ts"]
+    },
+    "typecheck": {
+      "dependsOn": ["transit", "^typecheck"]
+    },
+    "web#typecheck": {
+      "dependsOn": ["transit", "^typecheck", "generate:routes"]
+    },
+    "test": {
+      "dependsOn": ["transit"]
+    }
+  }
+}

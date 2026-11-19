@@ -1,0 +1,22 @@
+{
+  "name": "@kipivo/email",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./settings": "./src/settings.ts",
+    "./factory": "./src/factory.ts",
+    "./config": "./src/config.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@kipivo/tsconfig": "workspace:*",
+    "@types/node": "22.20.5",
+    "vitest": "catalog:"
+  }
+}

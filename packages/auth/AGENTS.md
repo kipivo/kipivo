@@ -1,0 +1,7 @@
+# Authentication
+
+- Put Better Auth and Drizzle adapter configuration in [createAuth](src/factory.ts). The API supplies the database and resolved settings via `@kipivo/auth/factory`; the package root is the environment-configured standalone instance. Do not create a second pool in the adapter.
+- Keep the auth preset and URL/secret validation in [env.ts](src/env.ts). The base URL is the public Web origin, not the internal API upstream. Distinguish disabled auth from a partially configured database, URL, and secret.
+- Check the version in [package.json](package.json) and the lockfile before applying [Better Auth guidance](../../.agents/skills/better-auth-best-practices/SKILL.md). This package configures the adapter; [the database package](../db/AGENTS.md) owns the tables and migrations. Do not run an upstream schema generator against this project.
+- Use [email and password](../../.agents/skills/email-and-password-best-practices/SKILL.md) for credential flows and [Better Auth security](../../.agents/skills/better-auth-security-best-practices/SKILL.md) when reviewing cookies, trusted origins, or rate limits. Optional upstream flows are not enabled by default in Kipivo.
+- For changes to sign-in, sessions, cookies, or trusted origins, run `bun run test:auth` from the repository root with `TEST_DATABASE_URL` pointing to disposable PostgreSQL. The [auth spec](../../tests/e2e/specs/auth.spec.ts) covers the Web/API boundary; the [setup spec](../../tests/e2e/specs/setup.spec.ts) covers first-admin setup. See the [test prerequisites](../../docs/testing.md).

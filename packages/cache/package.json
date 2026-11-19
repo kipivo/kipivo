@@ -1,0 +1,22 @@
+{
+  "name": "@kipivo/cache",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./factory": "./src/factory.ts",
+    "./env": "./src/env.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@kipivo/env": "workspace:*",
+    "@kipivo/logger": "workspace:*",
+    "ioredis": "6.0.0"
+  },
+  "devDependencies": {
+    "@kipivo/tsconfig": "workspace:*",
+    "@types/node": "22.20.5"
+  }
+}

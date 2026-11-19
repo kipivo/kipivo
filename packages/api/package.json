@@ -1,0 +1,25 @@
+{
+  "name": "@kipivo/api",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts",
+    "./client": "./src/client.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@kipivo/account": "workspace:*",
+    "@kipivo/admin": "workspace:*",
+    "@kipivo/auth": "workspace:*",
+    "@kipivo/email": "workspace:*",
+    "@kipivo/rbac": "workspace:*",
+    "@orpc/client": "1.16.2",
+    "@orpc/contract": "1.16.2",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@kipivo/tsconfig": "workspace:*"
+  }
+}

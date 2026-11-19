@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 360" fill="none" stroke="black" stroke-linecap="round" stroke-linejoin="round">
+  <!-- The plates use the same 1:0.46 projection as the animated assembly. -->
+  <defs>
+    <path id="plate" d="m332 215 223-103 223 103-223 103z"/>
+    <path id="register" d="M-5 0H5M0-5V5"/>
+  </defs>
+  <g opacity=".45" stroke-dasharray="3 6">
+    <path d="m176 287 531-245M376 359l379-175M378 84l382 176M555 87v265"/>
+  </g>
+  <g opacity=".64">
+    <use href="#plate" y="24"/><use href="#plate" y="12"/>
+    <path d="M332 215v24m223 79v24"/>
+  </g>
+  <use href="#plate" stroke-width="1.5"/>
+  <path d="m358 215 197-91 197 91-197 91z" opacity=".75"/>
+  <g stroke-width="1.5">
+    <path d="M32 251h142l80-37h64m-266 49h127l80-37h33m-159 49h52l79-36h25"/>
+    <path d="M492 171h-87l-38-18h-62m297 91h66l46-21h46"/>
+    <circle cx="28" cy="251" r="4"/><circle cx="48" cy="263" r="3"/>
+    <circle cx="129" cy="275" r="3"/><circle cx="301" cy="153" r="3"/>
+    <circle cx="495" cy="171" r="3"/><circle cx="598" cy="244" r="3"/>
+  </g>
+  <g opacity=".7"><use href="#register" x="223" y="126"/><use href="#register" x="438" y="327"/><use href="#register" x="681" y="107"/></g>
+</svg>

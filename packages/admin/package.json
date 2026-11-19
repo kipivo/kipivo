@@ -1,0 +1,18 @@
+{
+  "name": "@kipivo/admin",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./directory": "./src/directory.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@kipivo/account": "workspace:*",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@kipivo/tsconfig": "workspace:*"
+  }
+}

@@ -1,0 +1,96 @@
+@property --theme-reveal-progress {
+  syntax: "<percentage>";
+  inherits: true;
+  initial-value: -6%;
+}
+
+@property --spark-spacing {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 170px;
+}
+
+@keyframes theme-reveal {
+  to {
+    --theme-reveal-progress: 120%;
+    --spark-spacing: 224px;
+  }
+}
+
+:root[data-theme-transition]::view-transition {
+  pointer-events: none;
+}
+
+:root[data-theme-transition]::view-transition-group(root) {
+  animation: none;
+}
+
+:root[data-theme-transition]::view-transition-image-pair(root) {
+  --reveal-shape: circle farthest-corner at var(--theme-reveal-origin);
+  isolation: isolate;
+  animation: theme-reveal 1s cubic-bezier(0.3, 0.06, 0.38, 1) both;
+  background-image: radial-gradient(
+    var(--reveal-shape),
+    var(--color-brand-coral) calc(var(--theme-reveal-progress) - 13%),
+    var(--color-brand-amber) calc(var(--theme-reveal-progress) - 6%),
+    var(--color-brand-coral) calc(var(--theme-reveal-progress) - 2.5%),
+    var(--spark-tip, var(--color-brand-coral)) var(--theme-reveal-progress)
+  );
+}
+
+:root.dark[data-theme-transition]::view-transition-image-pair(root) {
+  --spark-tip: #ffd080;
+}
+
+:root[data-theme-transition]::view-transition-old(root) {
+  z-index: 1;
+  animation: none;
+  mix-blend-mode: normal;
+  mask-image: radial-gradient(
+    var(--reveal-shape),
+    transparent calc(var(--theme-reveal-progress) - 0.6%),
+    black calc(var(--theme-reveal-progress) + 1.2%)
+  );
+}
+
+:root[data-theme-transition]::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+  /* The middle mask exposes a warm rim. Cut sparks out of it, then fill the area behind the trail. */
+  mask-image:
+    radial-gradient(
+      var(--reveal-shape),
+      black calc(var(--theme-reveal-progress) - 18%),
+      transparent calc(var(--theme-reveal-progress) - 10%)
+    ),
+    radial-gradient(
+      var(--reveal-shape),
+      black calc(var(--theme-reveal-progress) - 7%),
+      rgb(0 0 0 / 90%) calc(var(--theme-reveal-progress) - 4.5%),
+      rgb(0 0 0 / 38%) calc(var(--theme-reveal-progress) - 2%),
+      rgb(0 0 0 / 12%) var(--theme-reveal-progress)
+    ),
+    url("./sparks.svg");
+  mask-composite: add, subtract;
+  mask-size:
+    100% 100%,
+    100% 100%,
+    var(--spark-spacing) var(--spark-spacing);
+  mask-position:
+    0 0,
+    0 0,
+    var(--theme-reveal-origin);
+}
+
+:root[data-theme-transition] :is([data-slot="theme-selector"], [data-slot="theme-toggle"]) {
+  view-transition-name: theme-selector;
+}
+
+:root[data-theme-transition]::view-transition-old(theme-selector) {
+  display: none;
+}
+
+:root[data-theme-transition]::view-transition-group(theme-selector),
+:root[data-theme-transition]::view-transition-new(theme-selector) {
+  animation: none;
+}

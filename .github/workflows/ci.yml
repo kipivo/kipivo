@@ -1,0 +1,245 @@
+name: CI
+
+on:
+  pull_request:
+  workflow_dispatch:
+  push:
+    branches: [main, next]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || format('run-{0}-{1}', github.run_id, github.run_attempt) }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  changes:
+    runs-on: ubuntu-26.04
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      ui: ${{ steps.plan.outputs.ui }}
+      cli: ${{ steps.plan.outputs.cli }}
+      mobile: ${{ steps.plan.outputs.mobile }}
+      auth: ${{ steps.plan.outputs.auth }}
+      e2e: ${{ steps.plan.outputs.e2e }}
+      has-images: ${{ steps.plan.outputs.has-images }}
+      images: ${{ steps.plan.outputs.images }}
+      plan: ${{ steps.plan.outputs.plan }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+      - name: Install only the pinned Turbo binary
+        if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/next')
+        shell: bash
+        run: |
+          version=$(bun -e 'console.log((await Bun.file("package.json").json()).devDependencies.turbo)')
+          mkdir -p "$RUNNER_TEMP/ci-turbo"
+          echo '{}' > "$RUNNER_TEMP/ci-turbo/package.json"
+          bun install --cwd "$RUNNER_TEMP/ci-turbo" --no-save "turbo@$version"
+          mkdir -p node_modules/.bin
+          ln -s "$RUNNER_TEMP/ci-turbo/node_modules/.bin/turbo" node_modules/.bin/turbo
+      - name: Select CI jobs
+        id: plan
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          GITHUB_TOKEN: ${{ github.event_name == 'push' && github.ref == 'refs/heads/next' && github.token || '' }}
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = pull_request ]; then
+            bun run ci:plan --base "$BASE_SHA" --head "$HEAD_SHA"
+          elif [ "$GITHUB_EVENT_NAME" = push ] && [ "$GITHUB_REF" = refs/heads/next ]; then
+            bun run ci:plan --next
+          else
+            bun run ci:plan --full
+          fi
+  check:
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup-workspace
+        with:
+          cache-scope: check
+      - name: Check new commit messages
+        if: github.event_name != 'workflow_dispatch'
+        shell: bash
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+          # Last pre-policy commit on next; do not re-lint its history on promotion to main.
+          POLICY_BASE: 82d94fbf6b51917553589f5dedb71306b5c5656b
+        run: |
+          exclude=("^$POLICY_BASE")
+          if [[ ! "$BASE" =~ ^0+$ ]]; then exclude+=("^$BASE"); fi
+          git rev-list --no-merges "$HEAD" "${exclude[@]}" | while read -r sha; do
+            echo "Checking $sha"
+            git show -s --format=%B "$sha" | bun run --silent commitlint
+          done
+      - run: bun run check
+  ui:
+    needs: changes
+    if: needs.changes.outputs.ui == 'true'
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup-workspace
+        with:
+          cache-scope: ui
+      - uses: ./.github/actions/setup-playwright
+        with:
+          workspace: apps/storybook
+      - run: bun run test:stories
+      - run: bun run test:ui
+      - if: failure()
+        uses: actions/upload-artifact@v5
+        with:
+          name: ui-test-results
+          path: apps/storybook/test-results/
+          if-no-files-found: ignore
+          retention-days: 7
+  cli:
+    needs: changes
+    if: needs.changes.outputs.cli == 'true'
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup-workspace
+        with:
+          cache-scope: cli
+      - run: bun run build --filter=kipivo
+      - name: Verify CLI commands
+        run: |
+          version=$(bun apps/cli/dist/kipivo.js --version)
+          test -n "$version"
+          test "$version" = "$(bun run --silent kipivo --version)"
+          test "$version" = "$(bun run --silent kpvo --version)"
+  mobile:
+    needs: changes
+    if: needs.changes.outputs.mobile == 'true'
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup-workspace
+        with:
+          cache-scope: mobile
+      - run: bun run build --filter=mobile
+  images:
+    needs: changes
+    if: needs.changes.outputs.has-images == 'true'
+    runs-on: ubuntu-26.04
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.changes.outputs.images) }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup-workspace
+        with:
+          cache-scope: images-${{ matrix.app }}
+          install-dependencies: ${{ matrix.app == 'api' }}
+          cache-build: "false"
+      - uses: docker/setup-buildx-action@v4
+      - name: Build Docker image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          tags: kipivo-${{ matrix.app }}:ci
+          load: true
+          cache-from: type=gha,scope=kipivo-${{ matrix.app }}
+          cache-to: type=gha,scope=kipivo-${{ matrix.app }},mode=max
+      - name: Smoke test the Web image
+        if: matrix.app == 'web'
+        run: |
+          container=$(docker run --detach --env PORT=8080 --publish 127.0.0.1:3000:8080 kipivo-web:ci)
+          trap 'docker logs "$container"; docker rm --force "$container"' EXIT
+          curl --fail --silent --show-error --retry 20 --retry-all-errors --retry-delay 1 --max-time 2 http://127.0.0.1:3000/healthz
+          node scripts/smoke-web.mjs http://127.0.0.1:3000 --production
+      - name: Verify API image migrations and readiness
+        if: matrix.app == 'api'
+        timeout-minutes: 10
+        run: scripts/smoke-api-image.sh kipivo-api:ci
+      - name: Verify gateway image routing and request preservation
+        if: matrix.app == 'gateway'
+        timeout-minutes: 5
+        run: scripts/smoke-gateway-image.sh kipivo-gateway:ci
+  auth:
+    needs: changes
+    if: needs.changes.outputs.auth == 'true'
+    runs-on: ubuntu-26.04
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: kipivo
+          POSTGRES_PASSWORD: kipivo_test
+          POSTGRES_DB: kipivo_auth_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U kipivo -d kipivo_auth_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgresql://kipivo:kipivo_test@127.0.0.1:5432/kipivo_auth_test
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup-workspace
+        with:
+          cache-scope: auth
+      - uses: ./.github/actions/setup-playwright
+        with:
+          workspace: tests/e2e
+      - run: bun run test:auth
+      - if: failure()
+        uses: actions/upload-artifact@v5
+        with:
+          name: auth-test-results
+          path: tests/e2e/test-results/
+          if-no-files-found: ignore
+          retention-days: 7
+  e2e:
+    needs: changes
+    if: needs.changes.outputs.e2e == 'true'
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup-workspace
+        with:
+          cache-scope: e2e
+      - uses: ./.github/actions/setup-playwright
+        with:
+          workspace: tests/e2e
+      - run: bun run test:e2e --project=resources
+      - if: failure()
+        uses: actions/upload-artifact@v5
+        with:
+          name: playwright-results
+          path: tests/e2e/test-results/
+          if-no-files-found: ignore
+          retention-days: 7
+  result:
+    name: CI result
+    if: always()
+    needs: [changes, check, ui, cli, mobile, auth, e2e, images]
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@v6
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+      - name: Require all selected jobs to succeed
+        env:
+          CI_PLAN: ${{ needs.changes.outputs.plan }}
+          CI_NEEDS: ${{ toJSON(needs) }}
+        run: bun scripts/ci-result.mjs
