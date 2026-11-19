@@ -1,0 +1,25 @@
+tests/e2e/specs/local-runs.spec.ts
+  s_ede7f0ca7c4b93::t_7221b8e9896d06 395-399,403-405
+  s_ede7f0ca7c4b93::t_1eda693af60e41 386,391,400-402,406
+  s_ede7f0ca7c4b93::t_87a36979d22ac8 343-355,370-371
+  s_ede7f0ca7c4b93::t_b3289eb75ab1d2 387-390
+docs/testing.md
+  s_ede7f0ca7c4b93::t_d796ae318e6d9c 61
+  s_ede7f0ca7c4b93::t_9369c11f160acf 62
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "5378a809b14e09a04b374184e005f191780b3dc1",
+  "prompts": {},
+  "sessions": {
+    "s_ede7f0ca7c4b93": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1eeda-d4f1-7f53-87ef-ae4cec611e36",
+        "model": "gpt-6.2-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
