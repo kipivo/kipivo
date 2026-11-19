@@ -1,0 +1,35 @@
+README.md
+  s_df762e5574b7c9::t_65800a6e0a2ae1 34-35,74
+docs/auth.md
+  s_df762e5574b7c9::t_9fa54250eb0496 64,75-80,138,144
+docs/architecture.md
+  s_df762e5574b7c9::t_65800a6e0a2ae1 58,75,79,85-95
+  s_df762e5574b7c9::t_9fa54250eb0496 72
+docs/README.md
+  s_df762e5574b7c9::t_9fa54250eb0496 5-13,17-41
+  s_df762e5574b7c9::t_65800a6e0a2ae1 3-4,14,43,45
+apps/web/src/features/brand/motion/README.md
+  s_df762e5574b7c9::t_9fa54250eb0496 9
+docs/api.md
+  s_df762e5574b7c9::t_9fa54250eb0496 22-24
+docs/design/README.md
+  s_df762e5574b7c9::t_9fa54250eb0496 14,88
+docs/admin.md
+  s_df762e5574b7c9::t_65800a6e0a2ae1 13,15
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "9d3082aa948dfd0311e489ae808f2ffdd77d601a",
+  "prompts": {},
+  "sessions": {
+    "s_df762e5574b7c9": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1f21a-e74e-7e71-98e5-b4eb8f0652ee",
+        "model": "gpt-6.2-astra"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
