@@ -1,5 +1,5 @@
 name: Set up workspace
-description: Install pinned runtimes and dependencies with Bun, Turbo, Vite, and Storybook caches.
+description: Install pinned Bun and workspace dependencies with Bun, Turbo, Vite, and Storybook caches.
 
 inputs:
   cache-scope:
@@ -15,9 +15,6 @@ inputs:
 runs:
   using: composite
   steps:
-    - uses: actions/setup-node@v6
-      with:
-        node-version-file: .node-version
     - uses: oven-sh/setup-bun@v2
       id: bun
       with:
@@ -43,6 +40,6 @@ runs:
           node_modules/.vite
           apps/*/node_modules/.vite
           apps/storybook/node_modules/.cache/storybook
-        key: tasks-v1-${{ runner.os }}-${{ runner.arch }}-${{ inputs.cache-scope }}-${{ steps.bun.outputs.bun-version }}-${{ hashFiles('bun.lock', '.node-version', 'package.json') }}-${{ github.sha }}
+        key: tasks-v1-${{ runner.os }}-${{ runner.arch }}-${{ inputs.cache-scope }}-${{ steps.bun.outputs.bun-version }}-${{ hashFiles('bun.lock', 'bunfig.toml', 'package.json') }}-${{ github.sha }}
         restore-keys: |
-          tasks-v1-${{ runner.os }}-${{ runner.arch }}-${{ inputs.cache-scope }}-${{ steps.bun.outputs.bun-version }}-${{ hashFiles('bun.lock', '.node-version', 'package.json') }}-
+          tasks-v1-${{ runner.os }}-${{ runner.arch }}-${{ inputs.cache-scope }}-${{ steps.bun.outputs.bun-version }}-${{ hashFiles('bun.lock', 'bunfig.toml', 'package.json') }}-

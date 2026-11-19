@@ -6,7 +6,7 @@ See the [documentation index](docs/README.md) for the workspace layout and guide
 
 ## Development
 
-Install Bun 1.4.4 and the Node.js version in `.node-version`.
+Install Bun 1.4.4.
 
 ```sh
 bun install --frozen-lockfile
@@ -50,7 +50,9 @@ docker build -f apps/web/Dockerfile -t kipivo-web .
 docker run --rm -e PORT=8080 -p 127.0.0.1:3000:8080 kipivo-web
 ```
 
-With the container running, use `node scripts/smoke-web.mjs http://127.0.0.1:3000 --production` to verify the home page, assets, health check, and local task routes.
+With the container running, use `bun scripts/smoke-web.mjs http://127.0.0.1:3000 --production` to verify the home page, assets, health check, and local task routes.
+
+Run `scripts/smoke-web-image.sh kipivo-web` to smoke-test the image in a temporary container.
 
 Build the API image with `docker build -f apps/api/Dockerfile -t kipivo-api .`. See the [testing guide](docs/testing.md) for its HTTP checks.
 
@@ -69,6 +71,6 @@ railway config plan
 
 Select the project's `next` environment when linking. Review the plan before running `railway config apply`. The configuration declares `gateway`, `web`, `api`, `postgres`, and `redis` resources, including the private database and Redis connection references. Configure the external private S3-compatible bucket on the API service using the [resource guide](docs/resources.md#railway).
 
-The source configuration enables **Wait for CI**. Keep the existing Web and API public domains while deploying the gateway as a separate service; domain changes are a separate step. Configure the API's `BETTER_AUTH_URL` and `BETTER_AUTH_SECRET` using the [authentication deployment steps](docs/auth.md#docker-and-railway). Railway checks Web's `/healthz` and API's `/readyz` before switching traffic and uses each service's watch paths to decide what to rebuild. Verify the Web deployment with `node scripts/smoke-web.mjs https://<web-domain> --production`. Verify the API over HTTPS using the [testing guide](docs/testing.md).
+The source configuration enables **Wait for CI**. Keep the existing Web and API public domains while deploying the gateway as a separate service; domain changes are a separate step. Configure the API's `BETTER_AUTH_URL` and `BETTER_AUTH_SECRET` using the [authentication deployment steps](docs/auth.md#docker-and-railway). Railway checks Web's `/healthz` and API's `/readyz` before switching traffic and uses each service's watch paths to decide what to rebuild. Verify the Web deployment with `bun scripts/smoke-web.mjs https://<web-domain> --production`. Verify the API over HTTPS using the [testing guide](docs/testing.md).
 
 The gateway uses `WEB_UPSTREAM` and `API_UPSTREAM` for its private upstreams. Use `/gateway-healthz` to check the gateway itself. The [routing guide](docs/architecture.md#web-and-public-api) covers REST, RPC, authentication, health checks, and the optional legacy API hostname.

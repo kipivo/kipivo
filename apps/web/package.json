@@ -6,8 +6,7 @@
     "dev": "vite dev --port 3000 --strictPort",
     "build": "vite build",
     "start": "bun run ./.output/server/index.mjs",
-    "generate:routes": "node scripts/generate-routes.mjs",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "bun scripts/generate-routes.mjs && tsc --noEmit",
     "test": "vitest run"
   },
   "dependencies": {

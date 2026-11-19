@@ -6,7 +6,7 @@ export default defineRailway(() => {
     "/package.json",
     "/bun.lock",
     "/turbo.json",
-    "/.node-version",
+    "/bunfig.toml",
     "/.dockerignore",
     "/packages/env/**",
     "/packages/email/**",

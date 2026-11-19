@@ -11,7 +11,7 @@ Use your Kipivo **Web or gateway origin**, not a separate API hostname. Include 
 
 ## Run in Expo Go
 
-From the repository root, with the versions of Bun and Node specified in the [repository guide](../../README.md#development):
+Run these commands from the repository root with the Bun version specified in the [repository guide](../../README.md#development).
 
 ```sh
 bun install --frozen-lockfile

@@ -62,7 +62,6 @@ typings/
 .nitro/
 .tanstack/
 .vitest/
-apps/web/src/routeTree.gen.ts
 tests/e2e/test-results/
 tests/e2e/playwright-report/
 apps/storybook/test-results/

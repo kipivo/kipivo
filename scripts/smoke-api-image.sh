@@ -199,7 +199,7 @@ docker exec "$api" bun -e '
 ledger >"$work_dir/second-ledger"
 diff -u "$work_dir/first-ledger" "$work_dir/second-ledger"
 printf 'Readiness returned 200 and the migration ledger matches the first run.\n'
-E2E_API_ORIGIN="$origin" bun run --cwd tests/e2e test:e2e --project=api
+E2E_API_ORIGIN="$origin" bun run --bun --cwd tests/e2e test:e2e --project=api
 
 printf 'Run the standalone migration command from the API image.\n'
 start_container --env "DATABASE_URL=$database_url" "$image" db:migrate

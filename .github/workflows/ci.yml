@@ -40,13 +40,7 @@ jobs:
       - name: Install only the pinned Turbo binary
         if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/next')
         shell: bash
-        run: |
-          version=$(bun -e 'console.log((await Bun.file("package.json").json()).devDependencies.turbo)')
-          mkdir -p "$RUNNER_TEMP/ci-turbo"
-          echo '{}' > "$RUNNER_TEMP/ci-turbo/package.json"
-          bun install --cwd "$RUNNER_TEMP/ci-turbo" --no-save "turbo@$version"
-          mkdir -p node_modules/.bin
-          ln -s "$RUNNER_TEMP/ci-turbo/node_modules/.bin/turbo" node_modules/.bin/turbo
+        run: scripts/ci-install-turbo.sh
       - name: Select CI jobs
         id: plan
         env:
@@ -101,11 +95,7 @@ jobs:
           cache-scope: cli
       - run: bun run build --filter=kipivo
       - name: Verify CLI commands
-        run: |
-          version=$(bun apps/cli/dist/kipivo.js --version)
-          test -n "$version"
-          test "$version" = "$(bun run --silent kipivo --version)"
-          test "$version" = "$(bun run --silent kpvo --version)"
+        run: scripts/smoke-cli.sh
   mobile:
     needs: changes
     if: needs.changes.outputs.mobile == 'true'
@@ -142,11 +132,7 @@ jobs:
           cache-to: type=gha,scope=kipivo-${{ matrix.app }},mode=max
       - name: Smoke test the Web image
         if: matrix.app == 'web'
-        run: |
-          container=$(docker run --detach --env PORT=8080 --publish 127.0.0.1:3000:8080 kipivo-web:ci)
-          trap 'docker logs "$container"; docker rm --force "$container"' EXIT
-          curl --fail --silent --show-error --retry 20 --retry-all-errors --retry-delay 1 --max-time 2 http://127.0.0.1:3000/healthz
-          node scripts/smoke-web.mjs http://127.0.0.1:3000 --production
+        run: scripts/smoke-web-image.sh kipivo-web:ci
       - name: Verify API image migrations and readiness
         if: matrix.app == 'api'
         timeout-minutes: 10

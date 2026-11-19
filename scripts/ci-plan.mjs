@@ -41,16 +41,17 @@ const consumers = {
 };
 const sharedRootInputs = new Set([
   ".gitignore",
-  ".node-version",
   ".oxfmtrc.json",
   ".oxlintrc.json",
   "bun.lock",
+  "bunfig.toml",
   "knip.json",
   "package.json",
   "turbo.json",
 ]);
 const imageInputs = new Map([
   ["apps/web/Dockerfile", ["web-image"]],
+  ["scripts/smoke-web-image.sh", ["web-image"]],
   ["scripts/smoke-web.mjs", ["web-image"]],
   ["scripts/smoke-api-image.sh", ["api-image"]],
   ["scripts/smoke-gateway-image.sh", ["gateway-image"]],
@@ -58,6 +59,7 @@ const imageInputs = new Map([
 ]);
 const specialInputs = new Map([
   ...imageInputs,
+  ["scripts/smoke-cli.sh", ["cli"]],
   ["scripts/workspace-lint.mjs", []],
   ["scripts/workspace-lint.test.mjs", []],
   ["assets/logo.svg", [...consumers.web, ...consumers.storybook]],
@@ -112,7 +114,7 @@ function specialInputJobs(path) {
 
 function sharedInputReason(path) {
   if (specialInputJobs(path)) return;
-  if (path.startsWith(".github/") || /^scripts\/ci-[^/]+\.mjs$/.test(path)) {
+  if (path.startsWith(".github/") || /^scripts\/ci-[^/]+\.(?:mjs|sh)$/.test(path)) {
     return `CI configuration changed: ${path}`;
   }
   if (sharedRootInputs.has(path) || path.startsWith(".railway/")) {
@@ -191,7 +193,7 @@ export function changedPaths(base, head, filters = []) {
 }
 
 function readGraph(directory, turbo, version) {
-  const graph = JSON.parse(run(turbo, ["query", graphQuery], directory));
+  const graph = JSON.parse(run(process.execPath, [turbo, "query", graphQuery], directory));
   if (graph.version !== version || graph.errors?.length) {
     throw new Error("The workspace graph must come from the pinned root Turbo version");
   }
@@ -231,8 +233,10 @@ function workspaceGraph(head) {
     const version = turboVersion(checkout);
     let turbo = rootTurbo;
     if (
-      spawnSync(rootTurbo, ["--version"], { cwd: temp, encoding: "utf8" }).stdout?.trim() !==
-      version
+      spawnSync(process.execPath, [rootTurbo, "--version"], {
+        cwd: temp,
+        encoding: "utf8",
+      }).stdout?.trim() !== version
     ) {
       const install = join(temp, "turbo");
       mkdirSync(install);

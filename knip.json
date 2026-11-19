@@ -2,9 +2,13 @@
   "$schema": "./node_modules/knip/schema.json",
   "ignoreFiles": [".agents/skills/shadcn/**"],
   "workspaces": {
+    ".": { "entry": ["scripts/smoke-web.mjs"] },
     "apps/api": { "entry": ["src/server.ts", "src/plugins/*.ts"] },
     "apps/web": { "entry": ["src/routes/**/*.{ts,tsx}", "src/features/brand/motion/src/scene.js"] },
-    "apps/mobile": { "ignoreDependencies": ["expo-updates"] },
+    "apps/mobile": {
+      "bun": { "entry": ["**/*.test.mjs"] },
+      "ignoreDependencies": ["expo-updates"]
+    },
     "tests/e2e": { "entry": ["fixtures/check.mjs", "fixtures/resend-preload.mjs"] }
   }
 }

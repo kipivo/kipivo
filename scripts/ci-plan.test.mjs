@@ -101,7 +101,13 @@ describe("CI selection", () => {
       "api",
       "gateway",
     ]);
-    expect(selected(selectJobs(["scripts/smoke-web.mjs"], graph))).toEqual(["check", "web-image"]);
+  });
+  test.each([
+    ["scripts/smoke-web.mjs", "web-image"],
+    ["scripts/smoke-web-image.sh", "web-image"],
+    ["scripts/smoke-cli.sh", "cli"],
+  ])("%s selects only %s alongside check", (path, job) => {
+    expect(selected(selectJobs([path], graph))).toEqual(["check", job]);
   });
   test("the API image smoke script selects only the API image", () => {
     const plan = selectJobs(["scripts/smoke-api-image.sh"], graph);
@@ -153,6 +159,7 @@ describe("CI selection", () => {
   test("unknown paths, unknown workspaces, and unmapped apps run everything", () => {
     for (const path of [
       ".github/workflows/ci.yml",
+      "scripts/ci-install-turbo.sh",
       "bun.lock",
       "package.json",
       "apps/unknown/a.ts",

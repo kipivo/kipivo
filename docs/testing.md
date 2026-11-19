@@ -1,6 +1,6 @@
 # Testing
 
-`bun run check` runs formatting, lint, TypeScript, Knip, and the Bun and Vitest tests. `bun run lint` checks workspace import boundaries and runs the rule's examples with Node. Web generates its route types using Vite without making a production bundle. Use `bun run knip` for the workspace usage analysis alone.
+`bun run check` runs formatting, lint, TypeScript, Knip, and the Bun and Vitest tests. `bun run lint` checks workspace import boundaries and runs the rule's examples with Bun. Web generates its route types using Vite without making a production bundle. Use `bun run knip` for the workspace usage analysis alone.
 
 ## CI job selection
 
@@ -15,7 +15,7 @@ Every pull request runs `check` in parallel with a lightweight `changes` job. Th
 | CLI (`kipivo`)    | `cli`, `e2e`                            |
 | `tests/e2e`       | `auth`, `e2e`, API image                |
 
-Changes to `@kipivo/cache` or `@kipivo/storage` follow their API and end-to-end consumers and select `auth`, `e2e`, and the API image. Changes to `@kipivo/runtime` follow the Web and CLI consumers and select `cli`, `auth`, `e2e`, and the Web image. Changes combine these selections. Root and existing workspace `README.md` files and Markdown under `docs/` only require `check`. `apps/web/Dockerfile` and `scripts/smoke-web.mjs` select the Web image. The `scripts/smoke-api-image.sh` script selects the API image. `.railway/gateway/` and `scripts/smoke-gateway-image.sh` select the gateway image. `.dockerignore` selects all three images. `assets/logo.svg` selects Web and Storybook consumers. CI configuration, lockfiles, and shared root tooling select all jobs. Unknown paths and workspaces also select all jobs and flag the relevant entry for mapping in `scripts/ci-plan.mjs`. If the planner cannot reliably read the diff or the workspace graph, it selects all jobs and reports the underlying problem.
+Changes to `@kipivo/cache` or `@kipivo/storage` follow their API and end-to-end consumers and select `auth`, `e2e`, and the API image. Changes to `@kipivo/runtime` follow the Web and CLI consumers and select `cli`, `auth`, `e2e`, and the Web image. Changes combine these selections. Root and existing workspace `README.md` files and Markdown under `docs/` only require `check`. `apps/web/Dockerfile`, `scripts/smoke-web-image.sh`, and `scripts/smoke-web.mjs` select the Web image. `scripts/smoke-cli.sh` selects `cli`. The `scripts/smoke-api-image.sh` script selects the API image. `.railway/gateway/` and `scripts/smoke-gateway-image.sh` select the gateway image. `.dockerignore` selects all three images. `assets/logo.svg` selects Web and Storybook consumers. CI configuration, lockfiles, and shared root tooling select all jobs. Unknown paths and workspaces also select all jobs and flag the relevant entry for mapping in `scripts/ci-plan.mjs`. If the planner cannot reliably read the diff or the workspace graph, it selects all jobs and reports the underlying problem.
 
 Pushes to `next` compare against the most recent ancestor with a successful `next` push CI run so that changes from failed or cancelled runs are included in the comparison. For ordinary changes, CI runs the selected tests and Railway builds the deployment images after CI succeeds. Changes to deployment Dockerfiles, `.dockerignore`, `.railway/`, or image smoke scripts also run the selected GitHub image checks. `next` runs the full suite when the workflow history is unavailable or no successful ancestor is found. Pushes to `main` and manual `workflow_dispatch` runs also run the full suite.
 
@@ -33,7 +33,7 @@ bun run ci:test
 
 ## CI caches
 
-The workflow uses `.github/actions/setup-workspace` to install the pinned Node and Bun versions and restore caches through GitHub Actions:
+The workflow uses `.github/actions/setup-workspace` to install the pinned Bun version and restore caches through GitHub Actions:
 
 - Bun's global package cache (`~/.bun/install/cache`) is shared between jobs for the same runner OS, architecture, Bun version, and lockfile. A version-matched fallback can supply unchanged packages after a lockfile update. Every job that needs dependencies still runs `bun install --frozen-lockfile`.
 - Turbo's task artifacts (`.turbo/cache`) and Vite's default cache directories (`node_modules/.vite` and `apps/*/node_modules/.vite`) are saved per job and commit. Restore keys reuse the latest matching cache for the same toolchain and dependency files. Turbo and Vite validate their own inputs before reusing entries.
@@ -90,8 +90,8 @@ The API image job runs this script against a disposable PostgreSQL 17 container 
 ## Verify running services
 
 ```sh
-node scripts/smoke-web.mjs https://<web-domain> --production
-E2E_API_ORIGIN=https://<api-domain> bun run --cwd tests/e2e test:e2e --project=api
+bun scripts/smoke-web.mjs https://<web-domain> --production
+E2E_API_ORIGIN=https://<api-domain> bun run --bun --cwd tests/e2e test:e2e --project=api
 ```
 
 The Web check covers the SSR home page, stylesheet, logo, `/healthz`, and the production `404` for local tasks. The API test checks `/healthz`, calls `system.ping` through the typed oRPC client, and verifies unknown HTTP and RPC paths return `404`.

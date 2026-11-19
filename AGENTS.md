@@ -31,7 +31,7 @@ Use the directory guide for Kipivo conventions and the linked skill for framewor
 
 ## Toolchain
 
-- Use the Bun version pinned in the root `package.json` and the Node.js version in `.node-version`. Install from the repository root with `bun install --frozen-lockfile`.
+- Use the Bun version pinned in the root `package.json`. Install from the repository root with `bun install --frozen-lockfile`.
 - Declare dependencies in the workspace that imports them. Use `workspace:*` for local packages and `catalog:` for Zod, Vite, and Vitest. Edit their versions in the root manifest and update `bun.lock` when dependencies change.
 - Use the root scripts and Turbo filters, such as `bun run build --filter=api`. Use `bun x oxfmt <paths>` to format changed files with the root Oxfmt configuration, including SVGs under `assets/`.
 

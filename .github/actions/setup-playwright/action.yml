@@ -13,9 +13,7 @@ runs:
       id: playwright
       working-directory: ${{ inputs.workspace }}
       shell: bash
-      run: |
-        version=$(bun -e 'console.log(require("@playwright/test/package.json").version)')
-        echo "version=$version" >> "$GITHUB_OUTPUT"
+      run: bash "$GITHUB_ACTION_PATH/resolve-version.sh"
     - name: Cache Chromium headless shell
       uses: actions/cache@v6
       with:
@@ -24,15 +22,8 @@ runs:
     - name: Ensure Chromium is installed
       working-directory: ${{ inputs.workspace }}
       shell: bash
-      run: bun run playwright install --only-shell chromium
+      run: bun run --bun playwright install --only-shell chromium
     - name: Install system dependencies if Chromium cannot launch
       working-directory: ${{ inputs.workspace }}
       shell: bash
-      run: |
-        check_chromium() {
-          node --input-type=module -e 'import { chromium } from "@playwright/test"; const browser = await chromium.launch(); await browser.close()'
-        }
-        if ! check_chromium; then
-          bun run playwright install-deps chromium
-          check_chromium
-        fi
+      run: bash "$GITHUB_ACTION_PATH/ensure-chromium-deps.sh"
