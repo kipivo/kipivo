@@ -1,0 +1,151 @@
+apps/api/src/procedures.ts
+  s_5b0ad29f5a4d17::t_d952e11506b6e7 6
+  s_5b0ad29f5a4d17::t_554f14b57f58e2 29-44,46,57-71,73-106,114,119
+  s_5b0ad29f5a4d17::t_f4cd796955a4fa 23
+  s_5b0ad29f5a4d17::t_187afbcb4d5f3d 3
+  s_5b0ad29f5a4d17::t_7fbce3421fefdb 72
+apps/api/src/access.ts
+  s_5b0ad29f5a4d17::t_554f14b57f58e2 13
+  s_5b0ad29f5a4d17::t_d952e11506b6e7 29,35-37
+  s_5b0ad29f5a4d17::t_4767b38cdbf1ba 30-34
+tests/e2e/specs/auth.spec.ts
+  s_5b0ad29f5a4d17::t_a26cd0392331c7 449,451-459
+  s_5b0ad29f5a4d17::t_f234c2f6e3f458 460-461
+  s_5b0ad29f5a4d17::t_82863d5f246778 57,516,615,672,678-679,684,733,841,939
+  s_5b0ad29f5a4d17::t_c5514e852be082 239
+  s_5b0ad29f5a4d17::t_764ea26c86529b 421,436-438,440-446
+  s_5b0ad29f5a4d17::t_f17e3e52064431 236,248,273
+  s_5b0ad29f5a4d17::t_2ab1018af5faaa 448
+  s_5b0ad29f5a4d17::t_eb4ff12746a233 182,188,195,197,232,287,313,318-319,321,370,398,426-427,430,439,450,649,661,778
+  s_5b0ad29f5a4d17::t_fb65b96ddc4470 196
+  s_5b0ad29f5a4d17::t_c2755f84db8c7d 447
+apps/web/src/features/account/client.ts
+  s_5b0ad29f5a4d17::t_d397f3f5eb0bae 2
+  s_5b0ad29f5a4d17::t_eb4ff12746a233 4
+docs/api.md
+  s_5b0ad29f5a4d17::t_5060fb0e5991c4 28-29,31-32,34-49,57,67
+  s_5b0ad29f5a4d17::t_82863d5f246778 13-24,30,61
+  s_5b0ad29f5a4d17::t_a2e3928f6cd5a1 5-6
+  s_5b0ad29f5a4d17::t_764ea26c86529b 68
+  s_5b0ad29f5a4d17::t_d8916b518ed811 9-12,33
+packages/api/src/contract.ts
+  s_5b0ad29f5a4d17::t_d952e11506b6e7 2,5
+  s_5b0ad29f5a4d17::t_f4cd796955a4fa 12-15,34-39,41,62-68,72-78,81-87,96-104,109-116,125-131,137-143,149-155,158-164
+  s_5b0ad29f5a4d17::t_8387b18169d2e7 8-9,26,32,53,174
+  s_5b0ad29f5a4d17::t_187afbcb4d5f3d 3,18-20,175
+  s_5b0ad29f5a4d17::t_554f14b57f58e2 24,28,59-61,69-71,79-80,88-91,107-108,117-124,132-134,136,144-148,156-157,165-167
+  s_5b0ad29f5a4d17::t_89555043a9f338 21,135
+tests/e2e/specs/api.spec.ts
+  s_5b0ad29f5a4d17::t_82863d5f246778 32,64
+  s_5b0ad29f5a4d17::t_c5514e852be082 52-54,63
+  s_5b0ad29f5a4d17::t_eb4ff12746a233 68,72-74,78-81
+  s_5b0ad29f5a4d17::t_f17e3e52064431 75-77
+  s_5b0ad29f5a4d17::t_2eea1a7c9c18ce 62
+apps/web/src/features/account/install-status.ts
+  s_5b0ad29f5a4d17::t_eb4ff12746a233 12
+apps/web/src/features/account/directory/role-change.tsx
+  s_5b0ad29f5a4d17::t_eb4ff12746a233 40
+apps/web/src/features/account/session.tsx
+  s_5b0ad29f5a4d17::t_f234c2f6e3f458 36-39,41-44
+  s_5b0ad29f5a4d17::t_eb4ff12746a233 35
+apps/api/src/runtime.test.ts
+  s_5b0ad29f5a4d17::t_82863d5f246778 62
+apps/web/src/routes/(auth)/authorize.tsx
+  s_5b0ad29f5a4d17::t_eb4ff12746a233 50
+docs/architecture.md
+  s_5b0ad29f5a4d17::t_82863d5f246778 48
+  s_5b0ad29f5a4d17::t_5060fb0e5991c4 62
+README.md
+  s_5b0ad29f5a4d17::t_2eea1a7c9c18ce 76
+docs/testing.md
+  s_5b0ad29f5a4d17::t_2eea1a7c9c18ce 112
+apps/web/src/features/settings/forms.tsx
+  s_5b0ad29f5a4d17::t_eb4ff12746a233 84,109,141,183,208
+  s_5b0ad29f5a4d17::t_6233ff04872fb1 176-177
+apps/web/src/features/account/menu.tsx
+  s_5b0ad29f5a4d17::t_d952e11506b6e7 30
+  s_5b0ad29f5a4d17::t_eb4ff12746a233 41
+  s_5b0ad29f5a4d17::t_51d72d4e406d84 43
+apps/web/src/features/account/auth-navigation.tsx
+  s_5b0ad29f5a4d17::t_eb4ff12746a233 55
+tests/e2e/specs/local-runs.spec.ts
+  s_5b0ad29f5a4d17::t_eb4ff12746a233 203,319,345,347
+scripts/smoke-gateway-image.sh
+  s_5b0ad29f5a4d17::t_c5514e852be082 74
+  s_5b0ad29f5a4d17::t_2eea1a7c9c18ce 101-104
+  s_5b0ad29f5a4d17::t_b83bf3ee84d8f4 57,60,64-68,70,73,96,98-99,105
+  s_5b0ad29f5a4d17::t_f644b8a5d79f9a 56,58-59
+apps/web/src/features/account/social-sign-in.tsx
+  s_5b0ad29f5a4d17::t_eb4ff12746a233 10,36,52
+packages/api/package.json
+  s_5b0ad29f5a4d17::t_d397f3f5eb0bae 7-8
+apps/web/src/features/account/credentials-form.tsx
+  s_5b0ad29f5a4d17::t_eb4ff12746a233 98,100
+packages/api/src/auth.ts
+  s_5b0ad29f5a4d17::t_187afbcb4d5f3d 1,6,23,136
+  s_5b0ad29f5a4d17::t_d952e11506b6e7 2
+  s_5b0ad29f5a4d17::t_8387b18169d2e7 5,15
+  s_5b0ad29f5a4d17::t_1fe4a5b63e9f9c 19-21,31-32,40-63,71-88,96-129,131-133,135,137-141,149-151
+  s_5b0ad29f5a4d17::t_f4cd796955a4fa 33-39,64-70,89-95,142-148
+  s_5b0ad29f5a4d17::t_188c72f5bd0313 22,134
+packages/api/src/client.ts
+  s_5b0ad29f5a4d17::t_187afbcb4d5f3d 8
+apps/web/src/features/account/email-form.tsx
+  s_5b0ad29f5a4d17::t_eb4ff12746a233 41,48,54-55
+tests/e2e/specs/setup.spec.ts
+  s_5b0ad29f5a4d17::t_82863d5f246778 32,69
+  s_5b0ad29f5a4d17::t_eb4ff12746a233 83,89
+packages/api/src/errors.ts
+  s_5b0ad29f5a4d17::t_d397f3f5eb0bae 1-6
+packages/api/src/account.ts
+  s_5b0ad29f5a4d17::t_d952e11506b6e7 1-11
+apps/api/src/auth/request.ts
+  s_5b0ad29f5a4d17::t_382b664c737ce6 3-6,21,24-27,43,46
+  s_5b0ad29f5a4d17::t_5b23df0c4cfc6d 29
+  s_5b0ad29f5a4d17::t_bd8758dc887d00 31
+scripts/smoke-api-image.sh
+  s_5b0ad29f5a4d17::t_82863d5f246778 184,196
+packages/api/src/security.ts
+  s_5b0ad29f5a4d17::t_187afbcb4d5f3d 1-7,16-17,24-27
+apps/api/src/routes/procedures.ts
+  s_5b0ad29f5a4d17::t_2552f84eba2973 2,5,7,15,19-20,22,25-28,61-63,65-73
+  s_5b0ad29f5a4d17::t_c5514e852be082 64
+apps/api/src/auth/procedures.ts
+  s_5b0ad29f5a4d17::t_d952e11506b6e7 3,6,29
+  s_5b0ad29f5a4d17::t_1fe4a5b63e9f9c 4,7-22,25-28,30-64,66-73,75-80
+  s_5b0ad29f5a4d17::t_ef29eed8c76036 5,65
+apps/web/src/routes/(auth)/setup.tsx
+  s_5b0ad29f5a4d17::t_eb4ff12746a233 33
+apps/web/src/routes/(auth)/reset-password.tsx
+  s_5b0ad29f5a4d17::t_eb4ff12746a233 49
+apps/api/src/route-access.test.ts
+  s_5b0ad29f5a4d17::t_eb4ff12746a233 38-43,45-46,48-49,54,60-61,445,488,505-506
+  s_5b0ad29f5a4d17::t_5b23df0c4cfc6d 476
+  s_5b0ad29f5a4d17::t_764ea26c86529b 494-495,497,499,532
+  s_5b0ad29f5a4d17::t_82863d5f246778 57,63,446,477
+  s_5b0ad29f5a4d17::t_f17e3e52064431 460-475
+  s_5b0ad29f5a4d17::t_4767b38cdbf1ba 484-485,500-504,507-531,533-546
+  s_5b0ad29f5a4d17::t_d5858a051ce837 478-483
+apps/api/package.json
+  s_5b0ad29f5a4d17::t_1da4d0055f4bab 22-25
+bun.lock
+  s_5b0ad29f5a4d17::t_123d4d9893a1cc 32-35,169-171,290,295,845,847,849,851,853,855,857,859,861,863,1135-1148,1497,1585,1809
+packages/logger/package.json
+  s_5b0ad29f5a4d17::t_0955878007de8e 22,27
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "1df614c336ce796a4fdfcaf0483cde514c306c86",
+  "prompts": {},
+  "sessions": {
+    "s_5b0ad29f5a4d17": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1f3ce-2e2d-7b72-9d22-76b8b8fc80e9",
+        "model": "gpt-6.2-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
