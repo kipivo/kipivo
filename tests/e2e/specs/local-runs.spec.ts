@@ -239,6 +239,7 @@ test("brand illustrations play once and respect reduced motion", async ({ page, 
         img.naturalWidth && img.currentSrc ? new URL(img.currentSrc).hash : null,
       );
     await expect(image).toBeVisible();
+    await expect(image).toHaveJSProperty("fetchPriority", path === "/" ? "high" : "auto");
     await expect(art.locator("figcaption, button")).toHaveCount(0);
     await expect.poll(currentFrame).toBe("#intro");
     await page.emulateMedia({ reducedMotion: "reduce" });

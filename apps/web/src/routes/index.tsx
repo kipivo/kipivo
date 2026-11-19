@@ -86,7 +86,7 @@ function Home() {
               </a>
             </div>
           </div>
-          <Assembly />
+          <Assembly fetchPriority="high" />
         </section>
         <RunExample />
         <Quickstart />
