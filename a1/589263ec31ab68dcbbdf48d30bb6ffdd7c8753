@@ -1,0 +1,23 @@
+apps/web/src/routes/index.tsx
+  s_df762e5574b7c9::t_fa17952ce55e65 89
+apps/web/src/features/brand/assembly.tsx
+  s_df762e5574b7c9::t_fa17952ce55e65 1-2,8,13-20
+tests/e2e/specs/local-runs.spec.ts
+  s_df762e5574b7c9::t_fa17952ce55e65 242
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "a1589263ec31ab68dcbbdf48d30bb6ffdd7c8753",
+  "prompts": {},
+  "sessions": {
+    "s_df762e5574b7c9": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1f21a-e74e-7e71-98e5-b4eb8f0652ee",
+        "model": "gpt-6.2-astra"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
