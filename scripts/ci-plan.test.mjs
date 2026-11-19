@@ -53,6 +53,7 @@ describe("CI selection", () => {
   test("admin directory changes select the API and Web consumers", () => {
     expect(selected(selectJobs(["packages/admin/src/directory.ts"], graph))).toEqual([
       "check",
+      "ui",
       "auth",
       "e2e",
       "web-image",
@@ -132,10 +133,17 @@ describe("CI selection", () => {
   });
   test("runtime selects its Web and CLI consumers", () => {
     const plan = selectJobs(["packages/runtime/src/local/connection.ts"], graph);
-    expect(selected(plan)).toEqual(["check", "cli", "auth", "e2e", "web-image"]);
+    expect(selected(plan)).toEqual(["check", "ui", "cli", "auth", "e2e", "web-image"]);
     expect(plan.reasons.e2e).toEqual(["@kipivo/runtime → web", "@kipivo/runtime → kipivo"]);
   });
   test("entry points select their declared consumers", () => {
+    expect(selected(selectJobs(["apps/web/src/routes/index.tsx"], graph))).toEqual([
+      "check",
+      "ui",
+      "auth",
+      "e2e",
+      "web-image",
+    ]);
     expect(selected(selectJobs(["apps/api/src/index.ts"], graph))).toEqual([
       "check",
       "auth",
@@ -210,7 +218,7 @@ describe("CI selection", () => {
   test("selection reasons are aggregated by changed workspace", () => {
     const paths = Array.from({ length: 10000 }, (_, index) => `packages/ui/src/file-${index}.ts`);
     const { reasons } = selectJobs(paths, graph);
-    expect(reasons.ui).toEqual(["@kipivo/ui → storybook"]);
+    expect(reasons.ui).toEqual(["@kipivo/ui → storybook", "@kipivo/ui → web"]);
     expect(reasons.auth).toEqual(["@kipivo/ui → web"]);
   });
   test("full mode skips git and dependency graph discovery", () => {
@@ -282,10 +290,10 @@ describe("CI selection", () => {
       commit("Remove web dependency on UI");
       process.chdir(dir);
       const args = ["--base", gatewayHead, "--head", head];
-      const expected = ["check", "auth", "e2e", "web-image"];
+      const expected = ["check", "ui", "auth", "e2e", "web-image"];
       expect(selected(planFromArgs(args))).toEqual(expected);
       const nextPlan = planFromArgs(args, { useRailwayBuilds: true });
-      expect(selected(nextPlan)).toEqual(["check", "auth", "e2e"]);
+      expect(selected(nextPlan)).toEqual(["check", "ui", "auth", "e2e"]);
       expect(nextPlan.images).toEqual([]);
 
       git("checkout", "--quiet", "--detach", head);
@@ -489,6 +497,17 @@ describe("CI result", () => {
         expect(() => validateResults(plan, { ...results(plan), [job]: { result } })).toThrow();
       }
     }
+  });
+  test("the Web browser job is advisory while Storybook and integrations gate CI", () => {
+    const workflow = Bun.YAML.parse(
+      readFileSync(new URL("../.github/workflows/ci.yml", import.meta.url), "utf8"),
+    );
+    const web = workflow.jobs["web-e2e"];
+    expect(web["continue-on-error"]).toBe(true);
+    expect(web.if).toBe(workflow.jobs.e2e.if);
+    expect(workflow.jobs.result.needs).toContain("ui");
+    expect(workflow.jobs.result.needs).toContain("e2e");
+    expect(workflow.jobs.result.needs).not.toContain("web-e2e");
   });
   test("invalid plan and unexpected unselected executions fail", () => {
     const plan = selectJobs([], graph);

@@ -16,7 +16,7 @@ export const jobs = ["ui", "cli", "mobile", "auth", "e2e", ...imageJobs];
 // Entry points are the only mapping from the workspace graph to CI jobs.
 const consumers = {
   storybook: ["ui"],
-  web: ["auth", "e2e", "web-image"],
+  web: ["ui", "auth", "e2e", "web-image"],
   api: ["auth", "e2e", "api-image"],
   kipivo: ["cli", "e2e"],
   "@kipivo/e2e": ["auth", "e2e", "api-image"],
@@ -62,7 +62,7 @@ const specialInputs = new Map([
   ["scripts/smoke-cli.sh", ["cli"]],
   ["scripts/workspace-lint.mjs", []],
   ["scripts/workspace-lint.test.mjs", []],
-  ["assets/logo.svg", [...consumers.web, ...consumers.storybook]],
+  ["assets/logo.svg", [...new Set([...consumers.web, ...consumers.storybook])]],
 ]);
 const rootTurbo = fileURLToPath(new URL("../node_modules/.bin/turbo", import.meta.url));
 const graphQuery = "query { packages { items { name path allDependents { items { name } } } } }";

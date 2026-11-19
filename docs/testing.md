@@ -10,7 +10,7 @@ Every pull request runs `check` in parallel with a lightweight `changes` job. Th
 | ----------------- | --------------------------------------- |
 | Mobile            | `mobile` (iOS and Android Expo exports) |
 | Storybook         | `ui`                                    |
-| Web               | `auth`, `e2e`, Web image                |
+| Web               | `ui`, `auth`, `e2e`, Web image          |
 | API               | `auth`, `e2e`, API image                |
 | CLI (`kipivo`)    | `cli`, `e2e`                            |
 | `tests/e2e`       | `auth`, `e2e`, API image                |
@@ -19,7 +19,9 @@ Changes to `@kipivo/cache` or `@kipivo/storage` follow their API and end-to-end 
 
 Pushes to `next` compare against the most recent ancestor with a successful `next` push CI run so that changes from failed or cancelled runs are included in the comparison. For ordinary changes, CI runs the selected tests and Railway builds the deployment images after CI succeeds. Changes to deployment Dockerfiles, `.dockerignore`, `.railway/`, or image smoke scripts also run the selected GitHub image checks. `next` runs the full suite when the workflow history is unavailable or no successful ancestor is found. Pushes to `main` and manual `workflow_dispatch` runs also run the full suite.
 
-A newer run cancels the older run on the same PR. Image builds use independent matrix entries with fail-fast disabled. The stable `CI result` check requires `changes`, `check`, and every selected job to succeed. Only jobs excluded by the plan may be skipped. Configure branch protection to require `CI result`. The `changes` summary records the `next` baseline when available and explains which jobs were selected.
+A newer run cancels the older run on the same PR. Image builds use independent matrix entries with fail-fast disabled. The stable `CI result` check requires `changes`, `check`, and every selected blocking job to succeed. Configure branch protection to require `CI result`. The `changes` summary records the `next` baseline when available and explains which jobs were selected.
+
+Storybook component interactions and browser checks are required through `ui` for Web changes. The same selection that starts `e2e` for required API and resource integrations also starts `Web E2E (advisory)` for the Chromium application tests. Advisory failures retain traces in `web-playwright-results` and leave the workflow eligible for success. Railway's **Wait for CI** still waits for the workflow to finish.
 
 Reproduce and test the plan locally:
 
@@ -38,7 +40,7 @@ The workflow uses `.github/actions/setup-workspace` to install the pinned Bun ve
 - Bun's global package cache (`~/.bun/install/cache`) is shared between jobs for the same runner OS, architecture, Bun version, and lockfile. A version-matched fallback can supply unchanged packages after a lockfile update. Every job that needs dependencies still runs `bun install --frozen-lockfile`.
 - Turbo's task artifacts (`.turbo/cache`) and Vite's default cache directories (`node_modules/.vite` and `apps/*/node_modules/.vite`) are saved per job and commit. Restore keys reuse the latest matching cache for the same toolchain and dependency files. Turbo and Vite validate their own inputs before reusing entries.
 - Vite's disk cache accelerates dependency prebundling in the development server and related test tooling. Turbo restores production build outputs declared in `turbo.json`. The component browser suite builds through Turbo so it can reuse cached build artifacts.
-- The `ui` and `e2e` jobs share a Chromium headless shell cache keyed by Playwright version, runner OS, and architecture. Each job ensures the required browser is present and installs system dependencies only if Chromium cannot launch.
+- The `ui`, `auth`, and `Web E2E (advisory)` jobs share a Chromium headless shell cache keyed by Playwright version, runner OS, and architecture. Each job ensures the required browser is present and installs system dependencies only if Chromium cannot launch.
 - Docker uses Buildx's GitHub Actions layer cache, with separate scopes for the Web, API, and gateway images. Built images are loaded locally for the existing smoke checks.
 
 These caches need no remote Turbo account or additional repository secrets. A cache miss runs the normal install/build path. To reset a cache after changing its layout, increment the `bun-v1` or `tasks-v1` prefix in the shared action, or change the corresponding Docker cache scope.
@@ -68,7 +70,7 @@ Use the Playwright page clock for browser timers. The local-run tests wait for t
 bun run test:resources
 ```
 
-This command uses the Docker CLI to start temporary `redis:8-alpine` and `rustfs/rustfs:1.0.5` containers on random loopback ports. The suite provisions its own private bucket and removes the containers on exit. Run it with Docker running locally. CI includes the resource project in `bun run test:e2e --project=resources` to cover all three projects in one run. Playwright uses one worker so Docker container startup and teardown do not change host networking while Chromium loads the Web client.
+This command uses the Docker CLI to start temporary `redis:8-alpine` and `rustfs/rustfs:1.0.5` containers on random loopback ports. The suite provisions its own private bucket and removes the containers on exit. Run it with Docker running locally. CI runs `bun run test:resources --project=api` for the blocking integration job. Use `bun run test:e2e --project=resources` to run API, Chromium, and resource tests together locally.
 
 ## Database and authentication tests
 

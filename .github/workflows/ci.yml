@@ -186,14 +186,35 @@ jobs:
       - uses: ./.github/actions/setup-workspace
         with:
           cache-scope: e2e
-      - uses: ./.github/actions/setup-playwright
-        with:
-          workspace: tests/e2e
-      - run: bun run test:e2e --project=resources
+      - name: Run API and resource integration tests
+        run: bun run test:resources --project=api
       - if: failure()
         uses: actions/upload-artifact@v5
         with:
           name: playwright-results
+          path: tests/e2e/test-results/
+          if-no-files-found: ignore
+          retention-days: 7
+  web-e2e:
+    name: Web E2E (advisory)
+    needs: changes
+    if: needs.changes.outputs.e2e == 'true'
+    runs-on: ubuntu-26.04
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup-workspace
+        with:
+          cache-scope: web-e2e
+      - uses: ./.github/actions/setup-playwright
+        with:
+          workspace: tests/e2e
+      - run: bun run build --filter=kipivo
+      - run: bun run --cwd tests/e2e test:e2e --project=chromium
+      - if: failure()
+        uses: actions/upload-artifact@v5
+        with:
+          name: web-playwright-results
           path: tests/e2e/test-results/
           if-no-files-found: ignore
           retention-days: 7
@@ -207,7 +228,7 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version-file: package.json
-      - name: Require all selected jobs to succeed
+      - name: Require all selected blocking jobs to succeed
         env:
           CI_PLAN: ${{ needs.changes.outputs.plan }}
           CI_NEEDS: ${{ toJSON(needs) }}
