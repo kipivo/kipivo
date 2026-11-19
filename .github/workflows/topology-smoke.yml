@@ -2,6 +2,11 @@ name: Production topology smoke
 
 on:
   workflow_dispatch:
+  workflow_call:
+    inputs:
+      advisory:
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -10,6 +15,7 @@ jobs:
   topology:
     runs-on: ubuntu-26.04
     timeout-minutes: 20
+    continue-on-error: ${{ inputs.advisory || false }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -28,3 +34,6 @@ jobs:
             api.cache-from=type=gha,scope=kipivo-api
       - name: Verify the production topology
         run: bash scripts/smoke-topology.sh
+      - name: Report an advisory failure
+        if: failure() && inputs.advisory
+        run: echo '::warning::Production topology smoke failed. See the job logs.'

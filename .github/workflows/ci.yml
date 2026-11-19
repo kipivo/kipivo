@@ -155,6 +155,15 @@ jobs:
         if: matrix.app == 'gateway'
         timeout-minutes: 5
         run: scripts/smoke-gateway-image.sh kipivo-gateway:ci
+  topology:
+    name: Topology smoke (advisory)
+    needs: changes
+    if: >-
+      github.event_name == 'push' && github.ref == 'refs/heads/next' &&
+      needs.changes.outputs.has-images == 'true'
+    uses: ./.github/workflows/topology-smoke.yml
+    with:
+      advisory: true
   auth:
     needs: changes
     if: needs.changes.outputs.auth == 'true'

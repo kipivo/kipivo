@@ -115,7 +115,7 @@ Pass a local image tag or ID as the first argument to check another build. CI ru
 
 ## Production topology smoke test
 
-Use the manual **Production topology smoke** workflow to build the three production images and test them together. Docker Bake builds the three targets from the Compose file and reads the existing image job caches. To run the same checks locally, build the images and run the smoke script with Docker Compose available.
+Pushes to `next` that select image checks also run **Topology smoke (advisory)** alongside the image jobs. CI calls the same **Production topology smoke** workflow available for manual runs. Docker Bake builds the three targets from the Compose file and reads the existing image job caches. To run the same checks locally, build the images and run the smoke script with Docker Compose available.
 
 ```sh
 docker build -f .railway/gateway/Dockerfile -t kipivo-gateway:topology .
