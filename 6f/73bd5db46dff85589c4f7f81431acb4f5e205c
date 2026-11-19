@@ -1,0 +1,20 @@
+apps/storybook/src/select.stories.tsx
+  s_5b0ad29f5a4d17::t_7e3cefa784a497 55
+  s_5b0ad29f5a4d17::t_a4e1c4b2e12d57 12,49,51,54,56-64
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "6f73bd5db46dff85589c4f7f81431acb4f5e205c",
+  "prompts": {},
+  "sessions": {
+    "s_5b0ad29f5a4d17": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1f3ce-2e2d-7b72-9d22-76b8b8fc80e9",
+        "model": "gpt-6.2-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
