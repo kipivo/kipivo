@@ -142,6 +142,8 @@ jobs:
           load: true
           cache-from: type=gha,scope=kipivo-${{ matrix.app }}
           cache-to: type=gha,scope=kipivo-${{ matrix.app }},mode=max
+      - name: Check the image filesystem
+        run: bash scripts/check-image.sh kipivo-${{ matrix.app }}:ci
       - name: Smoke test the Web image
         if: matrix.app == 'web'
         run: scripts/smoke-web-image.sh kipivo-web:ci

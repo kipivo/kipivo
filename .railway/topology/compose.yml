@@ -1,0 +1,89 @@
+services:
+  gateway:
+    image: ${KIPIVO_TOPOLOGY_GATEWAY_IMAGE:-kipivo-gateway:topology}
+    build:
+      context: ../..
+      dockerfile: .railway/gateway/Dockerfile
+    pull_policy: never
+    depends_on: [web, api]
+    environment:
+      WEB_UPSTREAM: web:8080
+      API_UPSTREAM: api:3001
+    healthcheck:
+      test: [CMD, wget, -q, -O, /dev/null, http://127.0.0.1:8080/gateway-healthz]
+      interval: 1s
+      timeout: 2s
+      retries: 60
+  web:
+    image: ${KIPIVO_TOPOLOGY_WEB_IMAGE:-kipivo-web:topology}
+    build:
+      context: ../..
+      dockerfile: apps/web/Dockerfile
+    pull_policy: never
+    depends_on: [api]
+    environment:
+      PORT: "8080"
+      API_ORIGIN: http://api:3001
+    healthcheck:
+      test:
+        [CMD, bun, -e, 'if (!(await fetch("http://127.0.0.1:8080/healthz")).ok) process.exit(1)']
+      interval: 1s
+      timeout: 2s
+      retries: 60
+  api:
+    image: ${KIPIVO_TOPOLOGY_API_IMAGE:-kipivo-api:topology}
+    build:
+      context: ../..
+      dockerfile: apps/api/Dockerfile
+    pull_policy: never
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      HOST: "::"
+      PORT: "3001"
+      DATABASE_URL: postgresql://kipivo:topology-test-password@postgres:5432/kipivo
+      DB_MIGRATE_ON_START: "true"
+      BETTER_AUTH_URL: http://gateway:8080
+      BETTER_AUTH_SECRET: kipivo-topology-smoke-disposable-secret
+      REDIS_URL: redis://redis:6379
+    healthcheck:
+      test: [CMD, bun, -e, 'if (!(await fetch("http://127.0.0.1:3001/readyz")).ok) process.exit(1)']
+      interval: 1s
+      timeout: 2s
+      retries: 60
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: kipivo
+      POSTGRES_PASSWORD: topology-test-password
+      POSTGRES_DB: kipivo
+    healthcheck:
+      test: [CMD, pg_isready, -h, 127.0.0.1, -U, kipivo, -d, kipivo]
+      interval: 1s
+      timeout: 2s
+      retries: 60
+  redis:
+    image: redis:8-alpine
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 1s
+      timeout: 2s
+      retries: 60
+  smoke:
+    image: oven/bun:1.4.4-slim
+    profiles: [smoke]
+    command:
+      - sh
+      - -ec
+      - |
+        bun /smoke/topology.mjs
+        bun /smoke/web.mjs http://gateway:8080 --production
+    volumes:
+      - ./smoke.mjs:/smoke/topology.mjs:ro
+      - ../../scripts/smoke-web.mjs:/smoke/web.mjs:ro
+networks:
+  default:
+    internal: true

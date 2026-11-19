@@ -56,7 +56,7 @@ Run `scripts/smoke-web-image.sh kipivo-web` to smoke-test the image in a tempora
 
 Build the API image with `docker build -f apps/api/Dockerfile -t kipivo-api .`. See the [testing guide](docs/testing.md) for its HTTP checks.
 
-Build the standalone gateway with `docker build -f .railway/gateway/Dockerfile -t kipivo-gateway:ci .` and run `scripts/smoke-gateway-image.sh` to verify routing on an isolated Docker network.
+Build the standalone gateway with `docker build -f .railway/gateway/Dockerfile -t kipivo-gateway:ci .` and run `scripts/smoke-gateway-image.sh` with Docker Compose installed to verify routing on an isolated network.
 
 ## Railway
 

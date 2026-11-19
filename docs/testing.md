@@ -45,6 +45,8 @@ The workflow uses `.github/actions/setup-workspace` to install the pinned Bun ve
 - The `ui`, `auth`, and `Web E2E (advisory)` jobs share a Chromium headless shell cache keyed by Playwright version, runner OS, and architecture. Each job ensures the required browser is present and installs system dependencies only if Chromium cannot launch.
 - Docker uses Buildx's GitHub Actions layer cache, with separate scopes for the Web, API, and gateway images. Built images are loaded locally for the existing smoke checks.
 
+Each image job checks the final filesystem for checkout and dotenv files outside third-party dependencies before running its smoke test.
+
 These caches need no remote Turbo account or additional repository secrets. A cache miss runs the normal install/build path. To reset a cache after changing its layout, increment the `bun-v1` or `tasks-v1` prefix in the shared action, or change the corresponding Docker cache scope.
 
 ## Component tests
@@ -102,11 +104,24 @@ The Web check covers the SSR home page, stylesheet, logo, `/healthz`, and the pr
 
 ## Gateway production image smoke test
 
-Run with Docker running locally:
+Run with Docker and the Compose plugin available locally.
 
 ```sh
 docker build -f .railway/gateway/Dockerfile -t kipivo-gateway:ci .
 scripts/smoke-gateway-image.sh
 ```
 
-Pass a local image tag or ID as the first argument to check another build. CI runs the same script for the gateway image matrix entry. The script creates an internal Docker network, disposable Web and API mock upstreams using `oven/bun:1.4.4-slim`, and a gateway. It publishes no ports and removes its containers and network on exit. It checks API path boundaries, Web routing, production local-route rejection, independent gateway health, external HTTPS forwarding, and preservation of query strings, POST bodies, Host, Origin, cookies, Set-Cookie, and upstream security headers.
+Pass a local image tag or ID as the first argument to check another build. CI runs the same script for the gateway image matrix entry. Compose starts the built gateway and `oven/bun:1.4.4-slim` mock upstreams on an isolated network and waits for their health checks. The script runs the Bun assertions inside the mock service, prints service logs on failure, and removes the Compose project on exit. The checks cover routing boundaries, production local-route rejection, gateway health, HTTPS forwarding, HTML compression, and preservation of query strings, POST bodies, Host, Origin, cookies, Set-Cookie, and upstream security headers.
+
+## Production topology smoke test
+
+Use the manual **Production topology smoke** workflow to build the three production images and test them together. Docker Bake builds the three targets from the Compose file and reads the existing image job caches. To run the same checks locally, build the images and run the smoke script with Docker Compose available.
+
+```sh
+docker build -f .railway/gateway/Dockerfile -t kipivo-gateway:topology .
+docker build -f apps/web/Dockerfile -t kipivo-web:topology .
+docker build -f apps/api/Dockerfile -t kipivo-api:topology .
+bash scripts/smoke-topology.sh
+```
+
+Compose starts the real gateway, Web, and API images with disposable PostgreSQL and Redis on an internal network. After the services are healthy, a one-shot Bun container calls the gateway over HTTP to check readiness, Web's redirect before setup, first administrator creation, sign-in, the account session over RPC, and session revocation. It then runs the existing production SSR and asset checks through the gateway. The script prints service logs on failure and removes the containers, network, and database volume on exit.

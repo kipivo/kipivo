@@ -160,11 +160,14 @@ describe("CI selection", () => {
       "web-e2e",
       "web-image",
     ]);
-    expect(planFor([".dockerignore"]).images.map(({ app }) => app)).toEqual([
-      "web",
-      "api",
-      "gateway",
-    ]);
+    for (const path of [".dockerignore", "scripts/check-image.sh"]) {
+      expect(selected(planFor([path]))).toEqual([
+        "check",
+        "web-image",
+        "api-image",
+        "gateway-image",
+      ]);
+    }
   });
   test.each([
     ["apps/web/Dockerfile", "web-image"],

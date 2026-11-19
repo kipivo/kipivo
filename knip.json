@@ -2,7 +2,14 @@
   "$schema": "./node_modules/knip/schema.json",
   "ignoreFiles": [".agents/skills/shadcn/**"],
   "workspaces": {
-    ".": { "entry": ["scripts/smoke-web.mjs"] },
+    ".": {
+      "entry": [
+        "scripts/smoke-web.mjs",
+        ".railway/gateway/smoke/upstreams.mjs",
+        ".railway/gateway/smoke/test.mjs",
+        ".railway/topology/smoke.mjs"
+      ]
+    },
     "apps/api": { "entry": ["src/server.ts", "src/plugins/*.ts"] },
     "apps/web": { "entry": ["src/routes/**/*.{ts,tsx}", "src/features/brand/motion/src/scene.js"] },
     "apps/mobile": {

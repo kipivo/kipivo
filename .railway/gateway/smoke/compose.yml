@@ -1,0 +1,38 @@
+services:
+  gateway:
+    image: ${KIPIVO_GATEWAY_SMOKE_IMAGE:?Set the local gateway image}
+    pull_policy: never
+    depends_on:
+      - upstream
+    environment:
+      WEB_UPSTREAM: upstream:8081
+      API_UPSTREAM: upstream:8082
+      # A stale hostname variable must not bypass path routing.
+      LEGACY_API_HOST: api.example.test
+    healthcheck:
+      test: [CMD, wget, -q, -O, /dev/null, http://127.0.0.1:8080/gateway-healthz]
+      interval: 1s
+      timeout: 2s
+      retries: 60
+  upstream:
+    image: oven/bun:1.4.4-slim
+    command: [bun, /smoke/upstreams.mjs]
+    volumes:
+      - ./upstreams.mjs:/smoke/upstreams.mjs:ro
+      - ./test.mjs:/smoke/test.mjs:ro
+    healthcheck:
+      test:
+        - CMD
+        - bun
+        - -e
+        - |
+          for (const port of [8081, 8082]) {
+            const response = await fetch(`http://127.0.0.1:$${port}/healthz`);
+            if (!response.ok) process.exit(1);
+          }
+      interval: 1s
+      timeout: 2s
+      retries: 60
+networks:
+  default:
+    internal: true

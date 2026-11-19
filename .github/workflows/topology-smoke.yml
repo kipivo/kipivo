@@ -1,0 +1,31 @@
+name: Production topology smoke
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  topology:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: docker/setup-buildx-action@v4
+      - name: Build production images
+        uses: docker/bake-action@v7
+        with:
+          source: .
+          files: .railway/topology/compose.yml
+          targets: gateway,web,api
+          load: true
+          set: |
+            *.context=.
+            gateway.cache-from=type=gha,scope=kipivo-gateway
+            web.cache-from=type=gha,scope=kipivo-web
+            api.cache-from=type=gha,scope=kipivo-api
+      - name: Verify the production topology
+        run: bash scripts/smoke-topology.sh

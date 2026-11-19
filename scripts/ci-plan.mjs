@@ -33,6 +33,7 @@ const imageInputs = new Map([
   ["scripts/smoke-web.mjs", ["web-image"]],
   ["scripts/smoke-api-image.sh", ["api-image"]],
   ["scripts/smoke-gateway-image.sh", ["gateway-image"]],
+  ["scripts/check-image.sh", imageJobs],
   [".dockerignore", imageJobs],
 ]);
 const knownRootInputs = new Set([
