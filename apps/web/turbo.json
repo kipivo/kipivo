@@ -1,0 +1,19 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "extends": ["//"],
+  "tags": ["ci:ui", "ci:auth", "ci:e2e", "ci:web-image"],
+  "tasks": {
+    "transit": {
+      "inputs": ["$TURBO_DEFAULT$", "!src/routeTree.gen.ts"]
+    },
+    "build": {
+      "env": ["VITE_CLOUDFLARE_ANALYTICS_TOKEN", "VITE_UMAMI_WEBSITE_ID"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*", "!src/routeTree.gen.ts"],
+      "outputs": [".output/**", "src/routeTree.gen.ts"]
+    },
+    "typecheck": {
+      "inputs": ["$TURBO_DEFAULT$", "!src/routeTree.gen.ts"],
+      "outputs": ["src/routeTree.gen.ts"]
+    }
+  }
+}

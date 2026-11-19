@@ -4,7 +4,7 @@
 
 ## CI job selection
 
-Every pull request runs `check` in parallel with a lightweight `changes` job. The planner compares the merge base of the PR base SHA and head SHA to the actual PR head, including deleted paths and both sides of renames. It uses the workspace graph from the PR head and the Turbo version pinned in that revision's root package to propagate shared package changes to consumers. Turbo's global inputs continue to govern cache invalidation.
+Every pull request runs `check` in parallel with a lightweight `changes` job. The planner passes the merge base and the PR head to Turborepo's `affectedPackages` query. Turbo reports the affected workspaces, including transitive consumers, and the `ci:<job>` tags from their `turbo.json` files. Git paths drive repository-wide, documentation, and image rules, including deleted paths and both sides of renames. For a range mixing code with excluded workspace inputs, Turbo's dependent filters scope the selection to the workspaces with code changes.
 
 | Affected consumer | Additional jobs                         |
 | ----------------- | --------------------------------------- |
@@ -15,7 +15,9 @@ Every pull request runs `check` in parallel with a lightweight `changes` job. Th
 | CLI (`kipivo`)    | `cli`, `e2e`                            |
 | `tests/e2e`       | `auth`, `e2e`, API image                |
 
-Changes to `@kipivo/cache` or `@kipivo/storage` follow their API and end-to-end consumers and select `auth`, `e2e`, and the API image. Changes to `@kipivo/runtime` follow the Web and CLI consumers and select `cli`, `auth`, `e2e`, and the Web image. Changes combine these selections. Root and existing workspace `README.md` files and Markdown under `docs/` only require `check`. `apps/web/Dockerfile`, `scripts/smoke-web-image.sh`, and `scripts/smoke-web.mjs` select the Web image. `scripts/smoke-cli.sh` selects `cli`. The `scripts/smoke-api-image.sh` script selects the API image. `.railway/gateway/` and `scripts/smoke-gateway-image.sh` select the gateway image. `.dockerignore` selects all three images. `assets/logo.svg` selects Web and Storybook consumers. CI configuration, lockfiles, and shared root tooling select all jobs. Unknown paths and workspaces also select all jobs and flag the relevant entry for mapping in `scripts/ci-plan.mjs`. If the planner cannot reliably read the diff or the workspace graph, it selects all jobs and reports the underlying problem.
+Changes to `@kipivo/cache` or `@kipivo/storage` follow their API and end-to-end consumers and select `auth`, `e2e`, and the API image. Changes to `@kipivo/runtime` follow the Web and CLI consumers and select `ui`, `cli`, `auth`, `e2e`, and the Web image. Changes combine these selections. Root and existing workspace `README.md` files and Markdown under `docs/` only require `check`. `apps/web/Dockerfile`, `scripts/smoke-web-image.sh`, and `scripts/smoke-web.mjs` select the Web image. `scripts/smoke-cli.sh` selects `cli`. The `scripts/smoke-api-image.sh` script selects the API image. `.railway/gateway/` and `scripts/smoke-gateway-image.sh` select the gateway image. `.dockerignore` selects all three images. `assets/logo.svg` selects Web and Storybook consumers. CI configuration, lockfiles, and shared root tooling select all jobs. A missing tag on an app or test workspace, an unknown CI tag, or an unmapped path triggers the full plan. If Git or Turbo cannot reliably determine the affected scope, the planner selects all jobs and reports the underlying problem.
+
+Declare a workspace's existing CI jobs in its own `turbo.json` with `"extends": ["//"]` and top-level `"tags"`, for example `"tags": ["ci:ui"]` in Storybook. Shared libraries use the root configuration unless they need custom tasks or CI tags.
 
 Pushes to `next` compare against the most recent ancestor with a successful `next` push CI run so that changes from failed or cancelled runs are included in the comparison. For ordinary changes, CI runs the selected tests and Railway builds the deployment images after CI succeeds. Changes to deployment Dockerfiles, `.dockerignore`, `.railway/`, or image smoke scripts also run the selected GitHub image checks. `next` runs the full suite when the workflow history is unavailable or no successful ancestor is found. Pushes to `main` and manual `workflow_dispatch` runs also run the full suite.
 
@@ -31,7 +33,7 @@ bun run ci:plan --full
 bun run ci:test
 ```
 
-`ci:test` also runs as part of `bun run check`. The planner job installs the pinned Turbo binary without installing workspace dependencies. Local replay reads the committed head from a temporary archive so local files cannot change the result. It installs that revision’s pinned Turbo into a temporary directory if needed.
+`ci:test` also runs as part of `bun run check`. The planner job installs the pinned Turbo binary without installing workspace dependencies. When replaying a different head or working from a dirty tree, the planner checks out the committed head in a temporary clone with Git history. It installs that revision’s pinned Turbo into a temporary directory if needed.
 
 ## CI caches
 

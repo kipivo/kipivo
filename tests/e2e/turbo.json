@@ -1,0 +1,5 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "extends": ["//"],
+  "tags": ["ci:auth", "ci:e2e", "ci:api-image"]
+}

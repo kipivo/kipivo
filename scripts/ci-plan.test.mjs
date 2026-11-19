@@ -1,57 +1,114 @@
-import { describe, expect, test } from "bun:test";
+import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, renameSync, rmSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
 import {
-  changedPaths,
-  fullPlan,
-  jobs,
-  planForNextPush,
-  planFromArgs,
-  selectJobs,
-} from "./ci-plan.mjs";
+  copyFileSync,
+  existsSync,
+  mkdtempSync,
+  mkdirSync,
+  readFileSync,
+  writeFileSync,
+  renameSync,
+  rmSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join } from "node:path";
+import { fullPlan, jobs, planForNextPush, planFromArgs } from "./ci-plan.mjs";
 import { validateResults } from "./ci-result.mjs";
 
-const pkg = (name, path, dependents = []) => ({
-  name,
-  path,
-  allDependents: { items: dependents.map((name) => ({ name })) },
-});
-const graph = [
-  pkg("@kipivo/icons", "packages/icons", ["@kipivo/ui", "storybook", "web"]),
-  pkg("@kipivo/ui", "packages/ui", ["storybook", "web"]),
-  pkg("@kipivo/admin", "packages/admin", ["api", "web"]),
-  pkg("@kipivo/cache", "packages/cache", ["api", "@kipivo/e2e"]),
-  pkg("@kipivo/storage", "packages/storage", ["api", "@kipivo/e2e"]),
-  pkg("@kipivo/runtime", "packages/runtime", ["web", "kipivo"]),
-  pkg("storybook", "apps/storybook"),
-  pkg("web", "apps/web"),
-  pkg("api", "apps/api"),
-  pkg("kipivo", "apps/cli"),
-  pkg("@kipivo/e2e", "tests/e2e"),
-  pkg("mobile", "apps/mobile"),
-];
 const selected = (plan) => ["check", ...jobs.filter((job) => plan[job])];
 
 describe("CI selection", () => {
+  const workspaces = [
+    ["packages/icons", "@kipivo/icons", []],
+    ["packages/ui", "@kipivo/ui", ["@kipivo/icons", "@kipivo/shared"]],
+    ["packages/shared", "@kipivo/shared", []],
+    ["packages/admin", "@kipivo/admin", []],
+    ["packages/cache", "@kipivo/cache", []],
+    ["packages/storage", "@kipivo/storage", []],
+    ["packages/runtime", "@kipivo/runtime", []],
+    ["apps/storybook", "storybook", ["@kipivo/ui"]],
+    ["apps/web", "web", ["@kipivo/ui", "@kipivo/admin", "@kipivo/runtime"]],
+    ["apps/api", "api", ["@kipivo/admin", "@kipivo/cache", "@kipivo/storage"]],
+    ["apps/cli", "kipivo", ["@kipivo/runtime"]],
+    ["apps/mobile", "mobile", []],
+    ["apps/new", "new", []],
+    ["tests/e2e", "@kipivo/e2e", ["@kipivo/cache", "@kipivo/storage"]],
+  ];
+  let directory;
+  let base;
+  const git = (...args) => execFileSync("git", args, { cwd: directory, encoding: "utf8" }).trim();
+
+  beforeAll(() => {
+    directory = mkdtempSync(join(tmpdir(), "kipivo-ci-selection-"));
+    git("init", "--quiet");
+    git("config", "user.name", "CI test");
+    git("config", "user.email", "ci@example.test");
+    const { devDependencies, packageManager } = JSON.parse(
+      readFileSync(new URL("../package.json", import.meta.url), "utf8"),
+    );
+    const writeJson = (path, value) => writeFileSync(join(directory, path), JSON.stringify(value));
+    writeJson("package.json", {
+      name: "fixture",
+      workspaces: ["apps/*", "packages/*", "tests/*"],
+      packageManager,
+      devDependencies: { turbo: devDependencies.turbo },
+    });
+    writeJson("turbo.json", { globalDependencies: ["assets/logo.svg"], tasks: {} });
+    const lockWorkspaces = workspaces.map(([path, name, dependencies]) => {
+      mkdirSync(join(directory, path), { recursive: true });
+      const manifest = {
+        name,
+        dependencies: Object.fromEntries(dependencies.map((dep) => [dep, "workspace:*"])),
+      };
+      writeJson(`${path}/package.json`, manifest);
+      const config = new URL(`../${path}/turbo.json`, import.meta.url);
+      if (existsSync(config)) copyFileSync(config, join(directory, path, "turbo.json"));
+      return [path, manifest];
+    });
+    writeJson("bun.lock", {
+      lockfileVersion: 2,
+      workspaces: { "": { name: "fixture" }, ...Object.fromEntries(lockWorkspaces) },
+      packages: Object.fromEntries(
+        workspaces.map(([path, name]) => [name, [`${name}@workspace:${path}`]]),
+      ),
+    });
+    writeFileSync(join(directory, "apps/web/old.ts"), "export const a = 1;\n");
+    writeFileSync(join(directory, "apps/cli/deleted.ts"), "delete\n");
+    git("add", ".");
+    git("commit", "--quiet", "-m", "Base workspace graph");
+    base = git("rev-parse", "HEAD");
+  });
+  afterAll(() => rmSync(directory, { recursive: true, force: true }));
+
+  function planFor(paths, content) {
+    git("checkout", "--quiet", "--detach", base);
+    for (const path of paths) {
+      mkdirSync(dirname(join(directory, path)), { recursive: true });
+      writeFileSync(join(directory, path), content ?? "\n", {
+        flag: content === undefined ? "a" : "w",
+      });
+    }
+    git("add", ".");
+    git("commit", "--quiet", "-m", "Change plan inputs");
+    const previous = process.cwd();
+    try {
+      process.chdir(directory);
+      return planFromArgs(["--base", base, "--head", "HEAD"]);
+    } finally {
+      process.chdir(previous);
+    }
+  }
+
   test("documentation is check only, including mixed workspace README changes", () => {
+    expect(selected(planFor(["README.md", "docs/testing.md", "apps/web/README.md"]))).toEqual([
+      "check",
+    ]);
     expect(
-      selected(
-        selectJobs(
-          ["README.md", "docs/testing.md", "apps/web/README.md", "apps/mobile/README.md"],
-          graph,
-        ),
-      ),
-    ).toEqual(["check"]);
-    expect(
-      selected(
-        selectJobs(["docs/testing.md", "apps/web/README.md", "apps/storybook/src/test.ts"], graph),
-      ),
+      selected(planFor(["docs/testing.md", "apps/mobile/README.md", "apps/storybook/src/test.ts"])),
     ).toEqual(["check", "ui"]);
   });
-  test("admin directory changes select the API and Web consumers", () => {
-    expect(selected(selectJobs(["packages/admin/src/directory.ts"], graph))).toEqual([
+  test("Turbo selects the affected admin directory consumers", () => {
+    expect(selected(planFor(["packages/admin/src/directory.ts"]))).toEqual([
       "check",
       "ui",
       "auth",
@@ -60,36 +117,26 @@ describe("CI selection", () => {
       "api-image",
     ]);
   });
-  test.each(["packages/ui/src/button.tsx", "packages/icons/src/index.tsx"])(
-    "%s follows its UI and Web consumers",
-    (path) => {
-      expect(selected(selectJobs([path], graph))).toEqual([
-        "check",
-        "ui",
-        "auth",
-        "e2e",
-        "web-image",
-      ]);
-    },
-  );
-  test.each(["cache", "storage"])("%s only selects the API resource consumers", (resource) => {
-    const plan = selectJobs([`packages/${resource}/src/factory.ts`], graph);
-    expect(selected(plan)).toEqual(["check", "auth", "e2e", "api-image"]);
-    expect(plan.reasons.e2e).toEqual([
-      `@kipivo/${resource} → api`,
-      `@kipivo/${resource} → @kipivo/e2e`,
-    ]);
+  test.each([
+    "packages/ui/src/button.tsx",
+    "packages/icons/src/index.tsx",
+    "packages/shared/input.ts",
+  ])("Turbo follows %s to its transitive UI and Web consumers", (path) => {
+    expect(selected(planFor([path]))).toEqual(["check", "ui", "auth", "e2e", "web-image"]);
   });
-  test("special inputs union with ordinary workspace paths without global expansion", () => {
+  test.each(["cache", "storage"])("Turbo selects the %s resource consumers", (resource) => {
+    const plan = planFor([`packages/${resource}/src/factory.ts`]);
+    expect(selected(plan)).toEqual(["check", "auth", "e2e", "api-image"]);
+    expect(plan.reasons.e2e.toSorted()).toEqual(["@kipivo/e2e", "api"]);
+  });
+  test("special inputs union with Turbo's scopes without expanding unrelated jobs", () => {
     expect(
-      selected(
-        selectJobs(["scripts/workspace-lint.mjs", "scripts/workspace-lint.test.mjs"], graph),
-      ),
+      selected(planFor(["scripts/workspace-lint.mjs", "scripts/workspace-lint.test.mjs"])),
     ).toEqual(["check"]);
-    const plan = selectJobs(["apps/web/Dockerfile", "apps/storybook/package.json"], graph);
+    const plan = planFor(["apps/web/Dockerfile", "apps/storybook/package.json"]);
     expect(selected(plan)).toEqual(["check", "ui", "web-image"]);
     expect(plan.images).toEqual([{ app: "web", dockerfile: "apps/web/Dockerfile" }]);
-    expect(selected(selectJobs(["assets/logo.svg", "apps/cli/src/index.ts"], graph))).toEqual([
+    expect(selected(planFor(["assets/logo.svg", "apps/cli/src/index.ts"]))).toEqual([
       "check",
       "ui",
       "cli",
@@ -97,74 +144,70 @@ describe("CI selection", () => {
       "e2e",
       "web-image",
     ]);
-    expect(selectJobs([".dockerignore"], graph).images.map(({ app }) => app)).toEqual([
+    expect(planFor([".dockerignore"]).images.map(({ app }) => app)).toEqual([
       "web",
       "api",
       "gateway",
     ]);
   });
   test.each([
-    ["scripts/smoke-web.mjs", "web-image"],
+    ["apps/web/Dockerfile", "web-image"],
     ["scripts/smoke-web-image.sh", "web-image"],
+    ["scripts/smoke-web.mjs", "web-image"],
+    ["scripts/smoke-api-image.sh", "api-image"],
+    [".railway/gateway/Dockerfile", "gateway-image"],
+    [".railway/gateway/Caddyfile", "gateway-image"],
+    [".railway/gateway/future-config.json", "gateway-image"],
+    ["scripts/smoke-gateway-image.sh", "gateway-image"],
     ["scripts/smoke-cli.sh", "cli"],
   ])("%s selects only %s alongside check", (path, job) => {
-    expect(selected(selectJobs([path], graph))).toEqual(["check", job]);
-  });
-  test("the API image smoke script selects only the API image", () => {
-    const plan = selectJobs(["scripts/smoke-api-image.sh"], graph);
-    expect(selected(plan)).toEqual(["check", "api-image"]);
-    expect(plan.images.map(({ app }) => app)).toEqual(["api"]);
-  });
-  test.each([
-    ".railway/gateway/Dockerfile",
-    ".railway/gateway/Caddyfile",
-    ".railway/gateway/future-config.json",
-    "scripts/smoke-gateway-image.sh",
-  ])("gateway input %s selects only the gateway image", (path) => {
-    const plan = selectJobs([path], graph);
-    expect(selected(plan)).toEqual(["check", "gateway-image"]);
-    expect(plan.images).toEqual([{ app: "gateway", dockerfile: ".railway/gateway/Dockerfile" }]);
+    expect(selected(planFor([path]))).toEqual(["check", job]);
   });
   test("gateway inputs union with workspace selections and Railway IaC remains shared", () => {
-    expect(
-      selected(selectJobs([".railway/gateway/Caddyfile", "apps/cli/src/index.ts"], graph)),
-    ).toEqual(["check", "cli", "e2e", "gateway-image"]);
-    expect(selected(selectJobs([".railway/railway.ts"], graph))).toEqual(["check", ...jobs]);
+    expect(selected(planFor([".railway/gateway/Caddyfile", "apps/cli/src/index.ts"]))).toEqual([
+      "check",
+      "cli",
+      "e2e",
+      "gateway-image",
+    ]);
+    expect(selected(planFor([".railway/railway.ts"]))).toEqual(["check", ...jobs]);
   });
-  test("runtime selects its Web and CLI consumers", () => {
-    const plan = selectJobs(["packages/runtime/src/local/connection.ts"], graph);
+  test("Turbo selects the Web and CLI consumers of runtime", () => {
+    const plan = planFor(["packages/runtime/src/local/connection.ts"]);
     expect(selected(plan)).toEqual(["check", "ui", "cli", "auth", "e2e", "web-image"]);
-    expect(plan.reasons.e2e).toEqual(["@kipivo/runtime → web", "@kipivo/runtime → kipivo"]);
+    expect(plan.reasons.e2e.toSorted()).toEqual(["kipivo", "web"]);
   });
-  test("entry points select their declared consumers", () => {
-    expect(selected(selectJobs(["apps/web/src/routes/index.tsx"], graph))).toEqual([
+  test("entry points select their declared jobs", () => {
+    expect(selected(planFor(["apps/web/src/routes/index.tsx"]))).toEqual([
       "check",
       "ui",
       "auth",
       "e2e",
       "web-image",
     ]);
-    expect(selected(selectJobs(["apps/api/src/index.ts"], graph))).toEqual([
+    expect(selected(planFor(["apps/api/src/index.ts"]))).toEqual([
       "check",
       "auth",
       "e2e",
       "api-image",
     ]);
-    expect(selected(selectJobs(["tests/e2e/playwright.config.ts"], graph))).toEqual([
+    expect(selected(planFor(["tests/e2e/playwright.config.ts"]))).toEqual([
       "check",
       "auth",
       "e2e",
       "api-image",
     ]);
-    expect(selected(selectJobs(["apps/cli/src/index.ts"], graph))).toEqual(["check", "cli", "e2e"]);
+    expect(selected(planFor(["apps/cli/src/index.ts"]))).toEqual(["check", "cli", "e2e"]);
+    expect(selected(planFor(["apps/mobile/src/app/index.tsx"]))).toEqual(["check", "mobile"]);
   });
-  test("mobile changes export both native bundles without selecting server jobs", () => {
-    expect(selected(selectJobs(["apps/mobile/src/app/index.tsx"], graph))).toEqual([
-      "check",
-      "mobile",
-    ]);
+  test("a workspace can declare its CI jobs through its own Turbo tags", () => {
+    const config = (tag) => JSON.stringify({ extends: ["//"], tags: [tag] });
+    expect(selected(planFor(["apps/new/turbo.json"], config("ci:cli")))).toEqual(["check", "cli"]);
+    const invalid = planFor(["apps/new/turbo.json"], config("ci:unknown"));
+    expect(selected(invalid)).toEqual(["check", ...jobs]);
+    expect(invalid.reasons.ui[0]).toContain("Unknown CI job tag ci:unknown on new");
   });
-  test("unknown paths, unknown workspaces, and unmapped apps run everything", () => {
+  test("shared and unmapped inputs conservatively select the full suite", () => {
     for (const path of [
       ".github/workflows/ci.yml",
       "scripts/ci-install-turbo.sh",
@@ -172,56 +215,17 @@ describe("CI selection", () => {
       "package.json",
       "apps/unknown/a.ts",
       "packages/deleted/a.ts",
+      "apps/new/a.ts",
+      "apps/new/README.md",
     ]) {
-      expect(selected(selectJobs([path], graph))).toEqual(["check", ...jobs]);
+      expect(selected(planFor([path]))).toEqual(["check", ...jobs]);
     }
-    for (const path of ["apps/new/a.ts", "apps/new/README.md"]) {
-      expect(selected(selectJobs([path], [...graph, pkg("new", "apps/new")]))).toEqual([
-        "check",
-        ...jobs,
-      ]);
-    }
-    expect(selectJobs([".github/workflows/ci.yml"], graph).reasons.ui).toEqual([
+    expect(planFor([".github/workflows/ci.yml"]).reasons.ui).toEqual([
       "CI configuration changed: .github/workflows/ci.yml",
     ]);
-    expect(selectJobs(["bun.lock"], graph).reasons.ui).toEqual([
-      "Shared repository input changed: bun.lock",
-    ]);
+    expect(planFor(["bun.lock"]).reasons.ui).toEqual(["Shared repository input changed: bun.lock"]);
   });
-  test("new consumers and transitive dependencies are handled safely", () => {
-    expect(
-      selected(
-        selectJobs(
-          ["packages/ui/src/button.tsx"],
-          [
-            pkg("@kipivo/ui", "packages/ui", ["storybook", "web", "new"]),
-            ...graph.slice(1),
-            pkg("new", "apps/new"),
-          ],
-        ),
-      ),
-    ).toEqual(["check", ...jobs]);
-    const transitive = [
-      pkg("@kipivo/ui", "packages/ui", ["storybook", "web", "@kipivo/contracts", "kipivo"]),
-      ...graph.slice(1),
-      pkg("@kipivo/contracts", "packages/contracts", ["kipivo"]),
-    ];
-    expect(selected(selectJobs(["packages/ui/src/button.tsx"], transitive))).toEqual([
-      "check",
-      "ui",
-      "cli",
-      "auth",
-      "e2e",
-      "web-image",
-    ]);
-  });
-  test("selection reasons are aggregated by changed workspace", () => {
-    const paths = Array.from({ length: 10000 }, (_, index) => `packages/ui/src/file-${index}.ts`);
-    const { reasons } = selectJobs(paths, graph);
-    expect(reasons.ui).toEqual(["@kipivo/ui → storybook", "@kipivo/ui → web"]);
-    expect(reasons.auth).toEqual(["@kipivo/ui → web"]);
-  });
-  test("full mode skips git and dependency graph discovery", () => {
+  test("full mode skips Git and Turbo, and a missing ref falls back to all jobs", () => {
     expect(selected(planFromArgs(["--full"]))).toEqual(["check", ...jobs]);
     expect(selected(planFromArgs(["--base", "nonexistent", "--head", "HEAD"]))).toEqual([
       "check",
@@ -259,6 +263,10 @@ describe("CI selection", () => {
         devDependencies: { turbo: devDependencies.turbo },
       });
       writeJson("turbo.json", { tasks: {} });
+      copyFileSync(
+        new URL("../apps/web/turbo.json", import.meta.url),
+        join(dir, "apps/web/turbo.json"),
+      );
       writeJson("packages/ui/package.json", { name: "@kipivo/ui" });
       writeJson("bun.lock", {
         lockfileVersion: 2,
@@ -312,48 +320,26 @@ describe("CI selection", () => {
       rmSync(dir, { recursive: true, force: true });
     }
   });
-  test("diff uses the merge base and preserves deletion and both rename paths", () => {
+  test("Turbo scopes renames across workspaces and deletions against the merge base", () => {
+    git("checkout", "--quiet", "--detach", base);
+    renameSync(join(directory, "apps/web/old.ts"), join(directory, "apps/storybook/new.ts"));
+    rmSync(join(directory, "apps/cli/deleted.ts"));
+    git("add", ".");
+    git("commit", "--quiet", "-m", "Move and delete");
+    const head = git("rev-parse", "HEAD");
+    git("checkout", "--quiet", "--detach", base);
+    writeFileSync(join(directory, "unrelated"), "base moved\n");
+    git("add", ".");
+    git("commit", "--quiet", "-m", "Target branch moved");
     const previous = process.cwd();
-    const dir = mkdtempSync(join(tmpdir(), "kipivo-ci-plan-"));
-    const git = (...args) => execFileSync("git", args, { cwd: dir, encoding: "utf8" }).trim();
     try {
-      git("init", "--quiet");
-      git("config", "user.name", "CI test");
-      git("config", "user.email", "ci@example.test");
-      mkdirSync(join(dir, "apps/web"), { recursive: true });
-      mkdirSync(join(dir, "apps/storybook"), { recursive: true });
-      writeFileSync(join(dir, "apps/web/old.ts"), "export const a = 1;\n");
-      writeFileSync(join(dir, "apps/web/deleted.ts"), "delete\n");
-      git("add", ".");
-      git("commit", "--quiet", "-m", "base");
-      const base = git("rev-parse", "HEAD");
-      git("checkout", "--quiet", "-b", "feature");
-      renameSync(join(dir, "apps/web/old.ts"), join(dir, "apps/storybook/new.ts"));
-      rmSync(join(dir, "apps/web/deleted.ts"));
-      git("add", ".");
-      git("commit", "--quiet", "-m", "move and delete");
-      const head = git("rev-parse", "HEAD");
-      git("checkout", "--quiet", "--detach", base);
-      writeFileSync(join(dir, "unrelated"), "base moved\n");
-      git("add", ".");
-      git("commit", "--quiet", "-m", "target branch moved");
-      process.chdir(dir);
-      const paths = changedPaths(git("rev-parse", "HEAD"), head);
-      expect(paths.sort()).toEqual([
-        "apps/storybook/new.ts",
-        "apps/web/deleted.ts",
-        "apps/web/old.ts",
-      ]);
-      expect(selected(selectJobs(paths, graph))).toEqual([
-        "check",
-        "ui",
-        "auth",
-        "e2e",
-        "web-image",
-      ]);
+      process.chdir(directory);
+      const plan = planFromArgs(["--base", git("rev-parse", "HEAD"), "--head", head]);
+      expect(selected(plan)).toEqual(["check", "ui", "cli", "auth", "e2e", "web-image"]);
+      expect(plan.reasons.ui.toSorted()).toEqual(["storybook", "web"]);
+      expect(plan.reasons.e2e.toSorted()).toEqual(["kipivo", "web"]);
     } finally {
       process.chdir(previous);
-      rmSync(dir, { recursive: true, force: true });
     }
   });
 });
@@ -486,7 +472,7 @@ describe("CI result", () => {
       ]),
     );
   test("empty image matrix and only planned skips pass", () => {
-    const plan = selectJobs(["README.md"], graph);
+    const plan = planFromArgs(["--base", "HEAD", "--head", "HEAD"]);
     expect(plan.images).toEqual([]);
     expect(() => validateResults(plan, results(plan))).not.toThrow();
   });
@@ -510,7 +496,7 @@ describe("CI result", () => {
     expect(workflow.jobs.result.needs).not.toContain("web-e2e");
   });
   test("invalid plan and unexpected unselected executions fail", () => {
-    const plan = selectJobs([], graph);
+    const plan = planFromArgs(["--base", "HEAD", "--head", "HEAD"]);
     expect(() => validateResults(null, results(plan))).toThrow();
     expect(() =>
       validateResults({ ...plan, images: fullPlan("test").images }, results(plan)),

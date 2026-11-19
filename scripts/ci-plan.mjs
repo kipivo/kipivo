@@ -13,32 +13,6 @@ import { fileURLToPath } from "node:url";
 
 const imageJobs = ["web-image", "api-image", "gateway-image"];
 export const jobs = ["ui", "cli", "mobile", "auth", "e2e", ...imageJobs];
-// Entry points are the only mapping from the workspace graph to CI jobs.
-const consumers = {
-  storybook: ["ui"],
-  web: ["ui", "auth", "e2e", "web-image"],
-  api: ["auth", "e2e", "api-image"],
-  kipivo: ["cli", "e2e"],
-  "@kipivo/e2e": ["auth", "e2e", "api-image"],
-  "@kipivo/account": [],
-  "@kipivo/admin": [],
-  "@kipivo/api": [],
-  "@kipivo/auth": [],
-  "@kipivo/cache": [],
-  "@kipivo/contracts": [],
-  "@kipivo/core": [],
-  "@kipivo/db": [],
-  "@kipivo/email": [],
-  "@kipivo/env": [],
-  "@kipivo/icons": [],
-  "@kipivo/logger": [],
-  "@kipivo/rbac": [],
-  "@kipivo/runtime": [],
-  "@kipivo/storage": [],
-  "@kipivo/tsconfig": [],
-  "@kipivo/ui": [],
-  mobile: ["mobile"],
-};
 const sharedRootInputs = new Set([
   ".gitignore",
   ".oxfmtrc.json",
@@ -62,10 +36,9 @@ const specialInputs = new Map([
   ["scripts/smoke-cli.sh", ["cli"]],
   ["scripts/workspace-lint.mjs", []],
   ["scripts/workspace-lint.test.mjs", []],
-  ["assets/logo.svg", [...new Set([...consumers.web, ...consumers.storybook])]],
+  ["assets/logo.svg", ["ui", "auth", "e2e", "web-image"]],
 ]);
 const rootTurbo = fileURLToPath(new URL("../node_modules/.bin/turbo", import.meta.url));
-const graphQuery = "query { packages { items { name path allDependents { items { name } } } } }";
 
 export function fullPlan(reason) {
   return makePlan(Object.fromEntries(jobs.map((job) => [job, [reason]])));
@@ -122,48 +95,67 @@ function sharedInputReason(path) {
   }
 }
 
-export function selectJobs(paths, packages) {
+function isUnmappedWorkspace({ path, ciJobs }) {
+  return path && !path.startsWith("packages/") && !ciJobs.length;
+}
+
+function selectJobs(paths, base, head) {
   const reasons = {};
   const add = (job, reason) => (reasons[job] ??= []).push(reason);
-  const workspaces = packages
-    .filter((pkg) => pkg.name !== "//")
-    .sort((a, b) => b.path.length - a.path.length);
-  const changedWorkspaces = new Set();
+  const workspacePaths = [];
   for (const path of paths) {
-    // CI selection uses dependency edges independently of Turbo's cache inputs.
     if (isRootDocumentation(path)) continue;
-    const shared = sharedInputReason(path);
-    if (shared) return fullPlan(shared);
     const special = specialInputJobs(path);
     if (special) {
       for (const job of special) add(job, path);
-      continue;
+    } else {
+      workspacePaths.push(path);
     }
-    const owner = workspaces.find((pkg) => path.startsWith(`${pkg.path}/`));
-    if (!owner) return fullPlan(`Unmapped path ${path}; update the CI mapping`);
-    if (!Object.hasOwn(consumers, owner.name)) {
-      return fullPlan(`Unmapped workspace ${owner.name}; update the CI mapping`);
-    }
-    if (/^readme\.md$/i.test(path.slice(owner.path.length + 1))) continue;
-    changedWorkspaces.add(owner);
   }
-  for (const owner of changedWorkspaces) {
-    const affected = new Set([owner.name, ...owner.allDependents.items.map((dep) => dep.name)]);
-    affected.delete("//");
-    let mapped = false;
-    for (const name of affected) {
-      if (!Object.hasOwn(consumers, name)) {
-        return fullPlan(`Unknown workspace ${name}; update the CI mapping`);
+  if (!workspacePaths.length) return makePlan(reasons);
+
+  return withCheckout(head, (directory, turbo, version) => {
+    const affected = readAffectedPackages(directory, turbo, version, base, head);
+    const workspaces = affected
+      .filter(({ path }) => path)
+      .sort((a, b) => b.path.length - a.path.length);
+    const ownerOf = (file) => workspaces.find(({ path }) => file.startsWith(`${path}/`));
+    const scopes = new Set();
+    let hasExcludedInputs = paths.some(
+      (path) => specialInputJobs(path) && (path === "assets/logo.svg" || ownerOf(path)),
+    );
+    for (const file of workspacePaths) {
+      const owner = ownerOf(file);
+      if (!owner) return fullPlan(`Unmapped path ${file}; update the CI mapping`);
+      if (isUnmappedWorkspace(owner)) {
+        return fullPlan(`Workspace ${owner.name} has no CI job tags in turbo.json`);
       }
-      for (const job of consumers[name]) {
-        add(job, name === owner.name ? name : `${owner.name} → ${name}`);
-        mapped = true;
+      if (/^readme\.md$/i.test(file.slice(owner.path.length + 1))) {
+        hasExcludedInputs = true;
+      } else {
+        scopes.add(owner.name);
       }
     }
-    if (!mapped)
-      return fullPlan(`No CI consumer mapped for workspace ${owner.name}; update the CI mapping`);
-  }
-  return makePlan(reasons);
+    if (!scopes.size) return makePlan(reasons);
+
+    // Re-scope mixed ranges so workspace READMEs and image-only inputs don't select extra jobs.
+    const packages = hasExcludedInputs
+      ? readDependents(directory, turbo, scopes, affected)
+      : affected;
+    let hasConsumer = false;
+    for (const workspace of packages) {
+      if (isUnmappedWorkspace(workspace)) {
+        return fullPlan(`Workspace ${workspace.name} has no CI job tags in turbo.json`);
+      }
+      for (const job of workspace.ciJobs) {
+        add(job, workspace.name);
+        hasConsumer = true;
+      }
+    }
+    return hasConsumer
+      ? makePlan(reasons)
+      : fullPlan("No CI jobs mapped to the affected workspaces");
+  });
 }
 
 function run(command, args, cwd) {
@@ -173,8 +165,7 @@ function run(command, args, cwd) {
   return result.stdout;
 }
 
-export function changedPaths(base, head, filters = []) {
-  const ancestor = run("git", ["merge-base", "--", base, head]).trim();
+function changedPaths(base, head, filters = []) {
   // No rename detection means both old and new names are always included,
   // including a rename crossing workspace boundaries and deleted files.
   return run("git", [
@@ -184,7 +175,7 @@ export function changedPaths(base, head, filters = []) {
     "--no-relative",
     "-z",
     ...filters,
-    ancestor,
+    base,
     head,
     "--",
   ])
@@ -192,16 +183,37 @@ export function changedPaths(base, head, filters = []) {
     .filter(Boolean);
 }
 
-function readGraph(directory, turbo, version) {
-  const graph = JSON.parse(run(process.execPath, [turbo, "query", graphQuery], directory));
-  if (graph.version !== version || graph.errors?.length) {
-    throw new Error("The workspace graph must come from the pinned root Turbo version");
+function readAffectedPackages(directory, turbo, version, base, head) {
+  const query = `{
+    affectedPackages(base: ${JSON.stringify(base)}, head: ${JSON.stringify(head)}) {
+      items { name path tags }
+    }
+  }`;
+  const result = JSON.parse(run(process.execPath, [turbo, "query", query], directory));
+  if (result.version !== version || result.errors?.length) {
+    throw new Error("Expected an affected-package result from the pinned Turbo version");
   }
-  const packages = graph.data.packages.items;
-  if (!packages.length || packages.some((pkg) => !Array.isArray(pkg.allDependents?.items))) {
-    throw new Error("Incomplete workspace graph");
-  }
-  return packages;
+  return result.data.affectedPackages.items.map(({ name, path, tags }) => {
+    const ciJobs = [
+      ...new Set(tags.filter((tag) => tag.startsWith("ci:")).map((tag) => tag.slice(3))),
+    ];
+    const unknown = ciJobs.find((job) => !jobs.includes(job));
+    if (unknown !== undefined) throw new Error(`Unknown CI job tag ci:${unknown} on ${name}`);
+    return { name, path, ciJobs };
+  });
+}
+
+function readDependents(directory, turbo, scopes, affected) {
+  const filters = [...scopes].map((scope) => `--filter=...${scope}`);
+  const result = JSON.parse(
+    run(process.execPath, [turbo, "ls", "--output=json", ...filters], directory),
+  );
+  const byName = new Map(affected.map((workspace) => [workspace.name, workspace]));
+  return result.packages.items.map(({ name }) => {
+    const workspace = byName.get(name);
+    if (!workspace) throw new Error(`Turbo did not report tags for affected workspace ${name}`);
+    return workspace;
+  });
 }
 
 function turboVersion(directory) {
@@ -213,23 +225,25 @@ function turboVersion(directory) {
   return version;
 }
 
-function workspaceGraph(head) {
+function withCheckout(head, visit) {
   const root = run("git", ["rev-parse", "--show-toplevel"]).trim();
   const current = run("git", ["rev-parse", "HEAD"]).trim();
   if (
     head === current &&
     !run("git", ["status", "--porcelain", "--untracked-files=normal"], root)
   ) {
-    return readGraph(root, rootTurbo, turboVersion(root));
+    return visit(root, rootTurbo, turboVersion(root));
   }
 
   const temp = mkdtempSync(join(tmpdir(), "kipivo-ci-graph-"));
   try {
-    const archive = join(temp, "head.tar");
     const checkout = join(temp, "checkout");
-    mkdirSync(checkout);
-    run("git", ["archive", "--format=tar", "--output", archive, head], root);
-    run("tar", ["-xf", archive, "-C", checkout]);
+    run("git", ["clone", "--quiet", "--shared", "--no-checkout", "--", root, checkout], root);
+    run(
+      "git",
+      ["-c", "core.hooksPath=/dev/null", "checkout", "--quiet", "--detach", head],
+      checkout,
+    );
     const version = turboVersion(checkout);
     let turbo = rootTurbo;
     if (
@@ -244,7 +258,7 @@ function workspaceGraph(head) {
       run(process.execPath, ["install", "--cwd", install, "--no-save", `turbo@${version}`]);
       turbo = join(install, "node_modules", ".bin", "turbo");
     }
-    return readGraph(checkout, turbo, version);
+    return visit(checkout, turbo, version);
   } finally {
     rmSync(temp, { recursive: true, force: true });
   }
@@ -262,26 +276,22 @@ export function planFromArgs(args, { useRailwayBuilds = false } = {}) {
       "--end-of-options",
       `${args[3]}^{commit}`,
     ]).trim();
-    const paths = changedPaths(args[1], head);
+    const base = run("git", ["merge-base", "--", args[1], head]).trim();
+    const paths = changedPaths(base, head);
     let plan;
     for (const path of paths) {
       const reason = sharedInputReason(path);
       if (!reason) continue;
       const manifest = /^(?:apps|packages|tests)\/[^/]+\/package\.json$/;
       const added = paths.some((changed) => manifest.test(changed))
-        ? changedPaths(args[1], head, ["--diff-filter=A"]).find((changed) => manifest.test(changed))
+        ? changedPaths(base, head, ["--diff-filter=A"]).find((changed) => manifest.test(changed))
         : undefined;
       plan = fullPlan(
         added ? `${reason}. New workspace manifest ${added}. Update the CI mapping.` : reason,
       );
       break;
     }
-    if (!plan) {
-      const needsGraph = paths.some(
-        (path) => !isRootDocumentation(path) && !specialInputJobs(path),
-      );
-      plan = selectJobs(paths, needsGraph ? workspaceGraph(head) : []);
-    }
+    if (!plan) plan = selectJobs(paths, base, head);
     const deferImages =
       useRailwayBuilds &&
       !paths.some(
@@ -291,7 +301,7 @@ export function planFromArgs(args, { useRailwayBuilds = false } = {}) {
     return deferImages ? deferImageChecks(plan) : plan;
   } catch (error) {
     if (error.code === "ENOBUFS")
-      return fullPlan("Changed path list or workspace graph exceeded the planner size limit");
+      return fullPlan("Changed path list or Turbo output exceeded the planner size limit");
     return fullPlan(
       `Cannot reliably select jobs: ${error.message.replace(/\s+/g, " ").slice(0, 500)}`,
     );
