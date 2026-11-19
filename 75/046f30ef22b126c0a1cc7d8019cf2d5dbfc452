@@ -1,0 +1,19 @@
+apps/web/src/routes/index.tsx
+  s_e1b4451477b712::t_1c74be31902078 3,59-62
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "75046f30ef22b126c0a1cc7d8019cf2d5dbfc452",
+  "prompts": {},
+  "sessions": {
+    "s_e1b4451477b712": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1f1db-24c5-7972-b545-ac0d43b8bf32",
+        "model": "gpt-6.2-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
