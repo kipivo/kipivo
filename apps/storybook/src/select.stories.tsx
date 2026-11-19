@@ -9,7 +9,7 @@ import {
 } from "@kipivo/ui/components/select";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useId } from "react";
-import { expect, waitFor } from "storybook/test";
+import { expect, waitFor, within } from "storybook/test";
 
 const items = [
   { value: "name", label: "Name" },
@@ -46,13 +46,22 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 export const Default: Story = {
-  play: async ({ canvas, userEvent }) => {
+  play: async ({ canvas, canvasElement, userEvent }) => {
     const trigger = canvas.getByRole("combobox", { name: "Account menu label" });
+    const body = within(canvasElement.ownerDocument.body);
     await expect(trigger).toHaveTextContent("Name");
     trigger.focus();
-    await userEvent.keyboard("{Enter}{ArrowDown}{Enter}");
-    await expect(trigger).toHaveTextContent("Email address");
-    await waitFor(() => expect(trigger).toHaveFocus());
+    await userEvent.keyboard("{Enter}");
+    const selected = await body.findByRole("option", { name: /^Name$/ });
+    await waitFor(() => expect(selected).toHaveFocus());
+    await userEvent.keyboard("{ArrowDown}");
+    const email = body.getByRole("option", { name: "Email address" });
+    await waitFor(() => expect(email).toHaveFocus());
+    await userEvent.keyboard("{Enter}");
+    await waitFor(async () => {
+      await expect(trigger).toHaveTextContent("Email address");
+      await expect(trigger).toHaveFocus();
+    });
   },
 };
 export const Disabled: Story = { args: { disabled: true } };
