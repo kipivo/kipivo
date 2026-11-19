@@ -24,4 +24,4 @@ printf '%s\n' 'fix(web): restore focus after saving' | bun run --silent commitli
 bun run commitlint --from origin/next --to HEAD
 ```
 
-CI checks the new non-merge commits in each push or pull request using the same commitlint configuration. Pre-policy history is excluded, including when `next` is later merged into `main`.
+CI uses the same commitlint configuration to check non-merge commits introduced by a push or pull request. If the previous tip is unavailable after a branch is created or its history is rewritten, CI checks all non-merge commits reachable from the new tip.

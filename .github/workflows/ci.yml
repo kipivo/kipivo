@@ -76,12 +76,13 @@ jobs:
         env:
           BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
           HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
-          # Last pre-policy commit on next; do not re-lint its history on promotion to main.
-          POLICY_BASE: 82d94fbf6b51917553589f5dedb71306b5c5656b
         run: |
-          exclude=("^$POLICY_BASE")
-          if [[ ! "$BASE" =~ ^0+$ ]]; then exclude+=("^$BASE"); fi
-          git rev-list --no-merges "$HEAD" "${exclude[@]}" | while read -r sha; do
+          revisions=("$HEAD")
+          # A new branch or a force-push can leave the previous tip outside the checkout.
+          if [[ -n "$BASE" ]] && git cat-file -e "${BASE}^{commit}" 2>/dev/null; then
+            revisions+=("^$BASE")
+          fi
+          git rev-list --no-merges "${revisions[@]}" | while read -r sha; do
             echo "Checking $sha"
             git show -s --format=%B "$sha" | bun run --silent commitlint
           done
