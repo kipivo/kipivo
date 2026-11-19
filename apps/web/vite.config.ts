@@ -6,6 +6,8 @@ import { defineConfig } from "vite";
 
 export default defineConfig({
   resolve: { tsconfigPaths: true },
+  // Bundle the lazy workspace's store with React before the first workspace route loads.
+  optimizeDeps: { include: ["zustand", "zustand/middleware"] },
   plugins: [
     tailwindcss(),
     tanstackStart({ server: { build: { inlineCss: true } } }),
