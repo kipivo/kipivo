@@ -1,0 +1,21 @@
+.github/workflows/ci.yml
+  s_5b0ad29f5a4d17::t_5fd263a028c9d6 2,7-19,60,67,70-79,187,193
+.github/workflows/topology-smoke.yml
+  s_5b0ad29f5a4d17::t_978e07c4ae9b31 10-12,23-25
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "ed65f74d72f628d1462576ae5c372f3a57145d8e",
+  "prompts": {},
+  "sessions": {
+    "s_5b0ad29f5a4d17": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1f3ce-2e2d-7b72-9d22-76b8b8fc80e9",
+        "model": "gpt-6.2-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
