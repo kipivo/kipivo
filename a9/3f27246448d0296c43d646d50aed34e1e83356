@@ -1,0 +1,25 @@
+apps/storybook/src/wordmark.stories.tsx
+  s_ede7f0ca7c4b93::t_1c94af2481201c 16-19
+apps/web/src/layout/home-link.tsx
+  s_ede7f0ca7c4b93::t_1c94af2481201c 7-8
+packages/ui/src/wordmark.tsx
+  s_ede7f0ca7c4b93::t_1c94af2481201c 1-2,6,9-11,13-25
+apps/storybook/src/examples.tsx
+  s_ede7f0ca7c4b93::t_1c94af2481201c 1,262-266
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "a93f27246448d0296c43d646d50aed34e1e83356",
+  "prompts": {},
+  "sessions": {
+    "s_ede7f0ca7c4b93": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1eeda-d4f1-7f53-87ef-ae4cec611e36",
+        "model": "gpt-6.2-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
