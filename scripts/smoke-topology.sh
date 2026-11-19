@@ -8,6 +8,7 @@ compose=(
   --project-name "kipivo-topology-smoke-$$-$RANDOM"
 )
 docker compose version >/dev/null
+"${compose[@]}" pull --policy missing postgres redis smoke
 
 cleanup() {
   local status=$?

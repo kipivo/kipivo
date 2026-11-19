@@ -16,6 +16,7 @@ services:
       retries: 60
   upstream:
     image: oven/bun:1.4.4-slim
+    init: true
     command: [bun, /smoke/upstreams.mjs]
     volumes:
       - ./upstreams.mjs:/smoke/upstreams.mjs:ro
