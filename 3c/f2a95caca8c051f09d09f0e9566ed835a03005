@@ -1,0 +1,34 @@
+apps/web/src/features/home/navigation.tsx
+  s_df762e5574b7c9::t_dae7d878d2ebeb 133,136
+packages/ui/src/components/dialog.tsx
+  s_df762e5574b7c9::t_dae7d878d2ebeb 26,29-34,39,41,43-44,60,64,68,70,72
+  s_df762e5574b7c9::t_ca79e0769bbf98 40,42,69,71
+  s_df762e5574b7c9::t_8d54a43a51925e 27-28
+tests/e2e/specs/local-runs.spec.ts
+  s_df762e5574b7c9::t_aabc206ffc3d72 319-321
+  s_df762e5574b7c9::t_1ca736dfd341f6 311-318,322-327,330-341
+  s_df762e5574b7c9::t_c4101519ffe609 328-329
+apps/storybook/src/dialog.stories.tsx
+  s_df762e5574b7c9::t_dae7d878d2ebeb 30-38,54-55
+  s_df762e5574b7c9::t_ca79e0769bbf98 48-49
+  s_df762e5574b7c9::t_17d47a5803e752 39-47,50-53
+apps/web/src/features/account/control.tsx
+  s_df762e5574b7c9::t_1ca736dfd341f6 27
+  s_df762e5574b7c9::t_322e9d139d79e3 19-24,29-36,53
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "3cf2a95caca8c051f09d09f0e9566ed835a03005",
+  "prompts": {},
+  "sessions": {
+    "s_df762e5574b7c9": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1f21a-e74e-7e71-98e5-b4eb8f0652ee",
+        "model": "gpt-6.2-astra"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
