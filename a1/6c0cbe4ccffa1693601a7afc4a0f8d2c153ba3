@@ -1,0 +1,24 @@
+tests/e2e/specs/auth.spec.ts
+  s_5b0ad29f5a4d17::t_c583e84ed65a9c 422-434,436-438
+  s_5b0ad29f5a4d17::t_926660fa922760 435
+apps/web/src/features/account/session.tsx
+  s_5b0ad29f5a4d17::t_4c456196824595 35-41
+tests/e2e/specs/local-runs.spec.ts
+  s_5b0ad29f5a4d17::t_c583e84ed65a9c 203,319,321,345
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "a16c0cbe4ccffa1693601a7afc4a0f8d2c153ba3",
+  "prompts": {},
+  "sessions": {
+    "s_5b0ad29f5a4d17": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1f3ce-2e2d-7b72-9d22-76b8b8fc80e9",
+        "model": "gpt-6.2-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
