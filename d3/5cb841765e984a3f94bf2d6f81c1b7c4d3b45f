@@ -1,0 +1,47 @@
+apps/web/src/styles/sparks.svg
+  s_df762e5574b7c9::t_93f215226b4607 1,9-17
+  s_df762e5574b7c9::t_84e56be290d41d 3-7
+  s_df762e5574b7c9::t_9a6f1c2348eb69 2,8,18
+apps/web/src/layout/workspace-frame.tsx
+  s_df762e5574b7c9::t_acce408a6d271a 7,57,70
+docs/design/README.md
+  s_df762e5574b7c9::t_acce408a6d271a 65
+apps/web/src/features/home/navigation.tsx
+  s_df762e5574b7c9::t_a73c7f93efd114 51,161
+tests/e2e/specs/local-runs.spec.ts
+  s_df762e5574b7c9::t_8a5f0c01983a5d 158-160,162,164,169,172,175,178,182-186,188,193
+  s_df762e5574b7c9::t_2877d5c09ae429 116-122,151,170
+  s_df762e5574b7c9::t_9cc20575a52916 115
+packages/ui/src/components/theme-selector.tsx
+  s_df762e5574b7c9::t_a73c7f93efd114 51
+tests/e2e/specs/workspace-nav.spec.ts
+  s_df762e5574b7c9::t_a88e2c8daf9c05 79-81
+  s_df762e5574b7c9::t_acce408a6d271a 102-104
+apps/web/src/styles/theme-transition.css
+  s_df762e5574b7c9::t_8c0b3b391ade84 58
+  s_df762e5574b7c9::t_db77cc01adc4b4 10,16,35-36,42,68-71
+  s_df762e5574b7c9::t_9a6f1c2348eb69 7-9,11-12,34,37,51-52,59-67,72-82
+  s_df762e5574b7c9::t_acce408a6d271a 85
+apps/web/src/features/theme/toggle.tsx
+  s_df762e5574b7c9::t_a88e2c8daf9c05 17-20
+  s_df762e5574b7c9::t_acce408a6d271a 1-16,21-34
+apps/web/src/styles/globals.css
+  s_df762e5574b7c9::t_a73c7f93efd114 71-76,81-83
+  s_df762e5574b7c9::t_72ebad0ef87a36 77-80
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "d35cb841765e984a3f94bf2d6f81c1b7c4d3b45f",
+  "prompts": {},
+  "sessions": {
+    "s_df762e5574b7c9": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1f21a-e74e-7e71-98e5-b4eb8f0652ee",
+        "model": "gpt-6.2-astra"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
