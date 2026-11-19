@@ -12,7 +12,7 @@ import {
 import { join } from "node:path";
 import { runnerHome } from "@kipivo/runtime/local/connection";
 import { runId, submitCheck } from "@kipivo/contracts/runs";
-import { startCheck } from "./check-process";
+import { startCheckRun } from "./check-run";
 import { openRunStore } from "./store";
 
 const host = "127.0.0.1";
@@ -65,7 +65,7 @@ export function startRunner({
   const connectionFile = join(home, "runner.json");
   const token = randomBytes(32).toString("hex");
   const expectedAuth = Buffer.from(`Bearer ${token}`);
-  let active: ReturnType<typeof startCheck> | undefined;
+  let active: ReturnType<typeof startCheckRun> | undefined;
   let closing: Promise<void> | undefined;
   let store: ReturnType<typeof openRunStore> | undefined;
   let server: ReturnType<typeof Bun.serve> | undefined;
@@ -96,7 +96,7 @@ export function startRunner({
             if (active) return json({ error: "a check is already running" }, 409);
             const id = runs.submit();
             try {
-              const check = startCheck(runs, id, repo, timeoutMs);
+              const check = startCheckRun(runs, id, repo, timeoutMs);
               active = check;
               void check.done.then(() => {
                 active = undefined;

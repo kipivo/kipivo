@@ -1,8 +1,13 @@
 import { spawn } from "node:child_process";
-import type { RunStore } from "./store";
 
-export function startCheck(store: RunStore, id: string, repo: string, timeoutMs: number) {
-  store.start(id);
+type CheckEvents = {
+  onLog(text: string): void;
+  onFinish(exitCode: number | null, error: string | null): void;
+};
+
+export function startCheck(repo: string, timeoutMs: number, events: CheckEvents) {
+  const onLog = events.onLog.bind(events);
+  const onFinish = events.onFinish.bind(events);
   const child = spawn(process.execPath, ["run", "check"], {
     cwd: repo,
     detached: true,
@@ -29,8 +34,8 @@ export function startCheck(store: RunStore, id: string, repo: string, timeoutMs:
 
   const timer = setTimeout(() => stop("timeout"), timeoutMs);
   const done = new Promise<void>((resolve) => {
-    child.stdout.setEncoding("utf8").on("data", (text: string) => store.appendLog(id, text));
-    child.stderr.setEncoding("utf8").on("data", (text: string) => store.appendLog(id, text));
+    child.stdout.setEncoding("utf8").on("data", onLog);
+    child.stderr.setEncoding("utf8").on("data", onLog);
     child.once("error", () => {
       error ??= "could not start bun run check";
     });
@@ -38,7 +43,7 @@ export function startCheck(store: RunStore, id: string, repo: string, timeoutMs:
       clearTimeout(timer);
       clearTimeout(forceTimer);
       if (error === "timeout" || error === "interrupted") signalGroup("SIGKILL");
-      store.finish(id, code, error ?? (signal ? `terminated by ${signal}` : null));
+      onFinish(code, error ?? (signal ? `terminated by ${signal}` : null));
       resolve();
     });
   });

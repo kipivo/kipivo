@@ -57,6 +57,34 @@ test("times out a running check and holds an exclusive state lock", async () => 
   }
 }, 12_000);
 
+test("closing the runner persists an active check as interrupted", async () => {
+  const { dir, home } = await isolatedRepo();
+  const runner = startRunner({ repo: dir, home, port: 0 });
+  try {
+    const request = await client(home);
+    const submission = await request("/v1/runs", { method: "POST", body: '{"kind":"check"}' });
+    expect(submission.status).toBe(202);
+    const { id } = submittedRun.parse(await submission.json());
+    const running = runDetail.parse(await (await request(`/v1/runs/${id}`)).json());
+    expect(running.status).toBe("running");
+
+    await runner.close();
+
+    const store = openRunStore(join(home, "runs.sqlite"));
+    try {
+      const result = runDetail.parse(store.get(id));
+      expect(result).toMatchObject({ status: "failed", error: "interrupted" });
+      expect(result.startedAt).toBe(running.startedAt);
+      expect(result.finishedAt).not.toBeNull();
+    } finally {
+      store.close();
+    }
+  } finally {
+    await runner.close();
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
 test("recovers interrupted records and retains a UTF-8 bounded log", async () => {
   const { dir, home } = await isolatedRepo();
   await mkdir(home, { mode: 0o700 });
