@@ -106,6 +106,13 @@ describe("CI selection", () => {
     expect(
       selected(planFor(["docs/testing.md", "apps/mobile/README.md", "apps/storybook/src/test.ts"])),
     ).toEqual(["check", "ui"]);
+    expect(selected(planFor(["apps/mobile/README.md", "packages/shared/input.ts"]))).toEqual([
+      "check",
+      "ui",
+      "auth",
+      "e2e",
+      "web-image",
+    ]);
   });
   test("Turbo selects the affected admin directory consumers", () => {
     expect(selected(planFor(["packages/admin/src/directory.ts"]))).toEqual([

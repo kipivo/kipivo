@@ -133,15 +133,19 @@ function selectJobs(paths, base, head) {
       if (/^readme\.md$/i.test(file.slice(owner.path.length + 1))) {
         hasExcludedInputs = true;
       } else {
-        scopes.add(owner.name);
+        scopes.add(owner);
       }
     }
     if (!scopes.size) return makePlan(reasons);
 
     // Re-scope mixed ranges so workspace READMEs and image-only inputs don't select extra jobs.
-    const packages = hasExcludedInputs
-      ? readDependents(directory, turbo, scopes, affected)
-      : affected;
+    let packages = affected;
+    if (hasExcludedInputs) {
+      const names = new Set([...scopes].flatMap(({ name, dependents }) => [name, ...dependents]));
+      packages = affected.filter(({ name }) => names.has(name));
+      if (packages.length !== names.size)
+        throw new Error("Incomplete affected-package scope from Turbo");
+    }
     let hasConsumer = false;
     for (const workspace of packages) {
       if (isUnmappedWorkspace(workspace)) {
@@ -186,33 +190,20 @@ function changedPaths(base, head, filters = []) {
 function readAffectedPackages(directory, turbo, version, base, head) {
   const query = `{
     affectedPackages(base: ${JSON.stringify(base)}, head: ${JSON.stringify(head)}) {
-      items { name path tags }
+      items { name path tags allDependents { items { name } } }
     }
   }`;
   const result = JSON.parse(run(process.execPath, [turbo, "query", query], directory));
   if (result.version !== version || result.errors?.length) {
     throw new Error("Expected an affected-package result from the pinned Turbo version");
   }
-  return result.data.affectedPackages.items.map(({ name, path, tags }) => {
+  return result.data.affectedPackages.items.map(({ name, path, tags, allDependents }) => {
     const ciJobs = [
       ...new Set(tags.filter((tag) => tag.startsWith("ci:")).map((tag) => tag.slice(3))),
     ];
     const unknown = ciJobs.find((job) => !jobs.includes(job));
     if (unknown !== undefined) throw new Error(`Unknown CI job tag ci:${unknown} on ${name}`);
-    return { name, path, ciJobs };
-  });
-}
-
-function readDependents(directory, turbo, scopes, affected) {
-  const filters = [...scopes].map((scope) => `--filter=...${scope}`);
-  const result = JSON.parse(
-    run(process.execPath, [turbo, "ls", "--output=json", ...filters], directory),
-  );
-  const byName = new Map(affected.map((workspace) => [workspace.name, workspace]));
-  return result.packages.items.map(({ name }) => {
-    const workspace = byName.get(name);
-    if (!workspace) throw new Error(`Turbo did not report tags for affected workspace ${name}`);
-    return workspace;
+    return { name, path, ciJobs, dependents: allDependents.items.map(({ name }) => name) };
   });
 }
 

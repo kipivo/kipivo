@@ -4,7 +4,7 @@
 
 ## CI job selection
 
-Every pull request runs `check` in parallel with a lightweight `changes` job. The planner passes the merge base and the PR head to Turborepo's `affectedPackages` query. Turbo reports the affected workspaces, including transitive consumers, and the `ci:<job>` tags from their `turbo.json` files. Git paths drive repository-wide, documentation, and image rules, including deleted paths and both sides of renames. For a range mixing code with excluded workspace inputs, Turbo's dependent filters scope the selection to the workspaces with code changes.
+Every pull request runs `check` in parallel with a lightweight `changes` job. The planner passes the merge base and the PR head to Turborepo's `affectedPackages` query. Turbo reports the affected workspaces, their `ci:<job>` tags, and their transitive consumers in one query. Git paths drive repository-wide, documentation, and image rules, including deleted paths and both sides of renames. For a range mixing code with excluded workspace inputs, the planner uses the consumers already returned by Turbo to scope the selection.
 
 | Affected consumer | Additional jobs                         |
 | ----------------- | --------------------------------------- |
