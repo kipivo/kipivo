@@ -1,0 +1,88 @@
+.railway/railway.ts
+  s_5b0ad29f5a4d17::t_86e099bbffc1d1 65-68
+docs/auth.md
+  s_5b0ad29f5a4d17::t_fe25e0d820ea5d 75-78,83-87
+  s_5b0ad29f5a4d17::t_e0a447d43d3fdc 79-82
+docs/api.md
+  s_5b0ad29f5a4d17::t_5c310b51bc719d 32,34
+tests/e2e/specs/local-runs.spec.ts
+  s_5b0ad29f5a4d17::t_ff6c955b31ca07 256-274
+  s_5b0ad29f5a4d17::t_e0a447d43d3fdc 250
+apps/web/src/router.tsx
+  s_5b0ad29f5a4d17::t_6f09abd745b3d8 10
+apps/api/src/auth/procedures.ts
+  s_5b0ad29f5a4d17::t_e0a447d43d3fdc 25-29
+  s_5b0ad29f5a4d17::t_0bd54bdede0f7c 24,30-32,36
+packages/auth/src/factory.ts
+  s_5b0ad29f5a4d17::t_0bd54bdede0f7c 11,46-51,64-66,118-121
+  s_5b0ad29f5a4d17::t_e0a447d43d3fdc 23-28,122-123
+tests/e2e/fixtures/process.ts
+  s_5b0ad29f5a4d17::t_ff6c955b31ca07 92-95
+packages/icons/src/index.tsx
+  s_5b0ad29f5a4d17::t_632125f8cb2c99 17,62
+apps/web/src/features/brand/assembly.tsx
+  s_5b0ad29f5a4d17::t_2ca15f2e797d92 1,9-12,14
+apps/web/src/features/account/credentials-form.tsx
+  s_5b0ad29f5a4d17::t_6f09abd745b3d8 117,125
+apps/web/src/routes/(auth)/sign-up.tsx
+  s_5b0ad29f5a4d17::t_6f09abd745b3d8 2-3,7,11-12,17,26-36
+  s_5b0ad29f5a4d17::t_5c310b51bc719d 22-24
+packages/auth/src/env.ts
+  s_5b0ad29f5a4d17::t_0bd54bdede0f7c 8-11,16,18-33,45,49
+  s_5b0ad29f5a4d17::t_330b5bc16929d9 50
+knip.json
+  s_5b0ad29f5a4d17::t_9d0b6c8ca1b9d4 12
+tests/e2e/specs/auth.spec.ts
+  s_5b0ad29f5a4d17::t_9d0b6c8ca1b9d4 870-873
+  s_5b0ad29f5a4d17::t_3d431568093c65 31-34,37,864-869,874-901
+apps/web/src/routes/(auth)/route.tsx
+  s_5b0ad29f5a4d17::t_e34c24fc084950 32
+  s_5b0ad29f5a4d17::t_81ca085e234737 49
+  s_5b0ad29f5a4d17::t_6f09abd745b3d8 13,20-22,29,36
+  s_5b0ad29f5a4d17::t_2ca15f2e797d92 4,12,14,26-28,30,33-34,37-41,43-48,52,55-56
+  s_5b0ad29f5a4d17::t_ec183b32fba1c5 24,31,35
+  s_5b0ad29f5a4d17::t_e22390a044f178 23,25
+packages/api/src/auth.ts
+  s_5b0ad29f5a4d17::t_0bd54bdede0f7c 36-38,40-44,69-74
+  s_5b0ad29f5a4d17::t_86e099bbffc1d1 27,39,75
+apps/api/src/runtime.test.ts
+  s_5b0ad29f5a4d17::t_e0a447d43d3fdc 111-113
+  s_5b0ad29f5a4d17::t_ff6c955b31ca07 86-88,101-104
+tests/e2e/fixtures/auth-preload.mjs
+  s_5b0ad29f5a4d17::t_3d431568093c65 1-2,4-24,27-44
+docs/design/README.md
+  s_5b0ad29f5a4d17::t_5c310b51bc719d 85-91
+apps/web/src/features/account/auth-navigation.tsx
+  s_5b0ad29f5a4d17::t_47bc6c2be797de 21-41
+  s_5b0ad29f5a4d17::t_6f09abd745b3d8 42-43
+apps/web/src/routes/(auth)/sign-in.tsx
+  s_5b0ad29f5a4d17::t_6f09abd745b3d8 7,10,19-20,26,61,65
+  s_5b0ad29f5a4d17::t_2ca15f2e797d92 1,36,63-64,66,69,73,77
+  s_5b0ad29f5a4d17::t_e5b7ed481fba77 54
+  s_5b0ad29f5a4d17::t_357c32cdbcc965 4,12-15,67,71
+  s_5b0ad29f5a4d17::t_5c310b51bc719d 33
+  s_5b0ad29f5a4d17::t_9d5c9dab81eace 11
+tests/e2e/specs/setup.spec.ts
+  s_5b0ad29f5a4d17::t_ff6c955b31ca07 23-24,67-74
+  s_5b0ad29f5a4d17::t_e0a447d43d3fdc 75-77
+apps/web/src/features/account/social-sign-in.tsx
+  s_5b0ad29f5a4d17::t_47bc6c2be797de 2
+  s_5b0ad29f5a4d17::t_632125f8cb2c99 87
+  s_5b0ad29f5a4d17::t_86e099bbffc1d1 1,3-86,88-96
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "0f0de803d8a4f65ac52d18689797e7eec7e368e9",
+  "prompts": {},
+  "sessions": {
+    "s_5b0ad29f5a4d17": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1f3ce-2e2d-7b72-9d22-76b8b8fc80e9",
+        "model": "gpt-6.2-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
