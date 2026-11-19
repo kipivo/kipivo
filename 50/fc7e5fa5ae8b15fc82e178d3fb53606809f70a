@@ -1,0 +1,367 @@
+apps/storybook/package.json
+  s_df762e5574b7c9::t_d6f7d8e9a67b90 15
+apps/storybook/src/button.stories.tsx
+  s_df762e5574b7c9::t_2745155ce28164 1,89,106,110
+  s_df762e5574b7c9::t_d6f7d8e9a67b90 107
+apps/web/src/routes/_app/workbench.tsx
+  s_451a0b755775de::t_1b4b0763e8c5fd 30-31
+  s_451a0b755775de::t_ed10c54f2a6d31 3,17-18
+  s_df762e5574b7c9::t_3d81c16a1eb337 14,35
+  s_df762e5574b7c9::t_7f6cd6ea36ba46 16,19-23,25-29,32-33
+apps/web/src/layout/workspace-frame.tsx
+  s_df762e5574b7c9::t_863e879081f7a2 1-3,5,52-53,68,73
+  s_451a0b755775de::t_58e4a98804c400 37,49,54-55,63,69
+  s_df762e5574b7c9::t_eb2089deb8c38d 50,71
+  s_451a0b755775de::t_1b754e4edee660 16-22,33-35,40-42
+  s_451a0b755775de::t_7e118e61380362 7,70
+  s_451a0b755775de::t_0b9d15ff89a8a3 9-10,13
+  s_451a0b755775de::t_872b29ef6b14af 27
+  s_451a0b755775de::t_042bc313b56b04 38-39,43-46
+  s_df762e5574b7c9::t_7f6cd6ea36ba46 51,72,79
+  s_451a0b755775de::t_387914a9dbaf01 15,23-24,31-32,36,59-62,64-67,74-78
+  s_451a0b755775de::t_32a3ec236c0750 56-58
+apps/web/src/features/runs/use-local-runs.ts
+  s_451a0b755775de::t_5a8cf082cf19fa 13-14,17,19,23,37,57,61-64,101,106
+  s_451a0b755775de::t_bf68966b5f7fea 34-36
+apps/web/src/layout/frame.tsx
+  s_df762e5574b7c9::t_932b15cb7c1156 36
+  s_451a0b755775de::t_ee56049c32a435 18,23,27-31
+apps/web/src/layout/workspace-styles.ts
+  s_451a0b755775de::t_387914a9dbaf01 3-6
+  s_451a0b755775de::t_58e4a98804c400 1-2
+apps/web/src/features/account/directory/role-change.tsx
+  s_451a0b755775de::t_ed10c54f2a6d31 98
+apps/web/src/routes/_app/runs.tsx
+  s_451a0b755775de::t_2cb4a9dd36986a 1,3,5-7,30,37-40,50,57-63,65-69,73,79-81,90-94,98-102,110-113,117
+  s_df762e5574b7c9::t_7f6cd6ea36ba46 44,49
+  s_451a0b755775de::t_387914a9dbaf01 46-48,74-77,82-84,89,95-97,103-105
+  s_df762e5574b7c9::t_a7a75b45f52a7f 42,51,119
+  s_451a0b755775de::t_00060ea272bd1c 4,43,45,64,78
+  s_451a0b755775de::t_bf68966b5f7fea 19-29,31-35,70-72,85-88,106-109,114-116
+  s_451a0b755775de::t_47a5b186de1f7d 41,118
+packages/ui/src/styles/globals.css
+  s_451a0b755775de::t_7de658eb279343 37-54
+  s_451a0b755775de::t_1f83de93d8db25 55-57
+packages/ui/src/lib/clipboard.ts
+  s_df762e5574b7c9::t_282157987bd48a 1-8
+apps/storybook/src/documentation.ts
+  s_df762e5574b7c9::t_513733dbe64596 20-38,42
+  s_df762e5574b7c9::t_a150e6983ba11e 39-41
+  s_451a0b755775de::t_da28adab542c68 2-19
+apps/web/src/features/runs/history.tsx
+  s_451a0b755775de::t_387914a9dbaf01 45-57
+  s_451a0b755775de::t_bf68966b5f7fea 6-10
+  s_451a0b755775de::t_6c78adf839911c 3-5,11
+  s_451a0b755775de::t_00060ea272bd1c 2,28-30,32,61
+  s_451a0b755775de::t_1b754e4edee660 37-41
+  s_451a0b755775de::t_e65ed856c73b52 13-16,63
+  s_df762e5574b7c9::t_a7a75b45f52a7f 12,64-65
+  s_df762e5574b7c9::t_7f6cd6ea36ba46 31,35,58-60,62
+apps/web/src/layout/sidebar-store.ts
+  s_451a0b755775de::t_0b9d15ff89a8a3 1-20
+apps/storybook/src/copy-button.tsx
+  s_df762e5574b7c9::t_282157987bd48a 2,21
+apps/web/src/features/theme/menu.tsx
+  s_451a0b755775de::t_042bc313b56b04 33-34,37-45
+  s_451a0b755775de::t_c73eb7d01c24b5 1,3-17,19-32,46-54
+  s_451a0b755775de::t_c1bb4796b559b4 35-36
+  s_451a0b755775de::t_7e118e61380362 2,18
+packages/ui/src/components/sidebar.tsx
+  s_451a0b755775de::t_cc4f16413841fc 1-13,15-24,26-50
+  s_451a0b755775de::t_0c2d6baf0aac7b 14,25
+packages/ui/src/components/theme-selector.tsx
+  s_df762e5574b7c9::t_d6f7d8e9a67b90 50
+  s_451a0b755775de::t_c73eb7d01c24b5 4,10,20,38
+  s_df762e5574b7c9::t_ef3799e20c8bcf 2,14,46
+  s_df762e5574b7c9::t_2745155ce28164 1,5-6
+apps/storybook/src/sidebar-menu.stories.tsx
+  s_451a0b755775de::t_9bda22379a4d65 1-19,35-66
+  s_451a0b755775de::t_0c2d6baf0aac7b 20-34
+packages/ui/src/components/password-input.tsx
+  s_df762e5574b7c9::t_0a71b425045918 1,16-17,26,31,33,35-37,39
+  s_df762e5574b7c9::t_282157987bd48a 2-15,18-25,27-30,32,34,38,40-43
+packages/ui/src/components/native-select.tsx
+  s_df762e5574b7c9::t_2745155ce28164 3,25
+packages/icons/tsconfig.json
+  s_df762e5574b7c9::t_d6f7d8e9a67b90 1-3,5,7
+  s_df762e5574b7c9::t_60261578fc1655 4,6
+packages/icons/AGENTS.md
+  s_df762e5574b7c9::t_56db7107c4459b 1-2,4
+  s_df762e5574b7c9::t_2745155ce28164 3,5
+apps/web/src/styles.css
+  s_df762e5574b7c9::t_4f713bad599a1e 113-116,119-122,125-126,129-130,133-134,136-147,150-151,154-162,165-167,170-171,184
+  s_451a0b755775de::t_ee56049c32a435 57-59
+  s_451a0b755775de::t_872b29ef6b14af 60,89,92-95
+  s_451a0b755775de::t_58e4a98804c400 4-26,34,48,56,61-62,69-75,77-81,84-85,99,102,107
+  s_451a0b755775de::t_387914a9dbaf01 27-31,35-46,49-52,86-88,103-105,108-109
+  s_451a0b755775de::t_573732587fe9af 65-66
+  s_451a0b755775de::t_cc5add0c3b6379 96-98
+  s_df762e5574b7c9::t_ef3799e20c8bcf 135
+  s_451a0b755775de::t_bddf126e3fca9c 174-175,178-180,182-183,187-190
+apps/storybook/src/back-to-top-button.stories.tsx
+  s_df762e5574b7c9::t_513733dbe64596 1-2,4-20,22-23
+  s_df762e5574b7c9::t_a361c145afc579 3,21
+tests/e2e/specs/workspace-nav.spec.ts
+  s_df762e5574b7c9::t_b4af34beb8b560 38-47,53-55,63-64,68-69
+  s_df762e5574b7c9::t_4fd503379db0b2 48-51
+  s_451a0b755775de::t_6cb8b590107e42 52,56-62,65
+  s_451a0b755775de::t_457343442fa7c8 66-67
+  s_451a0b755775de::t_95204f33a26ffb 83
+  s_451a0b755775de::t_e48e0e37513a14 89-91
+  s_451a0b755775de::t_be8c62f10dbd9d 79,86-87,100
+  s_451a0b755775de::t_3313a6d2b1f6b5 70-78,80-82,84-85,88,92-99,101-110
+tests/e2e/specs/setup.spec.ts
+  s_df762e5574b7c9::t_ca9a4a6fa9b4a8 67
+knip.json
+  s_df762e5574b7c9::t_3255e45c202deb 5
+apps/web/public/manifest.webmanifest
+  s_451a0b755775de::t_1b4b0763e8c5fd 5
+tests/e2e/specs/workbench.spec.ts
+  s_451a0b755775de::t_10fdfa5250aa38 8
+  s_451a0b755775de::t_8125cfb06e6d48 25-27
+  s_451a0b755775de::t_6cb8b590107e42 32
+apps/web/src/features/account/menu.tsx
+  s_df762e5574b7c9::t_1175bc078372a5 62-63,72,83-86,88-90,92-96
+  s_451a0b755775de::t_387914a9dbaf01 64-65,67-71
+  s_451a0b755775de::t_872b29ef6b14af 66
+  s_df762e5574b7c9::t_eb2089deb8c38d 1,24,28,77-82,87
+  s_df762e5574b7c9::t_e1d65bd0cd07d2 3,76
+packages/ui/package.json
+  s_df762e5574b7c9::t_d6f7d8e9a67b90 19
+apps/web/src/features/workbench/tasks.ts
+  s_451a0b755775de::t_ed10c54f2a6d31 6
+  s_451a0b755775de::t_387914a9dbaf01 12-20
+apps/web/src/features/workbench/board.tsx
+  s_df762e5574b7c9::t_7f6cd6ea36ba46 189,191-198
+  s_451a0b755775de::t_ed10c54f2a6d31 4,35,37,51-52,77,106,138,164-165,180,185,214,220
+  s_451a0b755775de::t_1b754e4edee660 115-118,126-129,145-150
+  s_451a0b755775de::t_1b4b0763e8c5fd 33-34,45-50,65,84-86,163
+  s_df762e5574b7c9::t_3d81c16a1eb337 1,3,7,9-10,18,24,26-32,36,53-62,64,162,182,187,212,219,221
+  s_451a0b755775de::t_387914a9dbaf01 11-16,38-42,66-75,78-83,87-104,109-111,125,130-137,140-142,166,199-206,209,223,225,227,236-240
+  s_451a0b755775de::t_f87431b7a48427 63,105,170
+  s_451a0b755775de::t_872b29ef6b14af 155
+  s_451a0b755775de::t_10fdfa5250aa38 190
+  s_451a0b755775de::t_bf68966b5f7fea 107-108,112-114,119-124,139,143-144,151-154,156-161,169,171-173
+.railway/railway.ts
+  s_df762e5574b7c9::t_56db7107c4459b 90
+apps/web/src/features/theme/appearance.tsx
+  s_df762e5574b7c9::t_ef3799e20c8bcf 42-46,48-56,92,151,156
+  s_451a0b755775de::t_042bc313b56b04 176-182
+  s_451a0b755775de::t_c73eb7d01c24b5 21,41,47,122,139,168,170-172,174-175
+tests/e2e/specs/auth.spec.ts
+  s_df762e5574b7c9::t_ca9a4a6fa9b4a8 454,498,501,551,598
+packages/ui/src/components/initials-avatar.tsx
+  s_df762e5574b7c9::t_e1d65bd0cd07d2 1-16
+apps/web/src/features/account/control.tsx
+  s_451a0b755775de::t_872b29ef6b14af 43
+  s_451a0b755775de::t_e48e0e37513a14 20-23,40-41,44-45
+  s_451a0b755775de::t_cc5add0c3b6379 48-51
+  s_df762e5574b7c9::t_eb2089deb8c38d 30
+  s_451a0b755775de::t_0b9d15ff89a8a3 2,38-39,53
+  s_451a0b755775de::t_387914a9dbaf01 42,47,52
+  s_df762e5574b7c9::t_1175bc078372a5 10-16
+apps/web/src/layout/sidebar.tsx
+  s_451a0b755775de::t_0b9d15ff89a8a3 1-2,5-7,11-19,21-24,31-35
+  s_451a0b755775de::t_58e4a98804c400 20
+  s_451a0b755775de::t_95204f33a26ffb 3,8,26
+  s_451a0b755775de::t_97c901803fcf8e 4,9-10,25,27-30
+apps/web/src/routes/index.tsx
+  s_451a0b755775de::t_1b4b0763e8c5fd 59-60
+  s_451a0b755775de::t_f7ae6e8c130c9f 38-42,44
+  s_451a0b755775de::t_573732587fe9af 43
+apps/web/src/features/workbench/quick-add.tsx
+  s_df762e5574b7c9::t_7f6cd6ea36ba46 43-47,49,52-54,59-89
+  s_451a0b755775de::t_6cb8b590107e42 1,22-23,50-51,55
+  s_451a0b755775de::t_10fdfa5250aa38 8,13
+  s_451a0b755775de::t_ed10c54f2a6d31 41,48
+  s_df762e5574b7c9::t_3d81c16a1eb337 2,7,12,40,42,57-58,90-91
+apps/web/src/features/runs/command.tsx
+  s_451a0b755775de::t_eacbfa1a181e4d 1-32
+apps/web/src/features/brand/assembly.tsx
+  s_df762e5574b7c9::t_6e73786f0751f8 25-29,46-53
+  s_451a0b755775de::t_85bc594c92e5d8 16
+  s_df762e5574b7c9::t_053c3c98a4ba11 23
+  s_df762e5574b7c9::t_5bd8b10e9f9e40 2,9-15,17-22,24,30-36,38
+docs/design/README.md
+  s_451a0b755775de::t_049dadd7cc0444 67
+  s_451a0b755775de::t_f87431b7a48427 93
+  s_451a0b755775de::t_8552449f7e9cc1 68
+  s_451a0b755775de::t_73b1c47840d7da 51
+  s_451a0b755775de::t_387914a9dbaf01 27-28
+  s_451a0b755775de::t_c86649b049f976 19-23,25-26,85-89,91
+  s_451a0b755775de::t_32a3ec236c0750 65
+  s_df762e5574b7c9::t_7f6cd6ea36ba46 8,98
+  s_451a0b755775de::t_5fb428449f2061 1-4,6,11-14,16-18,29,32-33,35-37,46-48,50,60-62,82-84,92,94-97,99-104
+  s_451a0b755775de::t_b3421e078e8c7b 90
+  s_451a0b755775de::t_a9406d7a50622e 24,31
+  s_451a0b755775de::t_5c42858616176a 52,58
+  s_451a0b755775de::t_68861e9c9ec035 64
+  s_451a0b755775de::t_8125cfb06e6d48 38-45,49,53-57,59,69-81
+  s_451a0b755775de::t_2daecc82d041d3 5,7,30,34,63
+  s_451a0b755775de::t_aef1a4f7137613 66
+  s_451a0b755775de::t_1eaeda3680d89a 9-10
+  s_451a0b755775de::t_457343442fa7c8 15
+apps/web/src/routes/(auth)/route.tsx
+  s_451a0b755775de::t_1b4b0763e8c5fd 43
+  s_df762e5574b7c9::t_932b15cb7c1156 3,6-7,15-16,19-24,48-49
+  s_451a0b755775de::t_ee56049c32a435 31-36
+  s_df762e5574b7c9::t_5bd8b10e9f9e40 38
+packages/ui/src/components/dialog.tsx
+  s_df762e5574b7c9::t_2745155ce28164 8,72
+apps/web/src/features/workbench/task-editor.tsx
+  s_451a0b755775de::t_bf68966b5f7fea 51-53
+  s_451a0b755775de::t_ed10c54f2a6d31 126
+apps/web/src/routes/_app/design-guide.tsx
+  s_df762e5574b7c9::t_7f6cd6ea36ba46 86
+  s_451a0b755775de::t_6cb8b590107e42 85
+  s_451a0b755775de::t_387914a9dbaf01 12-17,36-41,46-48,53-60,70-73,76-78,89-92,99-101,122-124,134-136,140-143,153-155
+  s_df762e5574b7c9::t_863e879081f7a2 1,4-9,31-32,176-178
+  s_451a0b755775de::t_f87431b7a48427 2,11,24-30,33-34,44-45,52,61-62,66,75,80,84,96-98,102-117,120-121,125-126,128-130,137,139,144-145,151-152
+  s_451a0b755775de::t_79b76930c96d72 3,10,18-23,35,42-43,49,51,63-65,67-69,74,79,81-83,87-88,93-95,118-119,127,131-133,138,146-150,156,162-175
+  s_451a0b755775de::t_1b754e4edee660 157-161
+  s_451a0b755775de::t_872b29ef6b14af 50
+apps/web/src/features/account/credentials-form.tsx
+  s_df762e5574b7c9::t_e1d65bd0cd07d2 2,59-67
+apps/web/src/routes/__root.tsx
+  s_451a0b755775de::t_ee56049c32a435 30
+apps/web/src/routes/(auth)/sign-in.tsx
+  s_df762e5574b7c9::t_75156e77835f6e 11
+apps/web/src/features/home/navigation.tsx
+  s_df762e5574b7c9::t_2745155ce28164 1,61,130,143,180,182
+  s_df762e5574b7c9::t_693b1d0789466f 178,201-203
+packages/ui/src/components/select.tsx
+  s_df762e5574b7c9::t_2745155ce28164 4,49,129,158,176
+apps/web/src/features/home/quickstart.tsx
+  s_451a0b755775de::t_eacbfa1a181e4d 2,63
+scripts/ci-plan.test.mjs
+  s_df762e5574b7c9::t_60261578fc1655 66-70
+  s_df762e5574b7c9::t_56db7107c4459b 22,63-65,71-73
+  s_df762e5574b7c9::t_2745155ce28164 62
+apps/web/src/layout/header-actions.tsx
+  s_df762e5574b7c9::t_932b15cb7c1156 5,9
+packages/icons/package.json
+  s_df762e5574b7c9::t_d6f7d8e9a67b90 1-6,8-24
+  s_df762e5574b7c9::t_2745155ce28164 7
+apps/web/src/features/runs/status.tsx
+  s_451a0b755775de::t_387914a9dbaf01 8,24-25,27
+  s_451a0b755775de::t_9c6b49262938b9 6-7,9-10,26
+  s_451a0b755775de::t_bf68966b5f7fea 14-16,18-20,22-23,28-30
+  s_451a0b755775de::t_00060ea272bd1c 5,11-13,17,21
+  s_451a0b755775de::t_6c78adf839911c 1-4,31
+apps/web/src/features/runs/details.test.tsx
+  s_451a0b755775de::t_457343442fa7c8 28
+apps/web/src/features/home/back-to-top.tsx
+  s_df762e5574b7c9::t_e1d65bd0cd07d2 1,26-27,29-30
+  s_df762e5574b7c9::t_8d0d4208f99daa 20,22
+packages/ui/src/components/back-to-top-button.tsx
+  s_df762e5574b7c9::t_2745155ce28164 1,36,53
+  s_451a0b755775de::t_7de658eb279343 46-50
+  s_df762e5574b7c9::t_a150e6983ba11e 13-18
+  s_df762e5574b7c9::t_e1d65bd0cd07d2 2-12,19-35,37-45,51-52,54-58
+apps/web/src/routes/(auth)/sign-up.tsx
+  s_df762e5574b7c9::t_75156e77835f6e 10
+packages/ui/src/components/dropdown-menu.tsx
+  s_df762e5574b7c9::t_2745155ce28164 6,121,175,210
+apps/storybook/.storybook/main.ts
+  s_df762e5574b7c9::t_e412367d4259a0 25
+  s_df762e5574b7c9::t_d9282a0f7393d2 26-27
+apps/web/src/features/runs/run-path.tsx
+  s_df762e5574b7c9::t_a7a75b45f52a7f 1,31,33,76
+  s_451a0b755775de::t_00060ea272bd1c 12,20,37-38,60,68,73
+  s_df762e5574b7c9::t_7f6cd6ea36ba46 34-35
+  s_df762e5574b7c9::t_3d81c16a1eb337 2-11,13-19,21-30,32,36,39-41,45-50,59,61-67,69-72,74-75,77-80
+  s_451a0b755775de::t_1b754e4edee660 42-44
+  s_451a0b755775de::t_387914a9dbaf01 51-58
+scripts/ci-plan.mjs
+  s_df762e5574b7c9::t_56db7107c4459b 33
+apps/web/src/features/runs/details.tsx
+  s_df762e5574b7c9::t_a7a75b45f52a7f 2,4,14,22-23,35-36,42
+  s_451a0b755775de::t_00060ea272bd1c 3,10-12,24-25
+  s_451a0b755775de::t_f87431b7a48427 17
+  s_df762e5574b7c9::t_7f6cd6ea36ba46 18-19,26-27,34
+  s_451a0b755775de::t_6c78adf839911c 5,8,13,20-21,33
+  s_451a0b755775de::t_387914a9dbaf01 28-32
+tests/e2e/specs/local-runs.spec.ts
+  s_451a0b755775de::t_457343442fa7c8 45,59,61,86,207
+  s_df762e5574b7c9::t_421e26f4614a34 103,106-109,115,118,145,147,159-160,168,180
+  s_df762e5574b7c9::t_2ecb68f6a312a0 110-114,137-140,146,165-167,169
+  s_451a0b755775de::t_f4188e83004c03 11-16,20-31
+  s_451a0b755775de::t_bf68966b5f7fea 17-19,87-89
+  s_451a0b755775de::t_c1bb4796b559b4 154-158,161-164,170-171,174-175,178,182-184,190
+  s_df762e5574b7c9::t_025b96e60c290e 195,215,217-219,224-225,322,340-356,360-361,371,413-431,435-440
+  s_df762e5574b7c9::t_053c3c98a4ba11 243-246
+apps/storybook/src/password-input.stories.tsx
+  s_df762e5574b7c9::t_513733dbe64596 1-39
+packages/icons/src/index.tsx
+  s_df762e5574b7c9::t_2745155ce28164 1-4,6-12,15-18,20-22,24,27-29,31-56,59-61,72-77,80-84,87-90
+  s_df762e5574b7c9::t_6e73786f0751f8 62-64,66-71
+  s_451a0b755775de::t_0b9d15ff89a8a3 5,19,25-26,65
+  s_df762e5574b7c9::t_5bd8b10e9f9e40 23,30,78,85
+  s_df762e5574b7c9::t_0a71b425045918 13-14,57-58
+  s_df762e5574b7c9::t_053c3c98a4ba11 79,86
+apps/web/src/layout/workspace-nav.tsx
+  s_451a0b755775de::t_696a122ee4c5ab 4,134-142
+  s_df762e5574b7c9::t_60261578fc1655 12
+  s_451a0b755775de::t_1b754e4edee660 36-41,101-103
+  s_451a0b755775de::t_8125cfb06e6d48 125-129
+  s_451a0b755775de::t_109b53455fa83c 21,91,123
+  s_451a0b755775de::t_e48e0e37513a14 156-161
+  s_451a0b755775de::t_58e4a98804c400 20,53,70,124
+  s_451a0b755775de::t_0b9d15ff89a8a3 2
+  s_df762e5574b7c9::t_863e879081f7a2 63,155
+  s_451a0b755775de::t_9cf979b755cb68 19,22,25-34,47-50,68-69,71-83,85-86
+  s_451a0b755775de::t_872b29ef6b14af 52,84
+  s_df762e5574b7c9::t_2745155ce28164 3,5-11,57,65,162
+  s_451a0b755775de::t_0c2d6baf0aac7b 106-107,109,120,131-132,149
+  s_451a0b755775de::t_08cadc2973f012 105,150,163
+  s_451a0b755775de::t_10fdfa5250aa38 93-97
+  s_451a0b755775de::t_387914a9dbaf01 35,42-46,51,151-154
+  s_451a0b755775de::t_113d6ddf80579b 1
+packages/ui/README.md
+  s_451a0b755775de::t_0c2d6baf0aac7b 19
+  s_df762e5574b7c9::t_2745155ce28164 111
+  s_df762e5574b7c9::t_513733dbe64596 20-22
+  s_df762e5574b7c9::t_a150e6983ba11e 23-28
+AGENTS.md
+  s_df762e5574b7c9::t_56db7107c4459b 14
+docs/README.md
+  s_451a0b755775de::t_2daecc82d041d3 41
+apps/storybook/src/initials-avatar.stories.tsx
+  s_df762e5574b7c9::t_513733dbe64596 1-22
+apps/web/AGENTS.md
+  s_df762e5574b7c9::t_75156e77835f6e 8
+  s_451a0b755775de::t_f87431b7a48427 9
+apps/web/package.json
+  s_451a0b755775de::t_8df13bef9250f8 26-27
+  s_df762e5574b7c9::t_d6f7d8e9a67b90 19
+apps/web/src/features/account/directory/row.tsx
+  s_df762e5574b7c9::t_e1d65bd0cd07d2 3,25
+apps/web/src/features/runs/run-modules.svg
+  s_df762e5574b7c9::t_65a1202164861a 1-61
+bun.lock
+  s_451a0b755775de::t_2b9649841c9333 88,120,128,266-280,339,788-789,2388-2389
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "50fc7e5fa5ae8b15fc82e178d3fb53606809f70a",
+  "prompts": {},
+  "sessions": {
+    "s_451a0b755775de": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1f200-f894-7462-a1e5-b8b9a65de422",
+        "model": "gpt-6.2-astra"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_df762e5574b7c9": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1f21a-e74e-7e71-98e5-b4eb8f0652ee",
+        "model": "gpt-6.2-astra"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
