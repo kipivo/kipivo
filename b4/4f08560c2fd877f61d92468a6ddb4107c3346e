@@ -1,0 +1,102 @@
+bunfig.toml
+  s_70edfba12bdd82::t_60a6bb56edde12 1-2
+README.md
+  s_70edfba12bdd82::t_63a54bf91dacc3 9,53,74
+  s_70edfba12bdd82::t_d479e0fe47a236 55
+  s_70edfba12bdd82::t_1a25c62c871315 54
+apps/web/Dockerfile
+  s_70edfba12bdd82::t_63a54bf91dacc3 4-5,7,9,12
+scripts/smoke-web-image.sh
+  s_70edfba12bdd82::t_d479e0fe47a236 1-23
+apps/web/AGENTS.md
+  s_70edfba12bdd82::t_623a8bd60d0740 3
+scripts/smoke-api-image.sh
+  s_70edfba12bdd82::t_63a54bf91dacc3 202
+.github/actions/setup-playwright/resolve-version.sh
+  s_70edfba12bdd82::t_62a8300c2803b3 1-5
+apps/api/Dockerfile
+  s_70edfba12bdd82::t_63a54bf91dacc3 4-5,7,9,12
+.github/actions/setup-playwright/ensure-chromium-deps.sh
+  s_70edfba12bdd82::t_62a8300c2803b3 1-11
+scripts/workspace-lint.test.mjs
+  s_70edfba12bdd82::t_7d1e319cb8c0b2 71,73
+  s_70edfba12bdd82::t_b8c49cad6d413d 65-68
+  s_70edfba12bdd82::t_675bbab4163883 8
+  s_70edfba12bdd82::t_7e35f0f36b6005 1-4,7,11,54-64,69-70,72,74-87
+docs/testing.md
+  s_70edfba12bdd82::t_616c2ee317cc35 18
+  s_70edfba12bdd82::t_63a54bf91dacc3 3,36,93-94
+AGENTS.md
+  s_70edfba12bdd82::t_63a54bf91dacc3 34
+.github/actions/setup-workspace/action.yml
+  s_70edfba12bdd82::t_63a54bf91dacc3 2,43,45
+apps/web/package.json
+  s_70edfba12bdd82::t_60a6bb56edde12 9
+scripts/ci-plan.test.mjs
+  s_70edfba12bdd82::t_d479e0fe47a236 105-110,162
+  s_70edfba12bdd82::t_50673b020ddd87 104
+scripts/ci-install-turbo.sh
+  s_70edfba12bdd82::t_d479e0fe47a236 1-11
+scripts/smoke-cli.sh
+  s_70edfba12bdd82::t_d479e0fe47a236 1-10
+.github/workflows/ci.yml
+  s_70edfba12bdd82::t_d479e0fe47a236 43,98,135
+.github/actions/setup-playwright/action.yml
+  s_70edfba12bdd82::t_62a8300c2803b3 16,29
+  s_70edfba12bdd82::t_63a54bf91dacc3 25
+apps/mobile/README.md
+  s_70edfba12bdd82::t_63a54bf91dacc3 14
+package.json
+  s_70edfba12bdd82::t_7e35f0f36b6005 43
+  s_1ac8d0e9e33f7d::t_b834e4924c73ba 46
+  s_70edfba12bdd82::t_623a8bd60d0740 40
+scripts/check.sh
+  s_1ac8d0e9e33f7d::t_b834e4924c73ba 1-11
+turbo.json
+  s_70edfba12bdd82::t_60a6bb56edde12 26,29,35,37
+  s_70edfba12bdd82::t_8c6bcb4171108f 8-11
+  s_70edfba12bdd82::t_623a8bd60d0740 28,36
+  s_70edfba12bdd82::t_63a54bf91dacc3 3
+.railway/railway.ts
+  s_70edfba12bdd82::t_63a54bf91dacc3 9
+scripts/ci-plan.mjs
+  s_70edfba12bdd82::t_63a54bf91dacc3 47,196,236-239
+  s_70edfba12bdd82::t_d479e0fe47a236 54,62,117
+knip.json
+  s_70edfba12bdd82::t_142dcac5417786 8-11
+  s_70edfba12bdd82::t_b1a5f93956b760 5
+apps/web/src/routeTree.gen.ts
+  s_451a0b755775de::t_5126a91c3e049b 1-565
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "b44f08560c2fd877f61d92468a6ddb4107c3346e",
+  "prompts": {},
+  "sessions": {
+    "s_1ac8d0e9e33f7d": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1f31a-cf85-79b1-803c-150c8af38d7a",
+        "model": "gpt-6.2-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_451a0b755775de": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1f200-f894-7462-a1e5-b8b9a65de422",
+        "model": "gpt-6.2-astra"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_70edfba12bdd82": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1f35f-c2b3-7bd2-9868-b35beb6c7446",
+        "model": "gpt-6.2-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
