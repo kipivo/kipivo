@@ -3,12 +3,33 @@ title: Self-hosting
 description: Deploy Kipivo and finish the first administrator setup.
 ---
 
-Kipivo uses a Web service, an API service, and PostgreSQL. Start with the repository's [Railway instructions](https://github.com/kipivo/kipivo/blob/next/README.md#railway) for the managed deployment, or follow the [Docker build instructions](https://github.com/kipivo/kipivo/blob/next/README.md#docker) to build the images yourself.
+Kipivo uses a Web service, an API service, and PostgreSQL.
+
+## Docker
+
+Build the images from the repository root so Docker can access the workspace lockfile and shared assets. Follow the [authentication guide](https://github.com/kipivo/kipivo/blob/next/docs/auth.md#docker-and-railway) to run Web and API containers with PostgreSQL. Find build commands and image smoke tests for [Web and Docs](https://github.com/kipivo/kipivo/blob/next/docs/testing.md#web-and-docs-production-image-smoke-tests), the [API](https://github.com/kipivo/kipivo/blob/next/docs/testing.md#api-production-image-smoke-test), and the [gateway](https://github.com/kipivo/kipivo/blob/next/docs/testing.md#gateway-production-image-smoke-test).
+
+## Railway
+
+Create an empty Railway project named `kipivo` and grant the Railway GitHub App access to `kipivo/kipivo`. Install [Railway CLI](https://docs.railway.com/cli) 5.42.1 or newer. Run the following commands from the repository root and select the project's `next` environment when linking.
+
+```sh
+bun install --frozen-lockfile
+railway login
+railway link
+railway config plan
+```
+
+Review the plan, then run `railway config apply`. The [Railway configuration](https://github.com/kipivo/kipivo/blob/next/.railway/railway.ts) declares gateway, Web, API, Docs, PostgreSQL, and Redis services. It connects services over the private network and enables **Wait for CI** for services deployed from `next`. Follow the [resource guide](https://github.com/kipivo/kipivo/blob/next/docs/resources.md#railway) to configure optional S3-compatible storage.
+
+Keep the existing Web and API public domains while deploying the gateway as a separate service. The [routing guide](https://github.com/kipivo/kipivo/blob/next/docs/architecture.md#web-and-public-api) explains domain routing and upstream settings. Railway checks `/docs` before switching Docs traffic. Check the gateway itself at `/gateway-healthz`.
 
 ## Configure and verify the instance
 
 1. Connect the API to PostgreSQL and apply the database migrations.
 2. Configure `BETTER_AUTH_URL` with the public Web origin and set `BETTER_AUTH_SECRET` on the API. Follow the [authentication deployment guide](https://github.com/kipivo/kipivo/blob/next/docs/auth.md#docker-and-railway) for the exact settings.
 3. Check Web at `/healthz` and API readiness at `/readyz`. Open the Web origin to create the first administrator.
+
+Use the [service smoke tests](https://github.com/kipivo/kipivo/blob/next/docs/testing.md#verify-running-services) to verify a production deployment.
 
 Use the Web origin when configuring [Mobile](/docs/mobile) or calling the [public API](/docs/api-reference).

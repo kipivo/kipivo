@@ -13,11 +13,20 @@ The local runner executes the checkout's `bun run check` script. Follow the [Qui
 | Read the status             | `bun run kipivo status <run-id>` |
 | Read the logs               | `bun run kipivo logs <run-id>`   |
 
-`kpvo` is an alias for `kipivo`. Run commands from the checkout where you started the runner.
+`kpvo` is an alias for `kipivo`. Both commands accept `--version`. Run commands from the checkout where you started the runner.
 
 ## Inspect runs in a browser
 
 With the runner active, start `bun run --cwd apps/web dev` and open [Local runs](http://localhost:3000/runs). This page is available on the development server.
+
+## Build the CLI
+
+Run these commands from the repository root to build the CLI and check the bundle.
+
+```sh
+bun run build --filter=kipivo
+bun apps/cli/dist/kipivo.js --help
+```
 
 ## Troubleshoot a check
 

@@ -6,7 +6,7 @@ Email/password authentication uses database-backed sessions. Passwords require a
 
 `@kipivo/db` exports `database` from `DATABASE_URL`. `@kipivo/auth` exports `auth` from the authentication environment and uses that same database pool. For standalone use, call `database.close()` at shutdown. Applications that manage their own resources can use `createDatabase` from `@kipivo/db/factory` and `createAuth` from `@kipivo/auth/factory`.
 
-Web forms use the typed `api.auth` RPC procedures; native Better Auth endpoints remain available for existing clients and email callbacks. See the [RPC operations and cookie handling](api.md#authentication-via-rpc).
+Web forms use the typed `api.auth` RPC procedures. Native Better Auth endpoints remain available for existing clients and email callbacks. See the [RPC operations and cookie handling](api.md#authentication-resources).
 
 ## System-browser sign-in for desktop and Expo
 
@@ -150,7 +150,7 @@ docker run --rm --network kipivo -p 127.0.0.1:3000:3000 \
 
 Railway supplies the API’s database reference and Web’s private API origin. It sets `DB_MIGRATE_ON_START=true` on the API and checks `/readyz` before switching API traffic.
 
-During first setup, generate the Web public domain and set the API's `BETTER_AUTH_URL` to that HTTPS origin. Generate `BETTER_AUTH_SECRET` with `openssl rand -hex 32` and save it in the API's Railway variables. The IaC configuration preserves these operator-managed values. Redeploy the API once the variables are present, then check `/readyz` and the Web-origin session endpoint. Follow the root [Railway setup](../README.md#railway) to preview and apply infrastructure changes.
+During first setup, generate the Web public domain and set the API's `BETTER_AUTH_URL` to that HTTPS origin. Generate `BETTER_AUTH_SECRET` with `openssl rand -hex 32` and save it in the API's Railway variables. The IaC configuration preserves these operator-managed values. Redeploy the API once the variables are present, then check `/readyz` and the Web-origin session endpoint. Follow the [Railway setup](../apps/docs/content/docs/self-hosting.mdx#railway) to preview and apply infrastructure changes.
 
 ## Integration tests
 

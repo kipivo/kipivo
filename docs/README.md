@@ -2,15 +2,15 @@
 
 ## Guides
 
-| Task                | Documentation                                                                                                                                                         |
-| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Run Kipivo locally  | [Development setup](../README.md#development) · [CLI commands](../README.md#cli) · [Run a local check](../apps/docs/content/docs/quickstart.mdx)                      |
-| Connect a phone     | [Mobile development and workspace connection](../apps/mobile/README.md)                                                                                               |
-| Set up an instance  | [Database and authentication](auth.md) · [Administration and account directory](admin.md) · [Redis and object storage](resources.md)                                  |
-| Work on the API     | [Architecture](architecture.md) · [Public API and access requirements](api.md) · [Product events in API logs](telemetry.md)                                           |
-| Build an interface  | [Workspace design guide](design/README.md) · [Shared UI components and themes](../packages/ui/README.md) · [Storybook and browser tests](../apps/storybook/README.md) |
-| Contribute and test | [Commit conventions](../CONTRIBUTING.md) · [File naming](file-naming.md) · [Testing and service verification](testing.md)                                             |
-| Deploy              | [Build the container images](../README.md#docker) · [Deploy to Railway](../README.md#railway)                                                                         |
+| Task                | Documentation                                                                                                                                                              |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Run Kipivo locally  | [Development setup](../README.md#development) · [CLI commands](../apps/docs/content/docs/local-runner.mdx) · [Run a local check](../apps/docs/content/docs/quickstart.mdx) |
+| Connect a phone     | [Mobile development and workspace connection](../apps/mobile/README.md)                                                                                                    |
+| Set up an instance  | [Database and authentication](auth.md) · [Administration and account directory](admin.md) · [Redis and object storage](resources.md)                                       |
+| Work on the API     | [Architecture](architecture.md) · [Public API and access requirements](api.md) · [Product events in API logs](telemetry.md)                                                |
+| Build an interface  | [Workspace design guide](design/README.md) · [Shared UI components and themes](../packages/ui/README.md) · [Storybook and browser tests](../apps/storybook/README.md)      |
+| Contribute and test | [Commit conventions](../CONTRIBUTING.md) · [File naming](file-naming.md) · [Testing and service verification](testing.md)                                                  |
+| Deploy              | [Docker](../apps/docs/content/docs/self-hosting.mdx#docker) · [Railway](../apps/docs/content/docs/self-hosting.mdx#railway)                                                |
 
 ## Workspace layout
 

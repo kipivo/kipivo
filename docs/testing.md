@@ -96,6 +96,17 @@ This command uses the Docker CLI to start temporary `redis:8-alpine` and `rustfs
 
 Install Chromium with `bun run test:e2e:install`, set `TEST_DATABASE_URL` to a disposable PostgreSQL database, then run `bun run test:auth`. The suite starts the built Web and API on ports 4383 and 4382 with API startup migrations enabled. It verifies registration, session cookies, origin checks, concurrent role changes, and the browser account management flow. Both auth specs create and drop their own databases on the same server (the test role needs `CREATEDB`). The setup race test also uses ports 4385–4387. CI starts a PostgreSQL service for this job. See the [database setup](auth.md).
 
+## Web and Docs production image smoke tests
+
+Build and test both images from the repository root with Docker running.
+
+```sh
+docker build -f apps/web/Dockerfile -t kipivo-web:ci .
+scripts/smoke-web-image.sh kipivo-web:ci
+docker build -f apps/docs/Dockerfile -t kipivo-docs:ci .
+bash scripts/smoke-docs-image.sh kipivo-docs:ci
+```
+
 ## API production image smoke test
 
 Run with Docker running locally, Bun available, and workspace dependencies installed.
@@ -117,6 +128,8 @@ E2E_API_ORIGIN=https://<api-domain> bun run --bun --cwd tests/e2e test:e2e --pro
 ```
 
 The Web check covers the SSR home page, stylesheet, logo, `/healthz`, and the production `404` for local tasks. The API test checks `/healthz`, calls `system.ping` through the typed oRPC client, and verifies unknown HTTP and RPC paths return `404`.
+
+For a local Web production build, run `bun run build --filter=web` and `bun run start`. Then run `bun scripts/smoke-web.mjs http://127.0.0.1:3000 --production`.
 
 ## Gateway production image smoke test
 
