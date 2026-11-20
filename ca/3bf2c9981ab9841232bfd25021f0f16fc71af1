@@ -1,0 +1,56 @@
+apps/docs/content/docs/self-hosting.mdx
+  s_d77957266a33b1::t_920eed07ca95c8 30
+apps/api/src/runtime.test.ts
+  s_d77957266a33b1::t_f740c61fbf1a09 80-81
+  s_d77957266a33b1::t_920eed07ca95c8 22-23,74-75,83-84,110
+  s_d77957266a33b1::t_e808c81a97d251 82
+packages/auth/src/env.ts
+  s_d77957266a33b1::t_920eed07ca95c8 6-7,29,33-35,38-40,44,52
+tests/e2e/specs/auth.spec.ts
+  s_d77957266a33b1::t_920eed07ca95c8 29-30,122-123
+tests/e2e/fixtures/process.ts
+  s_d77957266a33b1::t_920eed07ca95c8 90-91
+apps/mobile/README.md
+  s_d77957266a33b1::t_920eed07ca95c8 29
+docs/auth.md
+  s_d77957266a33b1::t_f740c61fbf1a09 79
+  s_d77957266a33b1::t_920eed07ca95c8 51,80-81
+  s_d77957266a33b1::t_c223a2a3c5046f 154
+  s_d77957266a33b1::t_408faa30830bd3 52,56,58,77,82,90,102,137,153,155
+scripts/smoke-api-image.sh
+  s_d77957266a33b1::t_920eed07ca95c8 104-105,158-159
+.railway/topology/compose.yml
+  s_d77957266a33b1::t_920eed07ca95c8 50-51
+.railway/railway.ts
+  s_d77957266a33b1::t_920eed07ca95c8 64-65
+tests/e2e/specs/setup.spec.ts
+  s_d77957266a33b1::t_920eed07ca95c8 21-22
+docs/api.md
+  s_242b86721d85a2::t_82ebc2f7e2f4b7 59
+docs/architecture.md
+  s_242b86721d85a2::t_09384bd0bd931f 75
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "ca3bf2c9981ab9841232bfd25021f0f16fc71af1",
+  "prompts": {},
+  "sessions": {
+    "s_242b86721d85a2": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1f717-b456-78c3-a391-37b974e8978c",
+        "model": "gpt-6.2-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_d77957266a33b1": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1f66a-d621-7693-9966-c7017179ac5b",
+        "model": "gpt-6.2-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
