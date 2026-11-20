@@ -132,14 +132,13 @@ jobs:
           cache-scope: images-${{ matrix.app }}
           install-dependencies: ${{ matrix.app == 'api' }}
           cache-build: "false"
-      - uses: docker/setup-buildx-action@v4
       - name: Build Docker image
         uses: docker/build-push-action@v7
         with:
+          builder: default
           context: .
           file: ${{ matrix.dockerfile }}
           tags: kipivo-${{ matrix.app }}:ci
-          load: true
           cache-from: type=gha,scope=kipivo-${{ matrix.app }}
           cache-to: type=gha,scope=kipivo-${{ matrix.app }},mode=max
       - name: Check the image filesystem
