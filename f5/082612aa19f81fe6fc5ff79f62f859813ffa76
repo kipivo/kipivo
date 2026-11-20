@@ -1,0 +1,47 @@
+apps/docs/content/docs/local-runner.mdx
+  s_d77957266a33b1::t_b8aebfa9baa42b 16,22-29
+  s_d77957266a33b1::t_a28c650da9b617 30
+README.md
+  s_d77957266a33b1::t_020e823b8037da 5,9,17
+docs/testing.md
+  s_d77957266a33b1::t_b8aebfa9baa42b 99-109,132
+  s_d77957266a33b1::t_903a80d764d373 133
+apps/mobile/AGENTS.md
+  s_d77957266a33b1::t_c3f445d7e69104 5
+docs/auth.md
+  s_242b86721d85a2::t_87b092114f11e9 9
+  s_d77957266a33b1::t_eef0e5c34052ed 153
+AGENTS.md
+  s_d77957266a33b1::t_c3f445d7e69104 71
+docs/README.md
+  s_d77957266a33b1::t_0525164c10c68d 5-6,8-13
+  s_d77957266a33b1::t_c3f445d7e69104 7
+apps/docs/content/docs/self-hosting.mdx
+  s_d77957266a33b1::t_5c6373aebc8f55 10
+  s_d77957266a33b1::t_b8aebfa9baa42b 6-9,11-25
+  s_d77957266a33b1::t_b3ecf6f99a103c 33-34
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "f5082612aa19f81fe6fc5ff79f62f859813ffa76",
+  "prompts": {},
+  "sessions": {
+    "s_242b86721d85a2": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1f717-b456-78c3-a391-37b974e8978c",
+        "model": "gpt-6.2-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_d77957266a33b1": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1f66a-d621-7693-9966-c7017179ac5b",
+        "model": "gpt-6.2-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
