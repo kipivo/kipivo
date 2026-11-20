@@ -10,6 +10,27 @@ const connection = 'import "@kipivo/runtime/local/connection";';
 
 const cases = {
   valid: [
+    {
+      filename: "apps/web/src/account.ts",
+      code: 'import type { ApiClient } from "@kipivo/contract"; export { errorStatus } from "@kipivo/orpc/errors"; import("@kipivo/orpc/client");',
+    },
+    {
+      filename: "apps/web/src/login.ts",
+      code: 'import "@kipivo/auth/errors"; import "@kipivo/auth/native";',
+    },
+    {
+      filename: "apps/web/src/api.server.ts",
+      code: 'import "@tanstack/react-start/server-only"; import "@kipivo/orpc";',
+    },
+    { filename: "apps/api/src/routes.ts", code: 'import "@kipivo/orpc";' },
+    {
+      filename: "packages/contract/src/account.ts",
+      code: 'import "@orpc/contract"; import "@kipivo/account"; import "@kipivo/email/settings";',
+    },
+    {
+      filename: "packages/core/src/account.ts",
+      code: 'import "@kipivo/core/access"; import "@kipivo/rbac"; import type { EmailSettings } from "@kipivo/email/settings";',
+    },
     { filename: "apps/web/src/page.ts", code: 'import "@kipivo/contracts/runs";' },
     { filename: "packages/db/scripts/run.ts", code: 'import "../src/env";' },
     { filename: "apps/cli/src/index.ts", code: connection },
@@ -21,6 +42,53 @@ const cases = {
     },
   ],
   invalid: [
+    { filename: "apps/web/src/account.tsx", code: 'import "@kipivo/orpc";', errors: 1 },
+    { filename: "apps/web/src/api.server.ts", code: 'import "@kipivo/orpc";', errors: 1 },
+    {
+      filename: "apps/web/src/api.server.ts",
+      code: 'import type {} from "@tanstack/react-start/server-only"; import "@kipivo/orpc";',
+      errors: 1,
+    },
+    {
+      filename: "apps/web/src/api.ts",
+      code: 'import "@tanstack/react-start/server-only"; import "@kipivo/auth/session";',
+      errors: 1,
+    },
+    {
+      filename: "apps/web/src/login.ts",
+      code: 'export * from "@kipivo/auth/factory";',
+      errors: 1,
+    },
+    {
+      filename: "packages/contract/src/account.ts",
+      code: 'export type { ProcedureServices } from "@kipivo/orpc";',
+      errors: 1,
+    },
+    {
+      filename: "packages/contract/src/session.ts",
+      code: 'import("@kipivo/orpc/client"); import("@kipivo/core/access");',
+      errors: 2,
+    },
+    {
+      filename: "packages/core/src/access.ts",
+      code: 'import "@kipivo/db"; type Connection = import("@kipivo/db/factory").Database;',
+      errors: 2,
+    },
+    {
+      filename: "packages/core/src/setup.ts",
+      code: 'require("@kipivo/contract"); import("@kipivo/orpc/errors");',
+      errors: 2,
+    },
+    {
+      filename: "packages/contract/src/settings.ts",
+      code: 'export * from "@kipivo/email/config";',
+      errors: 1,
+    },
+    {
+      filename: "apps/web/src/data.ts",
+      code: "import(`@kipivo/db/factory?raw`);",
+      errors: 1,
+    },
     {
       filename: "apps/web/src/page.ts",
       code: 'import "../../../packages/runtime/src/local/connection";',
