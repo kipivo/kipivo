@@ -11,6 +11,7 @@ import {
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { stripVTControlCharacters } from "node:util";
 
 let root: string;
 
@@ -99,7 +100,7 @@ test("discovers root scripts and offers scoped help without running a task", () 
   expect(result.out).toContain("Run the test:sample task");
   expect(result.out).not.toContain("smoke:example");
   expect(run("help", "test", "sample").out).toMatch(/USAGE.+kpdev test sample/);
-  expect(result.out.match(/\bUSAGE\b/g)).toHaveLength(1);
+  expect(stripVTControlCharacters(result.out).match(/^USAGE /gm)).toHaveLength(1);
   expect(run().out).not.toContain("  prepare");
 });
 
