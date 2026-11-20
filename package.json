@@ -41,7 +41,7 @@
     "db:migrate": "bun run --cwd apps/api scripts/db.ts db:migrate",
     "knip": "knip",
     "prepare": "if [ -e .git ] && [ -z \"$CI\" ] && [ -x node_modules/.bin/husky ]; then husky; fi",
-    "commitlint": "commitlint",
+    "commitlint": "bun scripts/commitlint.mjs",
     "lint": "oxlint --deny-warnings . && bun test scripts/workspace-lint.test.mjs",
     "format": "oxfmt .",
     "format:check": "oxfmt --check .",
@@ -50,8 +50,7 @@
     "ci:test": "bun test scripts/ci-plan.test.mjs"
   },
   "devDependencies": {
-    "@commitlint/cli": "21.2.4",
-    "@commitlint/config-conventional": "21.2.4",
+    "@commitlint/lint": "21.2.4",
     "@kipivo/tsconfig": "workspace:*",
     "husky": "9.1.7",
     "knip": "6.45.1",
