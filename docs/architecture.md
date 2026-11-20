@@ -72,7 +72,7 @@ The home, sign-in and application routes check `setup.get` in TanStack Router `b
 | `email_delivery`    | Instance / administrator | `/settings`: enable email delivery, set the sender, or rotate the encrypted Resend key. Reads return the sender, enabled state, and whether a key is present.            |
 | `admin_setup`       | Instance / system        | The setup workflow alone manages the JSONB state; there is no settings API for its value.                                                                                |
 
-Instance overrides are stored in `config_app`. Editable settings use the catalog default until an override exists. To add a setting, seed its definition in a [Drizzle migration](auth.md#schema-changes), define the JSON shape, and bind it to the authorized operation. The API reads database connection details and `BETTER_AUTH_SECRET` from the deployment environment.
+Instance overrides are stored in `config_app`. Editable settings use the catalog default until an override exists. To add a setting, seed its definition in a [Drizzle migration](auth.md#schema-changes), define the JSON shape, and bind it to the authorized operation. The API reads database connection details and `AUTH_SECRET` from the deployment environment.
 
 ## Local runner
 

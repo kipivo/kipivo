@@ -48,14 +48,14 @@ docker run -d --name kipivo-postgres \
 
 export DATABASE_URL='postgresql://kipivo:kipivo_local@127.0.0.1:5432/kipivo'
 export DB_MIGRATE_ON_START=true
-export BETTER_AUTH_URL='http://localhost:3000'
-export BETTER_AUTH_SECRET="$(openssl rand -hex 32)"
+export AUTH_URL='http://localhost:3000'
+export AUTH_SECRET="$(openssl rand -hex 32)"
 bun run dev:api
 ```
 
-In another terminal, run `bun run dev` and open [localhost:3000](http://localhost:3000). Keep the hostname consistent with `BETTER_AUTH_URL`. The Web development proxy defaults to `http://127.0.0.1:3001`. Override `API_ORIGIN` when the API runs elsewhere. Keep the secret stable across restarts to preserve sessions.
+In another terminal, run `bun run dev` and open [localhost:3000](http://localhost:3000). Keep the hostname consistent with `AUTH_URL`. The Web development proxy defaults to `http://127.0.0.1:3001`. Override `API_ORIGIN` when the API runs elsewhere. Keep the secret stable across restarts to preserve sessions.
 
-The API expects `DATABASE_URL`, `BETTER_AUTH_URL`, and `BETTER_AUTH_SECRET` together. `BETTER_AUTH_URL` is the public Web HTTP(S) origin. The secret must have at least 32 characters. The API exposes `/healthz` for liveness and `/readyz` for database connectivity, the authentication tables, and the account role column. With authentication unconfigured, its auth endpoints and readiness check return `503`.
+The API expects `DATABASE_URL`, `AUTH_URL`, and `AUTH_SECRET` together. `AUTH_URL` is the public Web HTTP(S) origin. The secret must have at least 32 characters. The API exposes `/healthz` for liveness and `/readyz` for database connectivity, the authentication tables, and the account role column. With authentication unconfigured, its auth endpoints and readiness check return `503`.
 
 Startup migrations are off by default. Set `DB_MIGRATE_ON_START=true` to apply pending migrations after configuration validation and before the API initializes its runtime clients. Enabling the switch requires `DATABASE_URL`.
 
@@ -74,12 +74,12 @@ Use browser `fetch` with JSON content headers and the default same-origin creden
 
 ## Google and GitHub sign-in
 
-Create a [Google Web OAuth client](https://better-auth.com/docs/authentication/google) or [GitHub OAuth App](https://better-auth.com/docs/authentication/github) for each deployment. Use the Web origin from `BETTER_AUTH_URL` when registering the callback URL. On Railway, set the matching variables on the API service and redeploy it.
+Create a [Google Web OAuth client](https://better-auth.com/docs/authentication/google) or [GitHub OAuth App](https://better-auth.com/docs/authentication/github) for each deployment. Use the Web origin from `AUTH_URL` when registering the callback URL. On Railway, set the matching variables on the API service and redeploy it.
 
-| Provider | API variables                              | Callback URL                                 |
-| -------- | ------------------------------------------ | -------------------------------------------- |
-| Google   | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | `<BETTER_AUTH_URL>/api/auth/callback/google` |
-| GitHub   | `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` | `<BETTER_AUTH_URL>/api/auth/callback/github` |
+| Provider | API variables                              | Callback URL                          |
+| -------- | ------------------------------------------ | ------------------------------------- |
+| Google   | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | `<AUTH_URL>/api/auth/callback/google` |
+| GitHub   | `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` | `<AUTH_URL>/api/auth/callback/github` |
 
 Each configured provider appears on `/sign-in` and `/sign-up`. GitHub requests `read:user` and `user:email` so private email addresses can be read during sign-in. Use separate OAuth apps for local development and production when the provider requires a single callback URL.
 
@@ -87,7 +87,7 @@ After administrator setup, the first successful social sign-in creates a member 
 
 ## Email sign-in and password recovery
 
-`/sign-in` and `/sign-up` are separate password flows. To offer `/magic-link`, `/email-code` and `/forgot-password`, open **Settings → Email delivery** as an administrator, enter a verified Resend sender address and sending API key, enable delivery and save. Changes apply across API instances without a restart. New installations default to password-only. When upgrading, re-enter any previously deployed mail environment variables here; the API no longer reads them. The credential is write-only and encrypted in PostgreSQL with a key derived from `BETTER_AUTH_SECRET`. Keep that secret stable and backed up separately from the database. If it changes, replace the Resend key in Settings. Disabling preserves the key unless you explicitly remove it. `/api/auth/email-methods` reports availability, not credentials or provider health. Keep `BETTER_AUTH_URL` set to the public Web origin used in emails.
+`/sign-in` and `/sign-up` are separate password flows. To offer `/magic-link`, `/email-code` and `/forgot-password`, open **Settings → Email delivery** as an administrator, enter a verified Resend sender address and sending API key, enable delivery and save. Changes apply across API instances without a restart. New installations default to password-only. When upgrading, re-enter any previously deployed mail environment variables here; the API no longer reads them. The credential is write-only and encrypted in PostgreSQL with a key derived from `AUTH_SECRET`. Keep that secret stable and backed up separately from the database. If it changes, replace the Resend key in Settings. Disabling preserves the key unless you explicitly remove it. `/api/auth/email-methods` reports availability, not credentials or provider health. Keep `AUTH_URL` set to the public Web origin used in emails.
 
 Email codes and magic links sign in existing accounts only; they do not replace registration or first-admin installation. Codes and links expire after five minutes. Recovery emails open `/reset-password`; completing a reset revokes previous sessions. Never log or forward email contents, links, or codes. Monitor mail delivery in Resend; a successful request is intentionally not confirmation that an account exists or a message reached its inbox.
 
@@ -99,7 +99,7 @@ In Web, use **Sign in** in the header to sign in or create an account. The accou
 
 ### Set up the first administrator
 
-1. Apply the database migrations and configure Better Auth. Keep `BETTER_AUTH_SECRET` in the deployment secret store. There is no installation token, token file, or SSH step.
+1. Apply the database migrations and configure Better Auth. Keep `AUTH_SECRET` in the deployment secret store. There is no installation token, token file, or SSH step.
 2. Open the Web site over HTTPS immediately after deploying. An empty installation redirects to `/setup`. Anyone who can reach it can submit the first administrator's name, email and password. Ordinary registration is blocked until installation finishes.
 3. Sign in with the new credentials. The API creates the administrator and password credential and permanently closes setup in the same transaction. Concurrent installations cannot create a second administrator. Removing all users does not reopen setup.
 
@@ -134,7 +134,7 @@ docker network connect kipivo kipivo-postgres
 export DATABASE_URL='postgresql://kipivo:kipivo_local@kipivo-postgres:5432/kipivo'
 docker run --rm --name kipivo-api --network kipivo -p 127.0.0.1:3001:3001 \
   --env DATABASE_URL --env DB_MIGRATE_ON_START=true \
-  --env BETTER_AUTH_URL --env BETTER_AUTH_SECRET \
+  --env AUTH_URL --env AUTH_SECRET \
   -e PORT=3001 kipivo-api
 ```
 
@@ -150,7 +150,9 @@ docker run --rm --network kipivo -p 127.0.0.1:3000:3000 \
 
 Railway supplies the API’s database reference and Web’s private API origin. It sets `DB_MIGRATE_ON_START=true` on the API and checks `/readyz` before switching API traffic.
 
-During first setup, generate the Web public domain and set the API's `BETTER_AUTH_URL` to that HTTPS origin. Generate `BETTER_AUTH_SECRET` with `openssl rand -hex 32` and save it in the API's Railway variables. The IaC configuration preserves these operator-managed values. Redeploy the API once the variables are present, then check `/readyz` and the Web-origin session endpoint. Follow the [Railway setup](../apps/docs/content/docs/self-hosting.mdx#railway) to preview and apply infrastructure changes.
+During first setup, generate the Web public domain and set the API's `AUTH_URL` to that HTTPS origin. Generate `AUTH_SECRET` with `openssl rand -hex 32` and save it in the API's Railway variables. The IaC configuration preserves these operator-managed values. Redeploy the API once the variables are present, then check `/readyz` and the Web-origin session endpoint. Follow the [Railway setup](../apps/docs/content/docs/self-hosting.mdx#railway) to preview and apply infrastructure changes.
+
+For an existing deployment, set `AUTH_URL` and `AUTH_SECRET` to the current origin and secret before deploying the version that reads these keys. Reuse the same secret to preserve sessions and access to encrypted credentials.
 
 ## Integration tests
 

@@ -19,8 +19,8 @@ vi.mock("@kipivo/storage/factory", () => ({ createObjectStorage: factories.stora
 
 const configuredEnv = {
   DATABASE_URL: "postgresql://db.example/kipivo",
-  BETTER_AUTH_URL: "https://app.example/",
-  BETTER_AUTH_SECRET: " auth-test-secret-long-enough-for-validation ",
+  AUTH_URL: "https://app.example/",
+  AUTH_SECRET: " auth-test-secret-long-enough-for-validation ",
   REDIS_URL: "redis://cache.example",
   S3_ENDPOINT: "https://s3.example",
   S3_BUCKET: "kipivo",
@@ -71,17 +71,17 @@ describe("API resource lifecycle", () => {
   });
 
   it("validates authentication and storage configuration before creating clients", async () => {
-    await expect(createConfiguredRuntime({ BETTER_AUTH_SECRET: " " })).rejects.toThrow(
-      "Set DATABASE_URL, BETTER_AUTH_URL, and BETTER_AUTH_SECRET together.",
+    await expect(createConfiguredRuntime({ AUTH_SECRET: " " })).rejects.toThrow(
+      "Set DATABASE_URL, AUTH_URL, and AUTH_SECRET together.",
     );
     await expect(createConfiguredRuntime({ S3_SECRET_ACCESS_KEY: " " })).rejects.toThrow(
       "Set S3_ENDPOINT, S3_BUCKET, S3_REGION, S3_ACCESS_KEY_ID, and S3_SECRET_ACCESS_KEY together.",
     );
-    await expect(
-      createConfiguredRuntime({ BETTER_AUTH_URL: "https://app.example/auth" }),
-    ).rejects.toThrow("BETTER_AUTH_URL must be the public Web HTTP(S) origin.");
-    await expect(createConfiguredRuntime({ BETTER_AUTH_SECRET: "short" })).rejects.toThrow(
-      "BETTER_AUTH_SECRET must be at least 32 characters.",
+    await expect(createConfiguredRuntime({ AUTH_URL: "https://app.example/auth" })).rejects.toThrow(
+      "AUTH_URL must be the public Web HTTP(S) origin.",
+    );
+    await expect(createConfiguredRuntime({ AUTH_SECRET: "short" })).rejects.toThrow(
+      "AUTH_SECRET must be at least 32 characters.",
     );
     await expect(createConfiguredRuntime({ GOOGLE_CLIENT_ID: "test-google" })).rejects.toThrow(
       "Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET together.",
@@ -107,7 +107,7 @@ describe("API resource lifecycle", () => {
       expect(factories.auth).toHaveBeenCalledWith({
         database: db,
         baseURL: "https://app.example",
-        secret: configuredEnv.BETTER_AUTH_SECRET,
+        secret: configuredEnv.AUTH_SECRET,
         socialProviders: {
           github: { clientId: "test-github", clientSecret: "test-github-secret" },
         },

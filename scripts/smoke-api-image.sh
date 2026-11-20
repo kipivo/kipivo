@@ -101,8 +101,8 @@ start_api() {
   local connection_string=$1
   shift
   start_container --publish 127.0.0.1::8080 --env PORT=8080 \
-    --env "DATABASE_URL=$connection_string" --env BETTER_AUTH_URL=https://kipivo.example \
-    --env BETTER_AUTH_SECRET=kipivo-image-smoke-test-secret-2026 "$@" "$image"
+    --env "DATABASE_URL=$connection_string" --env AUTH_URL=https://kipivo.example \
+    --env AUTH_SECRET=kipivo-image-smoke-test-secret-2026 "$@" "$image"
   api=$container
 }
 
@@ -155,8 +155,8 @@ after=$(schema_state)
 printf 'Without migrations, setup initialization stopped startup and left the schema empty.\n'
 
 printf 'Reject invalid Auth, Redis, and S3 settings before applying migrations.\n'
-expect_api_startup_failure 'BETTER_AUTH_SECRET must be at least 32 characters.' \
-  "$database_url" --env DB_MIGRATE_ON_START=true --env BETTER_AUTH_SECRET=short
+expect_api_startup_failure 'AUTH_SECRET must be at least 32 characters.' \
+  "$database_url" --env DB_MIGRATE_ON_START=true --env AUTH_SECRET=short
 expect_api_startup_failure 'REDIS_URL must be a Redis TCP URL' \
   "$database_url" --env DB_MIGRATE_ON_START=true --env REDIS_URL=https://redis.example
 expect_api_startup_failure 'S3_ENDPOINT must be an HTTP(S) URL' \

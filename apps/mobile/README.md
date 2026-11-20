@@ -26,7 +26,7 @@ Start the local API and Web services as described in the [development guide](../
 
 Development mode accepts HTTP for loopback and private IPv4 addresses. For the iOS simulator, use `http://localhost:3000`; for the Android emulator, use `http://10.0.2.2:3000` with the development host reachable there. On a physical device, use the computer’s private LAN IP and Web port; `localhost` on the phone points back to the phone. If device permissions or platform cleartext policies block local traffic, grant local-network access where applicable or use a Web endpoint with trusted HTTPS. Release builds do not permit HTTP addresses.
 
-To sign in from the device’s browser, set `BETTER_AUTH_URL` on the API server to the same Web origin the device uses (same scheme, hostname or IP, and port), then restart the API. If the phone uses a LAN IP, an API configured for `localhost` may pass the ping check but won’t accept sign-in from the LAN origin.
+To sign in from the device’s browser, set `AUTH_URL` on the API server to the same Web origin the device uses (same scheme, hostname or IP, and port), then restart the API. If the phone uses a LAN IP, an API configured for `localhost` may pass the ping check but won’t accept sign-in from the LAN origin.
 
 ## Export, build, and test
 

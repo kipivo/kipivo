@@ -18,8 +18,8 @@ test("only one anonymous installer can create the first administrator", async ({
     const api = launchBuiltApi(port, {
       DATABASE_URL: database.url,
       DB_MIGRATE_ON_START: "true",
-      BETTER_AUTH_URL: origin,
-      BETTER_AUTH_SECRET: "same-secret-for-both-disposable-servers",
+      AUTH_URL: origin,
+      AUTH_SECRET: "same-secret-for-both-disposable-servers",
       GOOGLE_CLIENT_ID: "test-google",
       GOOGLE_CLIENT_SECRET: "test-google-secret",
     });

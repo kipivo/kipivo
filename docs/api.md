@@ -56,7 +56,7 @@ The account list accepts a `limit` from 1 to 100, defaulting to the instance dir
 
 Installation accepts `{ name, email, password }`. A closed installation returns `409 SETUP_CLOSED`. After a lost response, read `setup.get` and sign in if installation finished; never automatically replay the write.
 
-Send `{ "role": "admin" }` or `{ "role": "member" }` to the role endpoint. Role writes require an `Origin` matching `BETTER_AUTH_URL`. A missing session returns `401`, insufficient privileges return `403`, and an unknown target account returns `404`. See [database and authentication](auth.md) for sign-in and administrator setup.
+Send `{ "role": "admin" }` or `{ "role": "member" }` to the role endpoint. Role writes require an `Origin` matching `AUTH_URL`. A missing session returns `401`, insufficient privileges return `403`, and an unknown target account returns `404`. See [database and authentication](auth.md) for sign-in and administrator setup.
 
 In browser code, the typed client uses the current origin and the existing session cookie. Use `includeAccount: true` to read the signed-in account, permissions, and personal settings along with the session. The REST equivalent is `GET /api/v1/auth/session?includeAccount=true`.
 

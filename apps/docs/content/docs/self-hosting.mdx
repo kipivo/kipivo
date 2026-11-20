@@ -27,7 +27,7 @@ Keep the existing Web and API public domains while deploying the gateway as a se
 ## Configure and verify the instance
 
 1. Connect the API to PostgreSQL and apply the database migrations.
-2. Configure `BETTER_AUTH_URL` with the public Web origin and set `BETTER_AUTH_SECRET` on the API. Follow the [authentication deployment guide](https://github.com/kipivo/kipivo/blob/next/docs/auth.md#docker-and-railway) for the exact settings.
+2. Configure `AUTH_URL` with the public Web origin and set `AUTH_SECRET` on the API. Follow the [authentication deployment guide](https://github.com/kipivo/kipivo/blob/next/docs/auth.md#docker-and-railway) for the exact settings.
 3. Check Web at `/healthz` and API readiness at `/readyz`. Open the Web origin to create the first administrator.
 
 Use the [service smoke tests](https://github.com/kipivo/kipivo/blob/next/docs/testing.md#verify-running-services) to verify a production deployment.

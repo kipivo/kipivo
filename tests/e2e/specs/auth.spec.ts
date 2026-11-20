@@ -26,8 +26,8 @@ test.beforeAll(async ({ playwright }) => {
     {
       DATABASE_URL: database.url,
       DB_MIGRATE_ON_START: "true",
-      BETTER_AUTH_URL: origin,
-      BETTER_AUTH_SECRET: authSecret,
+      AUTH_URL: origin,
+      AUTH_SECRET: authSecret,
       GOOGLE_CLIENT_ID: "test-google",
       GOOGLE_CLIENT_SECRET: "test-google-secret",
       GITHUB_CLIENT_ID: "test-github",
@@ -119,8 +119,8 @@ try {
     {
       TEST_DATABASE_URL: database.url,
       DATABASE_URL: "invalid-database-config",
-      BETTER_AUTH_URL: origin,
-      BETTER_AUTH_SECRET: authSecret,
+      AUTH_URL: origin,
+      AUTH_SECRET: authSecret,
     },
   );
   try {
