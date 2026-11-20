@@ -20,6 +20,11 @@ jobs:
       - uses: actions/checkout@v6
         with:
           persist-credentials: false
+      - uses: ./.github/actions/setup-workspace
+        with:
+          cache-scope: topology
+          install-filter: kpdev
+          cache-build: "false"
       - name: Build production images
         uses: docker/bake-action@v7
         with:
@@ -34,7 +39,7 @@ jobs:
             api.cache-from=type=gha,scope=kipivo-api
             docs.cache-from=type=gha,scope=kipivo-docs
       - name: Verify the production topology
-        run: bash scripts/smoke/topology.sh
+        run: kpdev smoke topology
       - name: Report an advisory failure
         if: failure() && inputs.advisory
         run: echo '::warning::Production topology smoke failed. See the job logs.'

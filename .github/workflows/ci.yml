@@ -53,11 +53,11 @@ jobs:
           GITHUB_TOKEN: ${{ github.event_name == 'push' && github.ref == 'refs/heads/next' && github.token || '' }}
         run: |
           if [ "$GITHUB_EVENT_NAME" = pull_request ]; then
-            bun run ci:plan --base "$BASE_SHA" --head "$GITHUB_SHA"
+            bun scripts/ci/plan.ts --base "$BASE_SHA" --head "$GITHUB_SHA"
           elif [ "$GITHUB_EVENT_NAME" = push ] && [ "$GITHUB_REF" = refs/heads/next ]; then
-            bun run ci:plan --next
+            bun scripts/ci/plan.ts --next
           else
-            bun run ci:plan --full
+            bun scripts/ci/plan.ts --full
           fi
   check:
     runs-on: ubuntu-26.04
@@ -66,7 +66,7 @@ jobs:
       - uses: ./.github/actions/setup-workspace
         with:
           cache-scope: check
-      - run: bun run check
+      - run: kpdev check
   ui:
     needs: changes
     if: needs.changes.outputs.ui == 'true'
@@ -104,7 +104,7 @@ jobs:
       - uses: ./.github/actions/setup-workspace
         with:
           cache-scope: cli
-      - run: bun run smoke:cli ${{ needs.changes.outputs.base && '--affected' || '' }}
+      - run: kpdev smoke cli ${{ needs.changes.outputs.base && '--affected' || '' }}
   mobile:
     needs: changes
     if: needs.changes.outputs.mobile == 'true'
@@ -133,7 +133,7 @@ jobs:
       - uses: ./.github/actions/setup-workspace
         with:
           cache-scope: images-${{ matrix.app }}
-          install-dependencies: ${{ matrix.app == 'api' }}
+          install-filter: ${{ matrix.app != 'api' && 'kpdev' || '' }}
           cache-build: "false"
       - name: Build Docker image
         uses: docker/build-push-action@v7
@@ -150,15 +150,15 @@ jobs:
         if: matrix.app == 'web' || matrix.app == 'docs'
         env:
           SMOKE_APP: ${{ matrix.app }}
-        run: bun run "smoke:$SMOKE_APP" "$IMAGE_TAG"
+        run: kpdev smoke "$SMOKE_APP" "$IMAGE_TAG"
       - name: Verify API image migrations and readiness
         if: matrix.app == 'api'
         timeout-minutes: 10
-        run: bun run smoke:api "$IMAGE_TAG"
+        run: kpdev smoke api "$IMAGE_TAG"
       - name: Verify gateway image routing and request preservation
         if: matrix.app == 'gateway'
         timeout-minutes: 5
-        run: bun run smoke:gateway "$IMAGE_TAG"
+        run: kpdev smoke gateway "$IMAGE_TAG"
   topology:
     name: Topology smoke (advisory)
     needs: changes
@@ -268,4 +268,4 @@ jobs:
         env:
           CI_PLAN: ${{ needs.changes.outputs.plan }}
           CI_NEEDS: ${{ toJSON(needs) }}
-        run: bun scripts/ci/result.mjs
+        run: bun scripts/ci/result.ts

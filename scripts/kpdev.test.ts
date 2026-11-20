@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, expect, test } from "bun:test";
 import {
+  chmodSync,
   copyFileSync,
   mkdirSync,
   mkdtempSync,
@@ -9,7 +10,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { delimiter, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { stripVTControlCharacters } from "node:util";
 
@@ -17,31 +18,40 @@ let root: string;
 
 beforeAll(() => {
   root = realpathSync(mkdtempSync(join(tmpdir(), "kipivo-kpdev-")));
-  mkdirSync(join(root, "scripts/cli/commands"), { recursive: true });
   mkdirSync(join(root, "node_modules/.bin"), { recursive: true });
-  symlinkSync(
-    fileURLToPath(new URL("../", import.meta.resolve("citty"))),
-    join(root, "node_modules/citty"),
-    "junction",
-  );
-  for (const file of [
-    "kpdev.mjs",
-    "index.ts",
-    "commands.ts",
-    "tasks.ts",
-    "commands/runner.ts",
-    "commands/smoke.ts",
-    "commands/turbo.ts",
-  ]) {
-    copyFileSync(new URL(`./${file}`, import.meta.url), join(root, "scripts/cli", file));
+  for (const name of ["citty", "@commitlint/lint"]) {
+    const destination = join(root, "node_modules", name);
+    mkdirSync(dirname(destination), { recursive: true });
+    symlinkSync(fileURLToPath(new URL("../", import.meta.resolve(name))), destination, "junction");
   }
+  for (const file of [
+    "kpdev.ts",
+    "check/run.ts",
+    "cmds/check.ts",
+    "cmds/ci.ts",
+    "cmds/commit.ts",
+    "cmds/commit/lint.ts",
+    "cmds/run.ts",
+    "cmds/runner.ts",
+    "cmds/smoke.ts",
+    "cmds/turbo.ts",
+    "internal/execute.ts",
+    "internal/repository-scripts.ts",
+    "internal/root.ts",
+    "internal/smoke-process.ts",
+    "ci/plan.ts",
+    "smoke/targets.ts",
+    "smoke/turbo.ts",
+  ]) {
+    const destination = join(root, "scripts", file);
+    mkdirSync(dirname(destination), { recursive: true });
+    copyFileSync(new URL(`./${file}`, import.meta.url), destination);
+  }
+  chmodSync(join(root, "scripts/kpdev.ts"), 0o755);
+  symlinkSync("../../scripts/kpdev.ts", join(root, "node_modules/.bin/kpdev"), "file");
   writeFileSync(
     join(root, "returning-task.mjs"),
-    'process.execve = () => {}; await import("./scripts/cli/index.ts");\n',
-  );
-  writeFileSync(
-    join(root, "returning-launcher.mjs"),
-    'process.execve = () => {}; await import("./scripts/cli/kpdev.mjs");\n',
+    'process.execve = () => {}; await import("./scripts/kpdev.ts");\n',
   );
   writeFileSync(
     join(root, "package.json"),
@@ -53,9 +63,6 @@ beforeAll(() => {
         "build:storybook": "echo build should not run through kpdev",
         test: "echo parent",
         "test:sample": "bun probe.mjs",
-        "smoke:plan": "bun probe.mjs plan",
-        "smoke:changed": "bun probe.mjs changed",
-        "smoke:example": "bash scripts/smoke-example.sh",
         prepare: "exit 1",
         kpdev: "exit 1",
       },
@@ -70,35 +77,48 @@ beforeAll(() => {
   );
   writeFileSync(
     join(root, "node_modules/.bin/turbo"),
-    '#!/bin/sh\nprintf "%s\\0" "$(pwd -P)" "$@"\nexit 23\n',
+    `#!/bin/sh
+if [ "$3" = "--wait-for-signal" ]; then
+  trap 'exit 0' INT TERM
+  printf 'ready\n'
+  while :; do sleep 1; done
+fi
+printf '%s\\0' "$(pwd -P)" "$@"
+exit 23
+`,
     {
       mode: 0o755,
     },
   );
-  writeFileSync(join(root, "scripts/smoke-example.sh"), 'printf "%s" "$1"\n');
-  writeFileSync(join(root, "scripts/smoke-example-image.sh"), "exit 99\n");
-  writeFileSync(join(root, "scripts/smoke-unregistered-image.sh"), "exit 99\n");
+  for (const file of ["api-image.ts", "changed.ts", "compose.ts", "http-image.ts"]) {
+    writeFileSync(join(root, "scripts/smoke", file), 'import "../../probe.mjs";\n');
+  }
+  writeFileSync(join(root, "scripts/smoke/unregistered.sh"), "exit 99\n");
 });
 afterAll(() => rmSync(root, { recursive: true, force: true }));
 
-function runEntry(entry: string, args: string[]) {
-  const result = Bun.spawnSync([process.execPath, join(root, entry), ...args], {
+function invoke(command: string[]) {
+  const result = Bun.spawnSync(command, {
     cwd: tmpdir(),
     stdout: "pipe",
     stderr: "pipe",
+    env: { ...process.env, PATH: [dirname(process.execPath), process.env.PATH].join(delimiter) },
   });
   return { code: result.exitCode, out: result.stdout.toString(), err: result.stderr.toString() };
 }
 
+function runEntry(entry: string, args: string[]) {
+  return invoke([process.execPath, join(root, entry), ...args]);
+}
+
 function run(...args: string[]) {
-  return runEntry("scripts/cli/kpdev.mjs", args);
+  return runEntry("scripts/kpdev.ts", args);
 }
 
 test("discovers root scripts and offers scoped help without running a task", () => {
   const result = run("test", "--help");
   expect(result.code).toBe(0);
   expect(result.out).toContain("Run the test:sample task");
-  expect(result.out).not.toContain("smoke:example");
   expect(run("help", "test", "sample").out).toMatch(/USAGE.+kpdev test sample/);
   expect(stripVTControlCharacters(result.out).match(/^USAGE /gm)).toHaveLength(1);
   expect(run().out).not.toContain("  prepare");
@@ -116,6 +136,40 @@ test("runs from the repo root and preserves flags, positional arguments and exit
   expect(JSON.parse(helpArgument.out).args).toEqual(["--help"]);
 });
 
+test("shows built-in check help without running the check suite", () => {
+  const help = run("check", "--help");
+  expect(help.code).toBe(0);
+  expect(help.out).toContain("Run repository validation");
+  expect(run("help", "check").out).toBe(help.out);
+});
+
+test("runs the built-in CI planner and shows its nested help", () => {
+  const help = run("help", "ci", "plan");
+  expect(help.code).toBe(0);
+  expect(help.out).toContain("kpdev ci plan");
+  expect(help.out).toContain("--full");
+
+  const plan = run("ci", "plan", "--full");
+  expect(plan.code).toBe(0);
+  expect(JSON.parse(plan.out)).toMatchObject({ check: true, topology: true });
+});
+
+test("commit lint handles nested help and message paths relative to the repository", () => {
+  const help = run("help", "commit", "lint");
+  expect(help.code).toBe(0);
+  expect(help.out).toContain("kpdev commit lint");
+  expect(help.out).toContain("--edit");
+
+  const file = "commit message.txt";
+  writeFileSync(join(root, file), "fix(e2e): preserve commit checks\n");
+  expect(run("commit", "lint", "--edit", file)).toMatchObject({ code: 0, err: "" });
+  writeFileSync(join(root, file), "invalid commit message\n");
+  expect(run("commit", "lint", "--edit", file)).toMatchObject({
+    code: 1,
+    err: expect.stringContaining("invalid commit message"),
+  });
+});
+
 test("only runs the selected task when the subprocess returns", () => {
   const child = runEntry("returning-task.mjs", ["test", "sample"]);
   expect(child.code).toBe(23);
@@ -127,24 +181,73 @@ test("runs a public script by its exact name and hands off the remaining argumen
   const help = run("run", "--help");
   expect(help.code).toBe(0);
   expect(help.out).toMatch(/USAGE.+kpdev run.+SCRIPT/);
+  expect(help.out).toContain("--list");
   expect(run("help", "run", "test:sample")).toMatchObject({ code: 0, out: help.out });
-  const result = run("run", "test:sample", "two words", "--grep", "$HOME", "--help");
+  const result = run("run", "test:sample", "two words", "--grep", "$HOME", "--help", "--list");
   expect(result.code).toBe(23);
   expect(JSON.parse(result.out)).toEqual({
     cwd: root,
-    args: ["two words", "--grep", "$HOME", "--help"],
+    args: ["two words", "--grep", "$HOME", "--help", "--list"],
   });
   expect(JSON.parse(run("run", "test:sample", "--", "--help").out).args).toEqual(["--help"]);
-  for (const script of ["build", "prepare", "turbo", "missing"]) {
+  for (const script of ["build", "prepare", "turbo", "missing", "smoke:plan"]) {
     expect(run("run", script)).toMatchObject({ code: 1, err: expect.stringContaining(script) });
   }
 });
 
-test("the launcher forwards arguments and exit status when it cannot replace itself", () => {
-  const child = runEntry("returning-launcher.mjs", ["test", "sample", "--", "two words"]);
+test("lists runnable script names and suggests a nearby match for a typo", () => {
+  expect(run("run", "--list")).toMatchObject({
+    code: 0,
+    out: "test\ntest:sample\n",
+  });
+  expect(run("run", "--list", "test").code).toBe(1);
+  expect(run("run", "test:sampel")).toMatchObject({
+    code: 1,
+    err: expect.stringContaining('Did you mean "test:sample"?'),
+  });
+  expect(run("run", "unrelated").err).toContain("Run kpdev run --list.");
+});
+
+test("the installed entry resolves its checkout when invoked from elsewhere", () => {
+  const child = invoke([
+    join(root, "node_modules/.bin/kpdev"),
+    "test",
+    "sample",
+    "--",
+    "two words",
+  ]);
   expect(child.code).toBe(23);
   expect(JSON.parse(child.out)).toEqual({ cwd: root, args: ["two words"] });
 });
+
+test.each([
+  ["SIGINT", 130],
+  ["SIGTERM", 143],
+] as const)(
+  "CLI smoke reports %s even when Turbo handles it and exits successfully",
+  async (signal, status) => {
+    const child = Bun.spawn(
+      [
+        process.execPath,
+        join(root, "scripts/smoke/turbo.ts"),
+        "kipivo#ci:cli",
+        "--wait-for-signal",
+      ],
+      { cwd: tmpdir(), stdout: "pipe", stderr: "inherit" },
+    );
+    const reader = child.stdout.getReader();
+    try {
+      const { value } = await reader.read();
+      expect(new TextDecoder().decode(value)).toBe("ready\n");
+      child.kill(signal);
+      expect(await child.exited).toBe(status);
+    } finally {
+      reader.releaseLock();
+      if (child.exitCode === null) child.kill("SIGTERM");
+      await child.exited;
+    }
+  },
+);
 
 test("forwards runner subcommands to the product CLI", () => {
   const runner = run("runner", "serve", "--port", "0");
@@ -178,17 +281,23 @@ test("forwards Turbo commands and keeps builds under the turbo subcommand", () =
   }
 });
 
-test("resolves registered smoke scripts and passes through the supplied tag", () => {
+test("runs smoke targets directly and passes through the supplied tag", () => {
   const help = run("help", "smoke");
-  expect(help.out).toContain("Suffix of a smoke:* script in package.json");
-  expect(run("smoke", "example", "example:local")).toMatchObject({
-    code: 0,
-    out: "example:local",
-  });
-  expect(run("smoke", "example", "--", "example:local")).toMatchObject({
-    code: 0,
-    out: "example:local",
-  });
+  expect(help.out).toContain("Smoke target to run");
+  const api = run("smoke", "api", "example:local");
+  expect(api.code).toBe(23);
+  expect(JSON.parse(api.out)).toEqual({ cwd: root, args: ["example:local"] });
+  expect(JSON.parse(run("smoke", "gateway", "example:local").out).args).toEqual([
+    "gateway",
+    "example:local",
+  ]);
+  expect(JSON.parse(run("smoke", "topology").out).args).toEqual(["topology"]);
+  const web = run("smoke", "web", "--", "example:local");
+  expect(web.code).toBe(23);
+  expect(JSON.parse(web.out)).toEqual({ cwd: root, args: ["web", "example:local"] });
+  const cli = run("smoke", "cli", "--affected");
+  expect(cli.code).toBe(23);
+  expect(cli.out.split("\0")).toEqual([root, "run", "kipivo#ci:cli", "--affected", ""]);
   expect(run("smoke", "unregistered")).toMatchObject({
     code: 1,
     err: expect.stringContaining('Unknown smoke target "unregistered"'),
@@ -201,12 +310,13 @@ test("shows shared smoke help and forwards options for the selected target", () 
   expect(help.out).toMatch(/USAGE.+kpdev smoke.+TARGET/);
   expect(help.out).toContain("--base");
   expect(help.out).toContain("--build");
+  expect(help.out).toContain("--json");
   expect(run("smoke", "changed", "--help").out).toBe(help.out);
 
   const plan = run("smoke", "plan", "--base", "HEAD");
   expect(plan.code).toBe(23);
   expect(JSON.parse(plan.out)).toEqual({ cwd: root, args: ["plan", "--base", "HEAD"] });
-  expect(run("run", "smoke:plan", "--base", "HEAD")).toMatchObject({ code: 23, out: plan.out });
+  expect(JSON.parse(run("smoke", "plan", "--json").out).args).toEqual(["plan", "--json"]);
   const changed = run("smoke", "changed", "--build", "--base=origin/next");
   expect(changed.code).toBe(23);
   expect(JSON.parse(changed.out).args).toEqual(["changed", "--build", "--base=origin/next"]);
@@ -218,7 +328,7 @@ test("rejects unknown tasks, including typos below a known task", () => {
   expect(result.err).toContain("Unknown command");
   expect(run("help", "test", "missing").code).toBe(1);
   expect(run("prepare").code).toBe(1);
-  for (const command of ["smoke:plan", "run:smoke:plan", "turbo:build"]) {
+  for (const command of ["smoke:plan", "turbo:build"]) {
     expect(run(command)).toMatchObject({
       code: 1,
       err: expect.stringContaining("Unknown command"),

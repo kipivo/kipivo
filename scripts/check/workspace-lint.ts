@@ -1,9 +1,15 @@
 import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
-import { fileURLToPath } from "node:url";
+import type { RuleTester } from "oxlint/plugins-dev";
+import { ROOT } from "../internal/root.ts";
 
-const root = fileURLToPath(new URL("../../", import.meta.url));
-const runnerConnection = "@kipivo/runtime/local/connection";
-const serverPackages = new Set([
+type Rule = Parameters<RuleTester["run"]>[1];
+type CreateRule = NonNullable<Rule["create"]>;
+type RuleContext = Parameters<CreateRule>[0];
+type Visitor = ReturnType<CreateRule>;
+type Node = Parameters<NonNullable<Visitor[string]>>[0];
+
+const RUNNER_CONNECTION = "@kipivo/runtime/local/connection";
+const SERVER_PACKAGES = new Set([
   "@kipivo/auth",
   "@kipivo/cache",
   "@kipivo/core",
@@ -12,7 +18,7 @@ const serverPackages = new Set([
   "@kipivo/orpc",
   "@kipivo/storage",
 ]);
-const sharedEntries = new Set([
+const SHARED_ENTRIES = new Set([
   "@kipivo/auth/errors",
   "@kipivo/auth/native",
   "@kipivo/email/settings",
@@ -20,11 +26,11 @@ const sharedEntries = new Set([
   "@kipivo/orpc/errors",
 ]);
 
-function repoPath(file) {
-  return relative(root, file).split(sep).join("/");
+function repoPath(file: string) {
+  return relative(ROOT, file).split(sep).join("/");
 }
 
-function isWebServerModule(file, context) {
+function isWebServerModule(file: string, context: RuleContext) {
   return (
     /^apps\/web\/src\/.+\.server\.tsx?$/.test(file) &&
     context.sourceCode.ast.body.some(
@@ -37,17 +43,17 @@ function isWebServerModule(file, context) {
   );
 }
 
-function create(context) {
+function create(context: RuleContext): Visitor {
   const importer = repoPath(context.filename);
   const webServer = isWebServerModule(importer, context);
   const webClient = importer.startsWith("apps/web/src/") && !webServer;
   const contract = importer.startsWith("packages/contract/src/");
   const core = importer.startsWith("packages/core/src/");
 
-  function checkDependency(node, specifier) {
+  function checkDependency(node: Node, specifier: string) {
     if (!specifier.startsWith("@kipivo/")) return;
     const workspace = specifier.split("/", 2).join("/");
-    const serverOnly = serverPackages.has(workspace) && !sharedEntries.has(specifier);
+    const serverOnly = SERVER_PACKAGES.has(workspace) && !SHARED_ENTRIES.has(specifier);
     if (webClient && serverOnly) {
       context.report({
         node,
@@ -70,11 +76,14 @@ function create(context) {
     }
   }
 
-  function check(node) {
+  function check(node: Node | null | undefined) {
+    if (!node) return;
     const value =
-      node?.type === "TemplateLiteral" && node.expressions.length === 0
+      node.type === "TemplateLiteral" && node.expressions.length === 0
         ? node.quasis[0].value.cooked
-        : node?.value;
+        : node.type === "Literal"
+          ? node.value
+          : undefined;
     if (typeof value !== "string") return;
     const [specifier] = value.split(/[?#]/, 1);
 
@@ -93,7 +102,7 @@ function create(context) {
 
     checkDependency(node, specifier);
     if (
-      specifier !== runnerConnection &&
+      specifier !== RUNNER_CONNECTION &&
       !/^packages\/runtime\/src\/local\/connection(?:\.[cm]?[jt]s)?$/.test(target)
     )
       return;
@@ -105,7 +114,9 @@ function create(context) {
     });
   }
 
-  const checkSource = (node) => check(node.source);
+  const checkSource = (node: Node) => {
+    if ("source" in node) check(node.source);
+  };
   return {
     ImportDeclaration: checkSource,
     ExportNamedDeclaration: checkSource,

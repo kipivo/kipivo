@@ -51,7 +51,7 @@ bun run kpdev ci plan --full
 bun run kpdev ci test
 ```
 
-`ci:test` also runs as part of `bun run kpdev check`. The planner job installs the pinned Turbo binary without installing workspace dependencies. When replaying a different head or working from a dirty tree, the planner checks out the committed head in a temporary clone with Git history. It installs that revision’s pinned Turbo into a temporary directory if needed.
+`kpdev ci test` also runs as part of `bun run kpdev check`. The planner job installs the pinned Turbo binary without installing workspace dependencies. When replaying a different head or working from a dirty tree, the planner checks out the committed head in a temporary clone with Git history. It installs that revision’s pinned Turbo into a temporary directory if needed.
 
 ## CI caches
 
@@ -114,8 +114,11 @@ Preview the selected checks and their reasons, then build and test the affected 
 
 ```sh
 bun run kpdev smoke plan
+bun run kpdev smoke plan --base HEAD --json
 bun run kpdev smoke changed --build
 ```
+
+`--json` prints a single plan with the full base commit SHA, selected targets and their reasons, and the images required by those targets.
 
 Both commands compare the working tree, including staged and untracked files, with the merge base of the checked-out branch and the locally known default branch on `origin`. If that ref is unavailable, they try the branch upstream and then `HEAD`. Pass `--base <ref>` to choose another comparison. Planning does not require Docker. A selected topology check builds all four images required by Compose. Individual image checks and topology reuse the same build when both are selected.
 

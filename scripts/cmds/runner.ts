@@ -1,5 +1,5 @@
 import { defineCommand } from "citty";
-import { execute } from "../tasks";
+import { execute } from "../internal/execute";
 
 export default defineCommand({
   meta: { name: "kpdev runner", description: "Manage the local Kipivo runner" },

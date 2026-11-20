@@ -4,7 +4,17 @@
   "tasks": {
     "ci:cli": {
       "dependsOn": ["build"],
-      "inputs": ["$TURBO_ROOT$/scripts/smoke/cli.sh", "$TURBO_ROOT$/scripts/smoke/turbo.ts"],
+      "inputs": [
+        "$TURBO_ROOT$/scripts/kpdev.ts",
+        "$TURBO_ROOT$/scripts/cmds/smoke.ts",
+        "$TURBO_ROOT$/scripts/internal/execute.ts",
+        "$TURBO_ROOT$/scripts/internal/repository-scripts.ts",
+        "$TURBO_ROOT$/scripts/internal/root.ts",
+        "$TURBO_ROOT$/scripts/internal/smoke-process.ts",
+        "$TURBO_ROOT$/scripts/smoke/cli.sh",
+        "$TURBO_ROOT$/scripts/smoke/targets.ts",
+        "$TURBO_ROOT$/scripts/smoke/turbo.ts"
+      ],
       "cache": false
     }
   }

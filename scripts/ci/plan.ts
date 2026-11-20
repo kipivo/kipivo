@@ -7,10 +7,10 @@ import {
   rmSync,
   writeFileSync,
 } from "node:fs";
-import { spawnSync } from "node:child_process";
+import { spawnSync, type SpawnSyncOptions } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { ROOT } from "../internal/root";
 
 export const ciTasks = {
   ui: "storybook#ci:ui",
@@ -19,64 +19,88 @@ export const ciTasks = {
   auth: "@kipivo/e2e#ci:auth",
   e2e: "@kipivo/e2e#ci:integration",
   "web-e2e": "@kipivo/e2e#ci:web-e2e",
-};
+} as const;
 export const imageDefinitions = {
   "web-image": { app: "web", dockerfile: "apps/web/Dockerfile" },
   "api-image": { app: "api", dockerfile: "apps/api/Dockerfile" },
   "gateway-image": { app: "gateway", dockerfile: ".railway/gateway/Dockerfile" },
   "docs-image": { app: "docs", dockerfile: "apps/docs/Dockerfile" },
+} as const;
+
+type CiJob = keyof typeof ciTasks;
+type ImageJob = keyof typeof imageDefinitions;
+type Job = CiJob | ImageJob;
+type ReasonJob = Job | "check" | "topology";
+type Reasons = Partial<Record<ReasonJob, string[]>>;
+type Plan = Record<Job, boolean> & {
+  base: string;
+  check: boolean;
+  topology: boolean;
+  images: (typeof imageDefinitions)[ImageJob][];
+  reasons: Reasons;
+  baseline?: string;
 };
-const imageJobs = Object.keys(imageDefinitions);
-export const jobs = [...Object.keys(ciTasks), ...imageJobs];
-const imageInputs = new Map([
+type RunAffected = (tasks: string[]) => Set<string>;
+
+const CI_JOBS = Object.keys(ciTasks) as CiJob[];
+const IMAGE_JOBS = Object.keys(imageDefinitions) as ImageJob[];
+export const jobs = [...CI_JOBS, ...IMAGE_JOBS];
+const sharedSmokeInputs = new Set([
+  "scripts/kpdev.ts",
+  "scripts/cmds/smoke.ts",
+  "scripts/internal/execute.ts",
+  "scripts/internal/repository-scripts.ts",
+  "scripts/internal/root.ts",
+  "scripts/internal/smoke-process.ts",
+  "scripts/smoke/targets.ts",
+]);
+const imageInputs = new Map<string, ImageJob[]>([
   ["apps/web/Dockerfile", ["web-image"]],
   ["apps/api/Dockerfile", ["api-image"]],
   ["apps/docs/Dockerfile", ["docs-image"]],
   ["scripts/smoke/http-image.ts", ["web-image", "docs-image"]],
   ["scripts/smoke/web.ts", ["web-image"]],
-  ["scripts/smoke/api-image.sh", ["api-image"]],
-  ["scripts/smoke/gateway-image.sh", ["gateway-image"]],
+  ["scripts/smoke/api-image.ts", ["api-image"]],
+  ["scripts/smoke/compose.ts", ["gateway-image"]],
   ["scripts/smoke/docs.ts", ["web-image", "docs-image"]],
-  ["scripts/smoke/image-files.sh", imageJobs],
-  [".dockerignore", imageJobs],
+  ["scripts/smoke/image-files.sh", IMAGE_JOBS],
+  [".dockerignore", IMAGE_JOBS],
 ]);
 const knownRootInputs = new Set([
   "assets/logo.svg",
+  "scripts/kpdev.test.ts",
   "scripts/smoke/cli.sh",
   "scripts/smoke/turbo.ts",
-  "scripts/check/workspace-lint.mjs",
-  "scripts/check/workspace-lint.test.mjs",
+  "scripts/check/workspace-lint.ts",
+  "scripts/check/workspace-lint.test.ts",
 ]);
-const rootTurbo = fileURLToPath(new URL("../../node_modules/.bin/turbo", import.meta.url));
+const TURBO_BIN = join(ROOT, "node_modules", ".bin", "turbo");
 
-export function imageMatrix(plan) {
-  return Object.entries(imageDefinitions)
-    .filter(([job]) => plan[job])
-    .map(([, image]) => image);
+export function imageMatrix(plan: Record<ImageJob, boolean>) {
+  return IMAGE_JOBS.filter((job) => plan[job]).map((job) => imageDefinitions[job]);
 }
 
-/** @param {Record<string, string[]>} reasons */
-function makePlan(reasons, base = "") {
-  const selection = Object.fromEntries(jobs.map((job) => [job, Boolean(reasons[job]?.length)]));
-  /** @type {Record<string, string[]>} */
-  const details = { check: ["Every change runs the repository checks"], ...reasons };
+function makePlan(reasons: Reasons, base = ""): Plan {
+  const selection = Object.fromEntries(
+    jobs.map((job) => [job, Boolean(reasons[job]?.length)]),
+  ) as Record<Job, boolean>;
   return {
     base,
     check: true,
     topology: Boolean(reasons.topology?.length),
     ...selection,
     images: imageMatrix(selection),
-    reasons: details,
+    reasons: { check: ["Every change runs the repository checks"], ...reasons },
   };
 }
 
-export function fullPlan(reason, includeImages = true, topology = includeImages) {
-  const required = includeImages ? [...jobs] : Object.keys(ciTasks);
+export function fullPlan(reason: string, includeImages = true, topology = includeImages) {
+  const required: ReasonJob[] = includeImages ? [...jobs] : [...CI_JOBS];
   if (topology) required.push("topology");
   return makePlan(Object.fromEntries(required.map((job) => [job, [reason]])));
 }
 
-function run(command, args, options = {}) {
+function run(command: string, args: string[], options: Pick<SpawnSyncOptions, "cwd" | "env"> = {}) {
   const result = spawnSync(command, args, {
     encoding: "utf8",
     maxBuffer: 8 * 1024 * 1024,
@@ -87,7 +111,7 @@ function run(command, args, options = {}) {
   return result.stdout;
 }
 
-function changedPaths(base, head) {
+function changedPaths(base: string, head: string | undefined) {
   const tracked = run("git", [
     "diff",
     "--name-only",
@@ -105,27 +129,33 @@ function changedPaths(base, head) {
   return [...new Set([...tracked, ...untracked.split("\0").filter(Boolean)])];
 }
 
-function imageInputJobs(path) {
+function imageInputJobs(path: string): ImageJob[] {
+  if (sharedSmokeInputs.has(path)) return IMAGE_JOBS;
   return imageInputs.get(path) ?? (path.startsWith(".railway/gateway/") ? ["gateway-image"] : []);
 }
 
-function isRootDocumentation(path) {
+function isRootDocumentation(path: string) {
   return /^README\.md$/i.test(path) || /^docs\/.*\.md$/i.test(path);
 }
 
-function isTopologyInput(path) {
+function isTopologyInput(path: string) {
   return (
     path.startsWith(".railway/topology/") ||
-    path === "scripts/smoke/topology.sh" ||
+    sharedSmokeInputs.has(path) ||
+    path === "scripts/smoke/compose.ts" ||
     path === ".github/workflows/topology-smoke.yml"
   );
 }
 
-function fullRunReason(paths, head) {
-  const workspaces = new Set();
+function fullRunReason(paths: string[], head: string | undefined) {
+  const workspaces = new Set<string>();
   for (const path of paths) {
     if (isRootDocumentation(path) || isTopologyInput(path)) continue;
-    if (path.startsWith("scripts/cli/") || knownRootInputs.has(path) || imageInputJobs(path).length)
+    if (
+      path.startsWith("scripts/cmds/") ||
+      knownRootInputs.has(path) ||
+      imageInputJobs(path).length
+    )
       continue;
     const workspace = /^(?:apps|packages|tests)\/[^/]+(?=\/)/.exec(path)?.[0];
     if (!workspace) return `Repository input changed: ${path}`;
@@ -145,27 +175,32 @@ function fullRunReason(paths, head) {
   if (missing) return `Unmapped path in ${missing.replace(/\/package\.json$/, "")}`;
 }
 
-function commitRef(ref) {
+function commitRef(ref: string) {
   return run("git", ["rev-parse", "--verify", "--end-of-options", `${ref}^{commit}`]).trim();
 }
 
-function turboVersion(directory) {
-  const version = JSON.parse(readFileSync(join(directory, "package.json"), "utf8")).devDependencies
-    ?.turbo;
+function turboVersion(directory: string) {
+  const manifest = JSON.parse(readFileSync(join(directory, "package.json"), "utf8")) as {
+    devDependencies?: { turbo?: unknown };
+  };
+  const version = manifest.devDependencies?.turbo;
   if (typeof version !== "string" || !/^\d+\.\d+\.\d+(?:-[\w.-]+)?$/.test(version)) {
     throw new Error("Expected an exact Turbo version in package.json");
   }
   return version;
 }
 
-function withCheckout(head, visit) {
+function withCheckout(
+  head: string,
+  visit: (directory: string, turbo: string, version: string) => void,
+) {
   const root = run("git", ["rev-parse", "--show-toplevel"]).trim();
   const current = run("git", ["rev-parse", "HEAD"]).trim();
   if (
     head === current &&
     !run("git", ["status", "--porcelain", "--untracked-files=normal"], { cwd: root })
   ) {
-    return visit(root, rootTurbo, turboVersion(root));
+    return visit(root, TURBO_BIN, turboVersion(root));
   }
 
   const temp = mkdtempSync(join(tmpdir(), "kipivo-ci-plan-"));
@@ -176,9 +211,9 @@ function withCheckout(head, visit) {
       cwd: checkout,
     });
     const version = turboVersion(checkout);
-    let turbo = rootTurbo;
+    let turbo = TURBO_BIN;
     if (
-      spawnSync(process.execPath, [rootTurbo, "--version"], {
+      spawnSync(process.execPath, [TURBO_BIN, "--version"], {
         cwd: temp,
         encoding: "utf8",
       }).stdout?.trim() !== version
@@ -195,32 +230,44 @@ function withCheckout(head, visit) {
   }
 }
 
-function affectedTasks(directory, turbo, version, base, head, tasks) {
+function affectedTasks(
+  directory: string,
+  turbo: string,
+  version: string,
+  base: string,
+  head: string,
+  tasks: string[],
+) {
   const summary = JSON.parse(
     run(process.execPath, [turbo, "run", ...tasks, "--affected", "--dry=json"], {
       cwd: directory,
       env: { ...process.env, TURBO_SCM_BASE: base, TURBO_SCM_HEAD: head },
     }),
-  );
+  ) as { turboVersion: string; tasks: { command: string; taskId: string }[] };
   if (summary.turboVersion !== version) throw new Error("Expected the pinned Turbo version");
   return new Set(
     summary.tasks.filter(({ command }) => command !== "<NONEXISTENT>").map(({ taskId }) => taskId),
   );
 }
 
-function selectPlan(base, head, useRailwayBuilds, inspectTasks) {
+function selectPlan(
+  base: string,
+  head: string | undefined,
+  useRailwayBuilds: boolean,
+  inspectTasks: (inspect: (runAffected: RunAffected) => void) => void,
+) {
   const paths = changedPaths(base, head);
   const topologyInputs = paths.filter(isTopologyInput);
   const includeImages =
     !useRailwayBuilds ||
     paths.some(
       (path) =>
-        !isTopologyInput(path) && (path.startsWith(".railway/") || imageInputJobs(path).length),
+        imageInputJobs(path).length || (!isTopologyInput(path) && path.startsWith(".railway/")),
     );
   const full = fullRunReason(paths, head);
   if (full) return fullPlan(full, includeImages, includeImages || topologyInputs.length > 0);
 
-  const reasons = { topology: topologyInputs };
+  const reasons: Reasons = { topology: topologyInputs };
   if (includeImages) {
     for (const path of paths) {
       for (const job of imageInputJobs(path)) (reasons[job] ??= []).push(path);
@@ -233,17 +280,20 @@ function selectPlan(base, head, useRailwayBuilds, inspectTasks) {
     paths.some(
       (path) =>
         path === "apps/api/Dockerfile" ||
+        sharedSmokeInputs.has(path) ||
         (!isRootDocumentation(path) && !isTopologyInput(path) && !imageInputJobs(path).length),
     )
   ) {
     inspectTasks((runAffected) => {
       const selected = runAffected(Object.values(ciTasks));
-      for (const [job, task] of Object.entries(ciTasks)) {
+      for (const job of CI_JOBS) {
+        const task = ciTasks[job];
         if (selected.has(task)) reasons[job] = [task];
       }
       if (includeImages) {
         const builds = runAffected(["build"]);
-        for (const [job, { app }] of Object.entries(imageDefinitions)) {
+        for (const job of IMAGE_JOBS) {
+          const { app } = imageDefinitions[job];
           const task = `${app}#build`;
           if (!builds.has(task)) continue;
           // Web includes Docs as a prerequisite even when only Web changed.
@@ -253,16 +303,16 @@ function selectPlan(base, head, useRailwayBuilds, inspectTasks) {
       }
     });
   }
-  if (useRailwayBuilds && imageJobs.some((job) => reasons[job]?.length)) {
+  if (useRailwayBuilds && IMAGE_JOBS.some((job) => reasons[job]?.length)) {
     topologyInputs.push("Image checks selected");
   }
   return makePlan(reasons, base);
 }
 
-export function planFromArgs(args, { useRailwayBuilds = false } = {}) {
+export function planFromArgs(args: string[], { useRailwayBuilds = false } = {}) {
   if (args.length === 1 && args[0] === "--full") return fullPlan("Full run requested");
   if (args.length !== 4 || args[0] !== "--base" || args[2] !== "--head") {
-    throw new Error("Usage: bun run ci:plan --base <sha> --head <sha> | --next | --full");
+    throw new Error("Usage: kpdev ci plan --base <sha> --head <sha> | --next | --full");
   }
   try {
     const head = commitRef(args[3]);
@@ -273,17 +323,16 @@ export function planFromArgs(args, { useRailwayBuilds = false } = {}) {
       ),
     );
   } catch (error) {
-    return fullPlan(
-      `Cannot reliably select jobs: ${error.message.replace(/\s+/g, " ").slice(0, 500)}`,
-    );
+    const message = error instanceof Error ? error.message : String(error);
+    return fullPlan(`Cannot reliably select jobs: ${message.replace(/\s+/g, " ").slice(0, 500)}`);
   }
 }
 
-export function planWorkingTree(ref) {
+export function planWorkingTree(ref?: string) {
   const head = commitRef("HEAD");
   if (ref === undefined) {
     // Use refs already available locally. The planner never fetches or changes the index.
-    for (const candidate of ["origin/HEAD", "@{upstream}", "HEAD"]) {
+    for (const candidate of ["origin/HEAD", "@{upstream}"]) {
       try {
         ref = commitRef(candidate);
         break;
@@ -294,16 +343,16 @@ export function planWorkingTree(ref) {
   } else {
     ref = commitRef(ref);
   }
-  const base = run("git", ["merge-base", "--", ref, head]).trim();
+  const base = run("git", ["merge-base", "--", ref ?? head, head]).trim();
   const directory = process.cwd();
   const plan = selectPlan(base, undefined, false, (inspect) => {
     const version = turboVersion(directory);
-    inspect((tasks) => affectedTasks(directory, rootTurbo, version, base, head, tasks));
+    inspect((tasks) => affectedTasks(directory, TURBO_BIN, version, base, head, tasks));
   });
   return { ...plan, base };
 }
 
-async function findNextBaseline(env) {
+async function findNextBaseline(env: NodeJS.ProcessEnv) {
   const {
     GITHUB_API_URL: api,
     GITHUB_REPOSITORY: repository,
@@ -311,7 +360,7 @@ async function findNextBaseline(env) {
     GITHUB_TOKEN: token,
   } = env;
   const commitSha = /^[0-9a-f]{40}$/;
-  if (!api || !repository || !token || !commitSha.test(head ?? "")) return;
+  if (!api || !repository || !token || !head || !commitSha.test(head)) return;
 
   try {
     const url = new URL(`${api}/repos/${repository}/actions/workflows/ci.yml/runs`);
@@ -328,7 +377,14 @@ async function findNextBaseline(env) {
       url.searchParams.set("page", String(page));
       const response = await fetch(url, { headers, signal });
       if (!response.ok) return;
-      const { workflow_runs: runs } = await response.json();
+      const { workflow_runs: runs } = (await response.json()) as {
+        workflow_runs?: Array<{
+          head_sha?: unknown;
+          conclusion?: unknown;
+          event?: unknown;
+          head_branch?: unknown;
+        } | null>;
+      };
       if (!Array.isArray(runs)) return;
 
       for (const entry of runs) {
@@ -347,7 +403,7 @@ async function findNextBaseline(env) {
           spawnSync("git", ["merge-base", "--is-ancestor", sha, head], { stdio: "ignore" })
             .status === 0
         ) {
-          return sha;
+          return { baseline: sha, head };
         }
       }
       if (!response.headers.get("link")?.includes('rel="next"')) return;
@@ -358,15 +414,16 @@ async function findNextBaseline(env) {
 }
 
 export async function planForNextPush(env = process.env) {
-  const baseline = await findNextBaseline(env);
-  if (!baseline) return fullPlan("No successful next CI ancestor available");
-  const plan = planFromArgs(["--base", baseline, "--head", env.GITHUB_SHA], {
+  const next = await findNextBaseline(env);
+  if (!next) return fullPlan("No successful next CI ancestor available");
+  const { baseline, head } = next;
+  const plan = planFromArgs(["--base", baseline, "--head", head], {
     useRailwayBuilds: true,
   });
   return { ...plan, baseline };
 }
 
-export function writePlan(plan) {
+export function writePlan(plan: Plan) {
   console.log(JSON.stringify(plan, null, 2));
   if (process.env.GITHUB_OUTPUT) {
     const selection = Object.fromEntries(jobs.map((job) => [job, plan[job]]));
@@ -381,27 +438,24 @@ export function writePlan(plan) {
     appendFileSync(process.env.GITHUB_OUTPUT, `${outputs.join("\n")}\n`);
   }
   if (process.env.GITHUB_STEP_SUMMARY) {
-    const baseline =
-      (plan.baseline ?? plan.base) ? `Baseline commit \`${plan.baseline ?? plan.base}\`.\n\n` : "";
+    const commit = plan.baseline ?? plan.base;
+    const baseline = commit ? `Baseline commit \`${commit}\`.\n\n` : "";
+    const rows = (["check", ...jobs, "topology"] as const).map((job) => {
+      const reasons = plan.reasons[job];
+      const reason = reasons?.length ? reasons.join("; ") : "No affected consumer";
+      return `| ${job} | ${plan[job] ? "yes" : "no"} | ${reason.replaceAll("|", "\\|").replaceAll("\n", " ")} |`;
+    });
     appendFileSync(
       process.env.GITHUB_STEP_SUMMARY,
-      `## CI plan\n\n${baseline}| Task | Selected | Reason |\n| --- | --- | --- |\n${[
-        "check",
-        ...jobs,
-        "topology",
-      ]
-        .map(
-          (job) =>
-            `| ${job} | ${plan[job] ? "yes" : "no"} | ${(plan.reasons[job]?.length ? plan.reasons[job] : ["No affected consumer"]).join("; ").replaceAll("|", "\\|").replaceAll("\n", " ")} |`,
-        )
-        .join("\n")}\n`,
+      `## CI plan\n\n${baseline}| Task | Selected | Reason |\n| --- | --- | --- |\n${rows.join("\n")}\n`,
     );
   }
 }
 
-if (import.meta.main) {
-  const args = process.argv.slice(2);
+export async function runPlan(args: string[]) {
   writePlan(
     args.length === 1 && args[0] === "--next" ? await planForNextPush() : planFromArgs(args),
   );
 }
+
+if (import.meta.main) await runPlan(process.argv.slice(2));

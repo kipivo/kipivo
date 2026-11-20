@@ -3,7 +3,6 @@
   "ignoreFiles": [".agents/skills/shadcn/**"],
   "workspaces": {
     ".": {
-      "ignoreDependencies": ["@kipivo/scripts"],
       "entry": [
         ".railway/gateway/smoke/upstreams.mjs",
         ".railway/gateway/smoke/test.mjs",
@@ -19,7 +18,7 @@
       "ignoreDependencies": ["expo-updates"]
     },
     "scripts": {
-      "entry": ["smoke/web.ts"],
+      "entry": ["smoke/{api-image,changed,compose,http-image,turbo,web}.ts"],
       "bun": { "entry": ["**/*.test.{mjs,ts}"] }
     },
     "tests/e2e": { "entry": ["fixtures/check.mjs", "fixtures/auth-preload.mjs"] }

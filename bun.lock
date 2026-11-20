@@ -5,12 +5,12 @@
     "": {
       "name": "kipivo",
       "devDependencies": {
-        "@kipivo/scripts": "workspace:*",
         "@kipivo/tsconfig": "workspace:*",
         "husky": "9.1.7",
         "knip": "6.45.1",
+        "kpdev": "workspace:*",
         "oxfmt": "0.79.0",
-        "oxlint": "1.94.0",
+        "oxlint": "catalog:",
         "railway": "3.17.0",
         "turbo": "2.11.12",
         "typescript": "7.0.2",
@@ -399,9 +399,9 @@
       },
     },
     "scripts": {
-      "name": "@kipivo/scripts",
+      "name": "kpdev",
       "bin": {
-        "kpdev": "./cli/kpdev.mjs",
+        "kpdev": "./kpdev.ts",
       },
       "dependencies": {
         "@commitlint/lint": "21.2.4",
@@ -411,6 +411,7 @@
         "@kipivo/tsconfig": "workspace:*",
         "@types/bun": "1.4.4",
         "@types/node": "22.20.5",
+        "oxlint": "catalog:",
       },
     },
     "tests/e2e": {
@@ -432,6 +433,7 @@
     "@vitest/coverage-v8": "5.1.0",
     "citty": "0.1.6",
     "hono": "5.0.0-rc.1",
+    "oxlint": "1.94.0",
     "vite": "8.3.8",
     "vitest": "5.1.0",
     "zod": "4.6.7",
@@ -840,8 +842,6 @@
     "@kipivo/rbac": ["@kipivo/rbac@workspace:packages/rbac"],
 
     "@kipivo/runtime": ["@kipivo/runtime@workspace:packages/runtime"],
-
-    "@kipivo/scripts": ["@kipivo/scripts@workspace:scripts"],
 
     "@kipivo/storage": ["@kipivo/storage@workspace:packages/storage"],
 
@@ -1996,6 +1996,8 @@
     "kleur": ["kleur@4.1.5", "", {}, "sha512-o+NO+8WrRiQEE4/7nwRJhN1HWpVmJm511pBHUxPLtp0BUISzlBplORYSmTclCnJvQq2tKu/sgl3xVpkc7ZWuQQ=="],
 
     "knip": ["knip@6.45.1", "", { "dependencies": { "formatly": "^0.11.4", "get-tsconfig": "4.14.3", "jiti": "^2.7.0", "oxc-parser": "^0.156.0", "oxc-resolver": "11.24.2", "picomatch": "^4.0.7", "smol-toml": "^1.9.1", "strip-json-comments": "5.0.3", "tinyglobby": "^0.2.17", "unbash": "^6.0.4", "yaml": "^2.9.1" }, "bin": { "knip": "bin/knip.js", "knip-bun": "bin/knip-bun.js" } }, "sha512-zp3zXKy2cZWiIttdlWU5fisKxVQaLSU6471ej0KGz1GdHdaHxpzTAO/LIyFNc3gU3v1W7LJaqvYumoO3l/u+6A=="],
+
+    "kpdev": ["kpdev@workspace:scripts"],
 
     "kysely": ["kysely@0.29.9", "", {}, "sha512-K48ErswC3MlIcBqR0pYIIEl+n9rIgwxgzaM1FxKHMXn7egxr1NHj7bCeF98mXl9A3/QoL5I7mo5S/mLXgeDgGA=="],
 

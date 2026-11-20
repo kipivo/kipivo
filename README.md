@@ -16,7 +16,7 @@ mise exec -- bun run kpdev dev
 
 Open [Web](http://localhost:3000) or [Docs](http://localhost:3000/docs). See the [contributing guide](CONTRIBUTING.md) for commit conventions.
 
-The `@kipivo/scripts` workspace provides `kpdev` after installation. Run `bun run kpdev --help` from the repository root to list development commands, or `bun run kpdev help <command>` to see its subcommands. You can call `kpdev` directly when the repository's `node_modules/.bin` is on your `PATH`.
+The workspace in `scripts/` provides `kpdev` after installation. Run `bun run kpdev --help` from the repository root to list development commands, or `bun run kpdev help <command>` to see its subcommands. You can call `kpdev` directly when the repository's `node_modules/.bin` is on your `PATH`.
 
 ```sh
 bun run kpdev help test
@@ -25,7 +25,7 @@ bun run kpdev test e2e all
 bun run kpdev runner --help
 ```
 
-Use `bun run kpdev run smoke:plan --base HEAD` to invoke a repository script by its `package.json` name.
+Use `bun run kpdev run --list` to list available scripts. Run a script by its `package.json` name, as in `bun run kpdev run format:check`.
 
 The [full end-to-end suite](docs/testing.md#end-to-end-tests) requires Docker. Prefix commands with `mise exec --` to use the pinned toolchain. Use `kpdev turbo` to pass arguments to the repository's Turbo executable, for example `bun run kpdev turbo run build --filter=web`. When Turbo is on your `PATH`, you can also run `turbo run build --filter=web` directly.
 

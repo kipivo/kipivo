@@ -1,15 +1,15 @@
 import { defineCommand, renderUsage } from "citty";
-import { scripts } from "../../../package.json";
-import { execute } from "../tasks";
+import { execute } from "../internal/execute";
+import { smokeCommands } from "../smoke/targets";
 
-const helpFlags = ["-h", "--help"];
+const HELP_FLAGS = ["-h", "--help"];
 
 export default defineCommand({
   meta: { name: "kpdev smoke", description: "Plan and run smoke tests" },
   args: {
     target: {
       type: "positional",
-      description: "Suffix of a smoke:* script in package.json",
+      description: "Smoke target to run",
       required: false,
     },
     base: {
@@ -21,19 +21,20 @@ export default defineCommand({
       type: "boolean",
       description: "Build selected images before testing (changed)",
     },
+    json: { type: "boolean", description: "Print the plan as JSON (plan)" },
   },
   async run({ cmd, args: { target }, rawArgs }) {
     const options = rawArgs.slice(2);
-    if (!target || helpFlags.includes(target) || helpFlags.includes(options[0])) {
+    if (!target || HELP_FLAGS.includes(target) || HELP_FLAGS.includes(options[0])) {
       console.log(await renderUsage(cmd));
       return;
     }
 
-    const script = `smoke:${target}`;
-    if (!Object.hasOwn(scripts, script)) {
+    if (!Object.hasOwn(smokeCommands, target)) {
       throw new Error(`Unknown smoke target "${target}". Run kpdev smoke --help.`);
     }
+    const [executable, ...args] = smokeCommands[target as keyof typeof smokeCommands];
     const taskArgs = options[0] === "--" ? options.slice(1) : options;
-    execute(process.execPath, ["run", script, ...taskArgs]);
+    execute(executable, [...args, ...taskArgs]);
   },
 });

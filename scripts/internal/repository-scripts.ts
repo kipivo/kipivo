@@ -1,20 +1,24 @@
 import { renderUsage, type CommandContext } from "citty";
-import { spawnSync } from "node:child_process";
+import { execute } from "./execute";
+
+const INTERNAL_SCRIPTS = new Set(["kpdev", "kipivo", "kpvo", "prepare"]);
+
+export function listRunnableScripts(scripts: Record<string, string>, builtIns: object) {
+  return Object.keys(scripts)
+    .filter((name) => {
+      const [command] = name.split(":", 1);
+      return (
+        command !== "build" && !INTERNAL_SCRIPTS.has(name) && !Object.hasOwn(builtIns, command)
+      );
+    })
+    .sort();
+}
 
 type TaskCommand = {
   meta: { name: string; description: string };
   subCommands: Record<string, TaskCommand>;
   run: (context: CommandContext) => void | Promise<void>;
 };
-
-export function execute(executable: string, args: string[]) {
-  // Replace the launcher so Ctrl-C and the exit status reach the task directly.
-  if (process.platform !== "win32")
-    process.execve?.(executable, [executable, ...args], process.env);
-  const child = spawnSync(executable, args, { stdio: "inherit" });
-  if (child.error) throw child.error;
-  process.exitCode = child.status ?? 1;
-}
 
 export function createTaskCommands(taskNames: string[], options: string[], helpCommand: boolean) {
   const taskArgs = options[0] === "--" ? options.slice(1) : options;
@@ -47,7 +51,7 @@ export function createTaskCommands(taskNames: string[], options: string[], helpC
   }
 
   const program = createCommand("kpdev", "Run Kipivo development tasks");
-  for (const name of taskNames.sort()) {
+  for (const name of taskNames) {
     let command = program;
     for (const word of name.split(":")) {
       command.subCommands[word] ??= createCommand(

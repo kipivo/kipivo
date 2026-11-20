@@ -3,14 +3,15 @@ import { copyFileSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "nod
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { ROOT } from "../internal/root";
 
-const root = fileURLToPath(new URL("../../", import.meta.url));
-const resolveFromRoot = createRequire(new URL("../../package.json", import.meta.url)).resolve;
-const oxlint = join(dirname(resolveFromRoot("oxlint/package.json")), "bin/oxlint");
+const resolveFromRoot = createRequire(join(ROOT, "package.json")).resolve;
+const OXLINT = join(dirname(resolveFromRoot("oxlint/package.json")), "bin/oxlint");
 const connection = 'import "@kipivo/runtime/local/connection";';
 
-const cases = {
+type Fixture = { filename: string; code: string; errors?: number };
+
+const cases: { valid: Fixture[]; invalid: Required<Fixture>[] } = {
   valid: [
     {
       filename: "apps/web/src/account.ts",
@@ -35,7 +36,7 @@ const cases = {
     },
     { filename: "apps/web/src/page.ts", code: 'import "@kipivo/contracts/runs";' },
     { filename: "packages/db/scripts/run.ts", code: 'import "../src/env";' },
-    { filename: "scripts/ci/result.mjs", code: 'import "./plan.mjs";' },
+    { filename: "scripts/ci/result.ts", code: 'import "./plan";' },
     { filename: "apps/cli/src/index.ts", code: connection },
     { filename: "packages/runtime/src/local/test.ts", code: 'import "./connection";' },
     { filename: "apps/web/src/page.ts", code: 'import "@kipivo/runtime/env";' },
@@ -45,7 +46,7 @@ const cases = {
     },
   ],
   invalid: [
-    { filename: "apps/web/src/page.ts", code: 'import "../../../scripts/ci/plan.mjs";', errors: 1 },
+    { filename: "apps/web/src/page.ts", code: 'import "../../../scripts/ci/plan.ts";', errors: 1 },
     { filename: "apps/web/src/account.tsx", code: 'import "@kipivo/orpc";', errors: 1 },
     { filename: "apps/web/src/api.server.ts", code: 'import "@kipivo/orpc";', errors: 1 },
     {
@@ -132,22 +133,28 @@ describe("workspace-imports", () => {
       try {
         const fixture = join(cwd, filename);
         mkdirSync(dirname(fixture), { recursive: true });
-        mkdirSync(join(cwd, "scripts/check"), { recursive: true });
-        copyFileSync(join(root, ".oxlintrc.json"), join(cwd, ".oxlintrc.json"));
-        copyFileSync(
-          join(root, "scripts/check/workspace-lint.mjs"),
-          join(cwd, "scripts/check/workspace-lint.mjs"),
-        );
+        for (const file of [
+          ".oxlintrc.json",
+          "scripts/check/workspace-lint.ts",
+          "scripts/internal/root.ts",
+        ]) {
+          const destination = join(cwd, file);
+          mkdirSync(dirname(destination), { recursive: true });
+          copyFileSync(join(ROOT, file), destination);
+        }
         writeFileSync(fixture, code);
 
         // Disable built-in rules so each fixture exercises just the workspace rule.
         const result = Bun.spawnSync(
-          [process.execPath, oxlint, "--allow=all", "--threads=1", "--format=json", filename],
+          [process.execPath, OXLINT, "--allow=all", "--threads=1", "--format=json", filename],
           { cwd },
         );
         const output = result.stdout.toString();
         expect(result.exitCode, result.stderr.toString() || output).toBe(errors ? 1 : 0);
-        const report = JSON.parse(output);
+        const report = JSON.parse(output) as {
+          number_of_files: number;
+          diagnostics: { code: string }[];
+        };
         expect(report.number_of_files).toBe(1);
         expect(report.diagnostics.map(({ code }) => code)).toEqual(
           Array(errors).fill("kipivo(workspace-imports)"),

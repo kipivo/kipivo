@@ -8,6 +8,9 @@ inputs:
   install-dependencies:
     description: Restore the Bun package cache and install workspace dependencies.
     default: "true"
+  install-filter:
+    description: Install the root workspace and workspaces matching this filter.
+    default: ""
   cache-build:
     description: Restore and save Turbo task artifacts, Vite dependencies, and Storybook caches.
     default: "true"
@@ -17,7 +20,7 @@ runs:
   steps:
     - uses: jdx/mise-action@v5
       with:
-        install_args: ${{ inputs.install-dependencies == 'false' && 'bun' || '' }}
+        install_args: ${{ (inputs.install-dependencies == 'false' || inputs.install-filter != '') && 'bun' || '' }}
     - name: Read the Bun version for cache keys
       if: inputs.install-dependencies == 'true' || inputs.cache-build == 'true'
       id: bun
@@ -28,13 +31,19 @@ runs:
       uses: actions/cache@v6
       with:
         path: ~/.bun/install/cache
-        key: bun-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.bun.outputs.bun-version }}-${{ hashFiles('bun.lock') }}
+        key: bun-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.bun.outputs.bun-version }}-${{ inputs.install-filter && format('filter-{0}', inputs.install-filter) || 'full' }}-${{ hashFiles('bun.lock') }}
         restore-keys: |
-          bun-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.bun.outputs.bun-version }}-
+          bun-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.bun.outputs.bun-version }}-${{ inputs.install-filter && format('filter-{0}', inputs.install-filter) || 'full' }}-
     - name: Install dependencies
       if: inputs.install-dependencies == 'true'
       shell: bash
-      run: bun install --frozen-lockfile
+      env:
+        BUN_WORKSPACE_FILTER: ${{ inputs.install-filter }}
+      run: |
+        args=(--frozen-lockfile)
+        if [[ -n "$BUN_WORKSPACE_FILTER" ]]; then args+=(--filter . --filter "$BUN_WORKSPACE_FILTER"); fi
+        bun install "${args[@]}"
+        printf '%s\n' "$GITHUB_WORKSPACE/node_modules/.bin" >> "$GITHUB_PATH"
     - name: Cache Turbo tasks, Vite dependencies, and Storybook
       if: inputs.cache-build == 'true'
       uses: actions/cache@v6
