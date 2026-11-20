@@ -1,0 +1,19 @@
+scripts/cli/index.test.ts
+  s_346064cd25ca73::t_90daf6a205f2f6 14,103
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "cc40570a5d8f7b10f513e67abd3eff639ceb4f23",
+  "prompts": {},
+  "sessions": {
+    "s_346064cd25ca73": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1f7d7-98e3-7103-a35b-3a1cea5f384f",
+        "model": "gpt-6.2-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
