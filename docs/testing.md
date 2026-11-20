@@ -2,6 +2,22 @@
 
 `bun run check` runs formatting, lint, TypeScript, Knip, and the Bun and Vitest tests. `bun run lint` checks workspace import boundaries and runs the rule's examples with Bun. Web generates its route types using Vite without making a production bundle. Use `bun run knip` for the workspace usage analysis alone.
 
+## Test standards
+
+Choose the smallest test that can observe the behavior being protected. Extend a focused test that already covers the same contract when possible.
+
+| Behavior                                                                | Test layer                                                                                                              |
+| ----------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Domain rules, data validation, and handler responses                    | Workspace Bun or Vitest tests that call the public function or HTTP handler                                             |
+| Component states, keyboard and focus behavior, and responsive layout    | [Storybook stories and browser checks](#component-tests)                                                                |
+| Sessions, migrations, and resource adapters with real dependencies      | [Auth and database tests](#database-and-authentication-tests) or [resource tests](#resource-tests)                      |
+| Browser routing, SSR, and workflows across services                     | [Playwright end-to-end tests](#end-to-end-tests)                                                                        |
+| Runtime files, container startup, and routing between deployed services | [Production image smoke checks](#api-production-image-smoke-test) and [topology smoke](#production-topology-smoke-test) |
+
+For a regression, reproduce the reported outcome at the affected entry point. Preserve the request shape, stored state, or event order that caused it, and substitute test values for credentials and personal data. When the affected revision can be replayed, verify that the focused check fails at the assertion for the reported behavior. Run the same check against the fix and confirm that it passes. Record the command and results with the change, including any conditions you could not reproduce.
+
+Use disposable state for real dependencies and local fixtures for third-party responses. For timing failures, control the event order in the fixture and wait for an observable state. Use Playwright's web-first assertions or `expect.poll` for asynchronous results, and advance a controlled clock when browser timers drive the transition. The [local runner tests](../tests/e2e/specs/local-runs.spec.ts) exercise both techniques.
+
 ## CI job selection
 
 Every pull request runs `check` in parallel with a lightweight `changes` job. The planner uses `turbo run … --affected --dry=json` to select CI tasks from their inputs and dependency graph. The selected jobs run the same tasks with `--affected`. Both steps use the same Git range through `TURBO_SCM_BASE` and `TURBO_SCM_HEAD`, including the PR merge commit.
