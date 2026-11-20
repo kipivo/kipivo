@@ -11,7 +11,7 @@ import {
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState, type SubmitEvent } from "react";
 import { SignInLink } from "@/features/account/auth-navigation";
-import { errorStatus, accountClient } from "@/features/account/client";
+import { authErrorStatus, authRequest } from "@/features/account/auth-client";
 import { requireInstallation } from "@/features/account/install-status";
 import { useAccountSession } from "@/features/account/session";
 
@@ -46,13 +46,13 @@ function ResetPassword() {
     setBusy(true);
     setError("");
     try {
-      await (await accountClient()).auth.password.update({ token, newPassword: password });
+      await authRequest("/reset-password", { body: { token, newPassword: password } });
       setToken("");
       setDone(true);
       await refresh();
     } catch (cause) {
       setError(
-        errorStatus(cause) === 429
+        authErrorStatus(cause) === 429
           ? "Too many attempts. Try again later."
           : "Could not reset your password. Try again or request a new link.",
       );

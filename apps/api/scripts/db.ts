@@ -1,3 +1,3 @@
-import { runDbCommand } from "../src/db-command";
+import { runDbCommand } from "../src/runtime/database";
 
 await runDbCommand(process.argv.slice(2));

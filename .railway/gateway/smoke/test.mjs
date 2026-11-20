@@ -91,10 +91,53 @@ for (const host of ["app.example.test", "api.example.test"]) {
   assert.equal(response.headers.get("x-upstream"), "web");
   assert.equal(await response.text(), "ok\n");
 }
+const aliasHeaders = { Host: "alias.example.test", "X-Forwarded-Host": "untrusted.example.test" };
+const aliasHealth = await fetch(`${base}/gateway-healthz`, { headers: aliasHeaders });
+assert.equal(aliasHealth.status, 200);
+assert.equal(await aliasHealth.text(), "ok");
+for (const method of ["GET", "HEAD"]) {
+  for (const path of ["/", "/docs", "/notes/a%2Fb?tag=one&tag=two&next=%2Fsign-in"]) {
+    const response = await fetch(`${base}${path}`, {
+      method,
+      headers: aliasHeaders,
+      redirect: "manual",
+    });
+    assert.equal(response.status, 308, `${method} ${path}`);
+    const location = response.headers.get("location");
+    assert.ok(location);
+    assert.equal(new URL(location).href, `https://xn--bcher-kva.example.test:8443${path}`);
+    assert.equal(response.headers.get("x-upstream"), null);
+  }
+}
+for (const [method, path] of [
+  ["GET", "/api"],
+  ["GET", "/api/auth/get-session"],
+  ["GET", "/api/openapi.json"],
+  ["GET", "/api/v1/system/ping"],
+  ["GET", "/%61pi/v1/system/ping"],
+  ["GET", "/rpc"],
+  ["GET", "/rpc/auth/session/get"],
+  ["GET", "/healthz"],
+  ["HEAD", "/readyz"],
+  ["POST", "/api/auth/sign-in/email"],
+  ["POST", "/sign-in"],
+  ["PUT", "/settings"],
+  ["OPTIONS", "/settings"],
+]) {
+  const response = await fetch(`${base}${path}`, {
+    method,
+    headers: aliasHeaders,
+    redirect: "manual",
+    body: method === "POST" ? "credential=example" : undefined,
+  });
+  assert.equal(response.status, 404, `${method} ${path}`);
+  assert.equal(response.headers.get("location"), null);
+  assert.equal(response.headers.get("x-upstream"), null);
+}
 const missing = await fetch(`${base}/missing`);
 assert.equal(missing.status, 404);
 assert.equal(missing.headers.get("x-upstream"), "web");
 assert.equal(missing.headers.get("x-content-type-options"), "nosniff");
 console.log(
-  "Gateway smoke passed: routing, boundaries, local isolation, HTTPS forwarding, HTML compression, request and response preservation.",
+  "Gateway smoke passed: routing, alias isolation, HTTPS forwarding, HTML compression, and request and response preservation.",
 );

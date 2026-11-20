@@ -8,6 +8,10 @@ export const apiEnv = {
   id: "api",
   extends: [dbEnv, authEnv, storageEnv, cacheEnv],
   server: {
+    API_TRUST_PROXY: z
+      .enum(["true", "false"])
+      .default("false")
+      .transform((value) => value === "true"),
     DB_MIGRATE_ON_START: z
       .enum(["true", "false"])
       .default("false")
@@ -22,7 +26,7 @@ export function resolveResourceConfig(env: ApiEnv) {
   const auth = resolveAuthSettings(env, Boolean(databaseUrl));
   const storage = resolveStorageConfig(env);
   if (redisUrl) parseRedisUrl(redisUrl);
-  return { databaseUrl, redisUrl, auth, storage };
+  return { databaseUrl, redisUrl, auth, storage, trustProxy: env.API_TRUST_PROXY };
 }
 
 export type ResourceConfig = ReturnType<typeof resolveResourceConfig>;

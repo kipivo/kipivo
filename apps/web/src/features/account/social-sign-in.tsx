@@ -1,14 +1,15 @@
-import type { ApiClient } from "@kipivo/api/contract";
+import { installationRequired } from "@kipivo/auth/errors";
 import { GitHubIcon, GoogleIcon } from "@kipivo/icons";
 import { Button } from "@kipivo/ui/components/button";
 import { FieldError } from "@kipivo/ui/components/field";
 import { useRouter } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { afterSignIn, type AuthSearch, type socialAuthSearch } from "./auth-navigation";
-import { accountClient, errorStatus } from "./client";
+import { authErrorCode, authErrorStatus, authRequest } from "./auth-client";
+import { SetupRequired } from "./setup-required";
 
-type Provider = Awaited<ReturnType<ApiClient["auth"]["providers"]["list"]>>["providers"][number];
-const providerNames = { google: "Google", github: "GitHub" } satisfies Record<Provider, string>;
+const providerNames = { google: "Google", github: "GitHub" };
+type Provider = keyof typeof providerNames;
 const callbackErrors = {
   access_denied: "Authorization was canceled. Try again or use your email.",
   account_not_linked: "An account already uses this email. Sign in with your original method.",
@@ -28,13 +29,16 @@ export function SocialSignIn({
   const router = useRouter();
   const [providers, setProviders] = useState<Provider[]>([]);
   const [pending, setPending] = useState(false);
-  const [error, setError] = useState<string>();
+  const [error, setError] = useState<ReactNode>();
 
   useEffect(() => {
     const abort = new AbortController();
-    void accountClient()
-      .then((client) => client.auth.providers.list(undefined, { signal: abort.signal }))
-      .then(({ providers }) => setProviders(providers))
+    void authRequest("/social-methods", { signal: abort.signal })
+      .then((response) => response.json())
+      .then(({ providers }) => {
+        if (Array.isArray(providers))
+          setProviders(providers.filter((value) => value === "google" || value === "github"));
+      })
       .catch(() => {});
     return () => abort.abort();
   }, []);
@@ -47,17 +51,25 @@ export function SocialSignIn({
     setError("");
     setPending(true);
     try {
-      const { url } = await (
-        await accountClient()
-      ).auth.social.authorizations.create({
-        provider,
-        callbackURL: router.buildLocation(afterSignIn(search)).href,
-        errorCallbackURL: router.buildLocation({ to: returnTo, search }).href,
+      const response = await authRequest("/sign-in/social", {
+        body: {
+          provider,
+          callbackURL: router.buildLocation(afterSignIn(search)).href,
+          errorCallbackURL: router.buildLocation({ to: returnTo, search }).href,
+          disableRedirect: true,
+        },
       });
+      const { url } = await response.json();
+      if (typeof url !== "string" || new URL(url).protocol !== "https:")
+        throw new Error("Invalid provider authorization URL.");
       window.location.assign(url);
     } catch (cause) {
+      if (authErrorCode(cause) === installationRequired) {
+        setError(<SetupRequired />);
+        return;
+      }
       setError(
-        errorStatus(cause) === 429
+        authErrorStatus(cause) === 429
           ? "Too many attempts. Wait a moment and try again."
           : `Could not open ${providerNames[provider]} sign-in. Try again.`,
       );

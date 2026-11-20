@@ -9,7 +9,7 @@ const hash = (value: string) => createHash("sha256").update(value).digest("base6
 const identifier = (client: string, code: string, challenge: string) =>
   `native-login:${client}:${hash(code)}:${challenge}`;
 
-export function nativeLogin(webOrigin: string) {
+export function nativeLogin(trustedOrigins: readonly string[]) {
   return {
     id: "kipivo-native-login",
     endpoints: {
@@ -21,7 +21,8 @@ export function nativeLogin(webOrigin: string) {
           body: nativeAuthorization.extend({ account_id: z.string() }),
         },
         async (ctx) => {
-          if (ctx.headers?.get("origin") !== webOrigin) throw ctx.error("FORBIDDEN");
+          if (!trustedOrigins.includes(ctx.headers?.get("origin") ?? ""))
+            throw ctx.error("FORBIDDEN");
           const { user } = ctx.context.session;
           const { client_id, code_challenge, state, account_id } = ctx.body;
           if (account_id !== user.id) throw ctx.error("CONFLICT", { message: "Account changed." });

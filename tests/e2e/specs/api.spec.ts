@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { expect, test } from "@playwright/test";
-import { createApiClient } from "@kipivo/api/client";
+import { createApiClient } from "@kipivo/orpc/client";
 import { healthy, launchBuiltApi } from "../fixtures/process";
 
 const origin = process.env.E2E_API_ORIGIN || "http://127.0.0.1:4381";
@@ -50,7 +50,11 @@ test("the API serves health and ping over HTTP", async ({ request }) => {
   expect((await request.post(`${origin}/rpc/unknown`, { data: {} })).status()).toBe(404);
   expect((await request.get(`${origin}/api/v1/unknown`)).status()).toBe(404);
   expect((await request.get(`${origin}/api/v1/account/me`)).status()).toBe(404);
-  expect((await request.get(`${origin}/api/v1/auth/get-session`)).status()).toBe(404);
+  expect((await request.get(`${origin}/api/v1/auth/session`)).status()).toBe(404);
+  expect((await request.post(`${origin}/api/v1/auth/login`, { data: {} })).status()).toBe(404);
+  for (const path of ["login", "session/create", "session/delete", "registrations/create"]) {
+    expect((await request.post(`${origin}/rpc/auth/${path}`, { data: {} })).status()).toBe(404);
+  }
   expect((await request.post(`${origin}/rpc/auth/getSession`, { data: {} })).status()).toBe(404);
 });
 
@@ -69,13 +73,7 @@ test("OpenAPI describes the cookie and Origin requirements without a session", a
     expect(paths[path].get.security).toEqual(cookie);
     expect(paths[path].get.parameters ?? []).not.toContainEqual(originHeader);
   }
-  expect(paths["/auth/native/authorizations"].post.security).toEqual(cookie);
-  expect(paths["/auth/native/authorizations"].post.parameters).toContainEqual(originHeader);
-  expect(paths["/auth/session"].post.parameters).toContainEqual(originHeader);
-  expect(paths["/auth/session"].delete.parameters).toContainEqual(originHeader);
-  expect(paths["/auth/session"].delete.requestBody?.required ?? false).toBe(false);
-  expect(paths["/auth/password"].put.parameters).toContainEqual(originHeader);
-  expect(paths["/auth/native/sessions"].post.parameters ?? []).not.toContainEqual(originHeader);
+  expect(Object.keys(paths).filter((path) => path.startsWith("/auth/"))).toEqual([]);
   expect(paths["/setup"].get.security ?? []).toEqual([]);
   expect(paths["/setup"].post.security ?? []).toEqual([]);
   expect(paths["/setup"].post.parameters).toContainEqual(originHeader);

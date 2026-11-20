@@ -1,0 +1,29 @@
+{
+  "name": "@kipivo/orpc",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./client": "./src/client/index.ts",
+    "./errors": "./src/client/errors.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@kipivo/auth": "workspace:*",
+    "@kipivo/contract": "workspace:*",
+    "@kipivo/core": "workspace:*",
+    "@kipivo/logger": "workspace:*",
+    "@orpc/client": "2.0.0-beta.52",
+    "@orpc/json-schema": "2.0.0-beta.52",
+    "@orpc/openapi": "2.0.0-beta.52",
+    "@orpc/server": "2.0.0-beta.52",
+    "@orpc/zod": "2.0.0-beta.52",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@kipivo/tsconfig": "workspace:*",
+    "@types/node": "22.20.5"
+  }
+}

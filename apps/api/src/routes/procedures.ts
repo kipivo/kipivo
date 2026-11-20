@@ -1,45 +1,40 @@
-import { contract } from "@kipivo/api/contract";
-import { SmartCoercionHandlerPlugin } from "@orpc/json-schema";
-import { OpenAPIGenerator } from "@orpc/openapi";
-import { OpenAPIHandler } from "@orpc/openapi/fetch";
-import { COMMON_ERROR_STATUS_MAP } from "@orpc/server";
-import { RPCHandler } from "@orpc/server/fetch";
-import { ZodToJsonSchemaConverter } from "@orpc/zod";
+import { sessionCookiePrefix } from "@kipivo/auth/env";
+import type { RequestIdentity } from "@kipivo/auth/session";
+import type { LoggerEnv } from "@kipivo/logger/hono";
+import { createProcedureHandlers } from "@kipivo/orpc";
 import { Hono } from "hono";
-import { bindAuthRequest } from "../auth/request";
-import { requestServices, type AppEnv } from "../context";
-import { createProcedureRouter } from "../procedures";
+import { createSessionLimit } from "../http/session-limit";
+import type { AppServices } from "../runtime/services";
 
-const rpcPrefix = "/rpc";
-const restPrefix = "/api/v1";
-const errorStatusMap = { ...COMMON_ERROR_STATUS_MAP, SETUP_CLOSED: 409 };
+export function createProcedureRoutes({ authentication, procedures, trustProxy }: AppServices) {
+  const { handlers, openApi } = createProcedureHandlers(
+    authentication?.cookiePrefix ?? sessionCookiePrefix(),
+    procedures,
+  );
+  const limitSessionRead = createSessionLimit(trustProxy);
+  const routes = new Hono<LoggerEnv>();
 
-export function createProcedureRoutes() {
-  const router = createProcedureRouter();
-  const converters = [new ZodToJsonSchemaConverter()];
-  const generator = new OpenAPIGenerator({ converters });
-  const handlers = [
-    [rpcPrefix, new RPCHandler(router, { errorStatusMap })],
-    [
-      restPrefix,
-      new OpenAPIHandler(router, {
-        errorStatusMap,
-        plugins: [new SmartCoercionHandlerPlugin({ converters })],
-      }),
-    ],
-  ] as const;
-  const routes = new Hono<AppEnv>();
+  function requestIdentity(request: Request, outgoing: Headers): RequestIdentity | undefined {
+    if (!authentication) return;
+    const identity = authentication.identify(request.headers, outgoing);
+    let session: ReturnType<RequestIdentity["readSession"]> | undefined;
+    return {
+      getActorId: identity.getActorId,
+      readSession: () =>
+        (session ??= limitSessionRead(request, outgoing).then(() => identity.readSession())),
+    };
+  }
+
   for (const [prefix, handler] of handlers) {
     routes.all(`${prefix}/*`, async (context) => {
-      const { raw } = context.req;
-      const services = requestServices(context);
+      const request = context.req.raw;
       const outgoing = new Headers();
-      const result = await handler.handle(raw, {
+      const result = await handler.handle(request, {
         prefix,
         context: {
-          access: services.access,
-          callAuth: bindAuthRequest(raw, services, outgoing),
-          headers: raw.headers,
+          identity: requestIdentity(request, outgoing),
+          trustedOrigin:
+            authentication?.trustedOrigins.includes(request.headers.get("origin") ?? "") ?? false,
           requestId: context.var.requestId,
           log: context.var.log,
         },
@@ -54,32 +49,6 @@ export function createProcedureRoutes() {
     });
   }
 
-  let document: ReturnType<typeof generator.generate> | undefined;
-  routes.get("/api/openapi.json", async (context) => {
-    document ??= generator
-      .generate(contract, {
-        version: "3.1.1",
-        errorStatusMap,
-        base: {
-          info: { title: "Kipivo API", version: "1.0.0" },
-          servers: [{ url: restPrefix }],
-          components: {
-            securitySchemes: {
-              sessionCookie: { type: "apiKey", in: "cookie", name: "kipivo.session_token" },
-              secureSessionCookie: {
-                type: "apiKey",
-                in: "cookie",
-                name: "__Secure-kipivo.session_token",
-              },
-            },
-          },
-        },
-      })
-      .catch((error: unknown) => {
-        document = undefined;
-        throw error;
-      });
-    return context.json(await document);
-  });
+  routes.get("/api/openapi.json", async (context) => context.json(await openApi()));
   return routes;
 }

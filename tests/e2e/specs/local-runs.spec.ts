@@ -344,8 +344,8 @@ for (const width of [1600, 360, 320]) {
     await page.setViewportSize({ width, height: 780 });
     await page.route("**/rpc/auth/session/get", (route) => route.fulfill({ status: 503 }));
 
-    await page.route("**/rpc/auth/methods/email/get", (route) =>
-      route.fulfill({ json: { json: { enabled: true } } }),
+    await page.route("**/api/auth/email-methods", (route) =>
+      route.fulfill({ json: { enabled: true } }),
     );
 
     const header = page.getByRole("banner");

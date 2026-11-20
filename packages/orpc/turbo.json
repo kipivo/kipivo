@@ -1,0 +1,16 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "transit": {
+      "dependsOn": ["@kipivo/contract#transit"],
+      "inputs": ["src/client/**", "package.json", "tsconfig.json", "turbo.json"]
+    },
+    "build": { "dependsOn": ["transit"], "inputs": ["package.json"] },
+    "server": {
+      "dependsOn": ["^build", "^transit", "@kipivo/auth#server"],
+      "inputs": ["$TURBO_DEFAULT$", "!README.md"]
+    },
+    "typecheck": { "dependsOn": ["$TURBO_EXTENDS$", "server"] }
+  }
+}

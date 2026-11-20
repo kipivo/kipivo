@@ -8,7 +8,8 @@ import { magicLink } from "better-auth/plugins/magic-link";
 import { emailOTP } from "better-auth/plugins/email-otp";
 import { createEmailSender } from "@kipivo/email/factory";
 import { createEmailRepository } from "@kipivo/db/email";
-import { validateAuthSecret, type AuthSettings } from "./env";
+import { sessionCookiePrefix, validateAuthSecret, type AuthSettings } from "./env";
+import { installationRequired } from "./errors";
 import { nativeLogin } from "./native/plugin";
 
 const mailPaths = new Set([
@@ -21,12 +22,14 @@ const mailPaths = new Set([
 ]);
 
 export function createAuth(
-  options: Omit<AuthSettings, "socialProviders"> & {
+  options: Omit<AuthSettings, "socialProviders" | "trustedOrigins"> & {
     database: Database;
     socialProviders?: AuthSettings["socialProviders"];
+    trustedOrigins?: AuthSettings["trustedOrigins"];
   },
 ) {
   validateAuthSecret(options.secret);
+  const trustedOrigins = options.trustedOrigins ?? [new URL(options.baseURL).origin];
   const setup = createSetupRepository(options.database);
   const mail = createEmailRepository(options.database, options.secret);
   const send = createEmailSender(mail.delivery);
@@ -42,7 +45,7 @@ export function createAuth(
     baseURL: options.baseURL,
     basePath: "/api/auth",
     secret: options.secret,
-    trustedOrigins: [options.baseURL],
+    trustedOrigins,
     socialProviders: options.socialProviders,
     account: {
       encryptOAuthTokens: true,
@@ -54,7 +57,7 @@ export function createAuth(
     },
     database: drizzleAdapter(options.database, { provider: "pg", schema, transaction: true }),
     plugins: [
-      nativeLogin(new URL(options.baseURL).origin),
+      nativeLogin(trustedOrigins),
       {
         id: "kipivo-auth-methods",
         endpoints: {
@@ -125,12 +128,16 @@ export function createAuth(
         if (open === undefined) throw new APIError("SERVICE_UNAVAILABLE");
         if (open)
           throw new APIError("CONFLICT", {
+            code: installationRequired,
             message: "Complete administrator setup before registering.",
           });
       }),
     },
     advanced: {
-      cookiePrefix: "kipivo",
+      cookiePrefix: sessionCookiePrefix(options.cookieDomain),
+      ...(options.cookieDomain
+        ? { crossSubDomainCookies: { enabled: true, domain: options.cookieDomain } }
+        : {}),
       useSecureCookies: options.baseURL.startsWith("https:"),
     },
   });

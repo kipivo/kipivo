@@ -1,4 +1,4 @@
-import { accountClient } from "./client";
+import { authRequest } from "./auth-client";
 import { nativeAuthorization, type NativeAuthorization } from "@kipivo/auth/native";
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
@@ -51,10 +51,9 @@ export function useEmailMethods() {
   const [enabled, setEnabled] = useState<boolean | null>(null);
   useEffect(() => {
     const abort = new AbortController();
-    void accountClient()
-      .then((client) => client.auth.methods.email.get(undefined, { signal: abort.signal }))
-      .then((result) => result.enabled)
-      .then(setEnabled)
+    void authRequest("/email-methods", { signal: abort.signal })
+      .then((response) => response.json())
+      .then(({ enabled }) => setEnabled(enabled === true))
       .catch(() => {
         if (!abort.signal.aborted) setEnabled(false);
       });

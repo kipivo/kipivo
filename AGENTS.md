@@ -9,7 +9,7 @@ Use Conventional Commits for new commits: `type(scope): subject`, with an option
 Start with the guide for the workspace you are changing. Commands in these guides run from the repository root unless noted otherwise.
 
 - **Applications:** [Web](apps/web/AGENTS.md), [API server](apps/api/AGENTS.md), [CLI and local runner](apps/cli/AGENTS.md), [Mobile](apps/mobile/AGENTS.md), [Storybook](apps/storybook/AGENTS.md).
-- **Contracts and access:** [Public API and client](packages/api/AGENTS.md), [Local run schemas](packages/contracts/AGENTS.md), [Account schemas](packages/account/AGENTS.md), [Admin directory](packages/admin/AGENTS.md), [RBAC rules](packages/rbac/AGENTS.md), [Access workflows](packages/core/AGENTS.md).
+- **Contracts and access:** [Public API contract](packages/contract/AGENTS.md), [oRPC client and server](packages/orpc/AGENTS.md), [Local run schemas](packages/contracts/AGENTS.md), [Account schemas](packages/account/AGENTS.md), [Admin directory](packages/admin/AGENTS.md), [RBAC rules](packages/rbac/AGENTS.md), [Access workflows](packages/core/AGENTS.md).
 - **Server resources:** [Authentication](packages/auth/AGENTS.md), [Database](packages/db/AGENTS.md), [Redis cache](packages/cache/AGENTS.md), [Object storage](packages/storage/AGENTS.md), [Local runner connection](packages/runtime/AGENTS.md).
 - **Shared foundations:** [Environment validation](packages/env/AGENTS.md), [Logging](packages/logger/AGENTS.md), [TypeScript presets](packages/tsconfig/AGENTS.md), [Web icons](packages/icons/AGENTS.md), [Web UI](packages/ui/AGENTS.md).
 
@@ -41,7 +41,7 @@ Use the directory guide for Kipivo conventions and the linked skill for framewor
 - Import another workspace's code through its package exports. Keep single-app features in their app. Extract shared rules when a second app needs them.
 - Keep Web feature code in `apps/web/src/features/<feature>/` and TanStack Start route registration and guards in `apps/web/src/routes/`. Turbo generates `apps/web/src/routeTree.gen.ts` during Web builds and type checks.
 - Use `@kipivo/contracts/runs` for local run schemas. Import `@kipivo/runtime/local/connection` only in the CLI or a Web `.server.ts` module marked with `@tanstack/react-start/server-only`.
-- Add Hono route groups under `apps/api/src/routes/` and mount them in `apps/api/src/app.ts`. Keep the public oRPC contract and typed client in `packages/api` and the local runner contract in `packages/contracts`. Use the existing logger adapters to carry the Hono request ID into oRPC.
+- Add Hono route groups under `apps/api/src/routes/` and mount them in `apps/api/src/app.ts`. Define the public API in `packages/contract` and keep the typed client and server procedures in `packages/orpc`. Keep the local runner contract in `packages/contracts`. Use the existing logger adapters to carry the Hono request ID into oRPC.
 - Share Web components through `@kipivo/ui` component exports. Use Tailwind utilities and the shared semantic tokens for styling. Add examples and interaction states in `apps/storybook/src/`. See the [UI guide](packages/ui/README.md) and [Storybook guide](apps/storybook/README.md).
 
 ## Environment and startup

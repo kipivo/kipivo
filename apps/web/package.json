@@ -11,11 +11,12 @@
   },
   "dependencies": {
     "@kipivo/admin": "workspace:*",
-    "@kipivo/api": "workspace:*",
     "@kipivo/auth": "workspace:*",
+    "@kipivo/contract": "workspace:*",
     "@kipivo/contracts": "workspace:*",
     "@kipivo/env": "workspace:*",
     "@kipivo/icons": "workspace:*",
+    "@kipivo/orpc": "workspace:*",
     "@kipivo/rbac": "workspace:*",
     "@kipivo/runtime": "workspace:*",
     "@kipivo/ui": "workspace:*",

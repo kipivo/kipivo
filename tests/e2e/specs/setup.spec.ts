@@ -61,17 +61,56 @@ test("only one anonymous installer can create the first administrator", async ({
       await page.goto(origin + route);
       await expect(page).toHaveURL(`${origin}/setup`);
     }
-    expect(
-      (await request.post(origin + "/api/auth/sign-up/email", { data, headers })).status(),
-    ).toBe(409);
-    expect(
-      (
-        await request.post(origin + "/api/v1/auth/social/authorizations", {
-          data: { provider: "google", callbackURL: "/", errorCallbackURL: "/sign-in" },
-          headers,
-        })
-      ).status(),
-    ).toBe(409);
+    // Load the sign-up page with a closed status to simulate a stale page when setup opens.
+    await db`update config_app set value='{"status":"closed"}' where key='admin_setup'`;
+    await page.goto(origin + "/sign-up");
+    await page.getByLabel("Name", { exact: true }).fill(data.name);
+    await page.getByLabel("Email").fill(data.email);
+    await page.getByLabel("Password", { exact: true }).fill(data.password);
+    const signUp = page.getByRole("button", { name: "Create account" });
+    await page.route(
+      "**/api/auth/sign-up/email",
+      (route) =>
+        route.fulfill({
+          status: 409,
+          json: { code: "UNRELATED_CONFLICT", message: "Internal conflict details" },
+        }),
+      { times: 1 },
+    );
+    await signUp.click();
+    await expect(page.getByRole("alert")).toHaveText(
+      "Could not create this account. Check your details or sign in.",
+    );
+    const social = page.getByRole("group", { name: "Social sign-in" });
+    const google = social.getByRole("button", { name: "Continue with Google" });
+    await expect(google).toBeVisible();
+    await db`update config_app set value='{"status":"pending"}' where key='admin_setup'`;
+
+    const [blockedSignUp] = await Promise.all([
+      page.waitForResponse((response) => response.url().endsWith("/api/auth/sign-up/email")),
+      signUp.click(),
+    ]);
+    expect(blockedSignUp.status()).toBe(409);
+    expect(await blockedSignUp.json()).toMatchObject({ code: "INSTALLATION_REQUIRED" });
+    const credentialsAlert = page.getByRole("alert");
+    await expect(credentialsAlert).toContainText("Complete administrator setup to continue.");
+    await expect(credentialsAlert.getByRole("link", { name: "Open setup" })).toHaveAttribute(
+      "href",
+      "/setup",
+    );
+
+    const [blockedSocial] = await Promise.all([
+      page.waitForResponse((response) => response.url().endsWith("/api/auth/sign-in/social")),
+      google.click(),
+    ]);
+    expect(blockedSocial.status()).toBe(409);
+    expect(await blockedSocial.json()).toMatchObject({ code: "INSTALLATION_REQUIRED" });
+    const socialAlert = social.getByRole("alert");
+    await expect(socialAlert).toContainText("Complete administrator setup to continue.");
+    await socialAlert.getByRole("link", { name: "Open setup" }).click();
+    await expect(page).toHaveURL(`${origin}/setup`);
+    await expect(page.getByRole("heading", { name: "Administrator setup" })).toBeVisible();
+
     expect((await request.get(origin + "/api/auth/callback/google?code=unused")).status()).toBe(
       409,
     );

@@ -10,8 +10,8 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "@kipivo/api": "workspace:*",
     "@kipivo/cache": "workspace:*",
+    "@kipivo/orpc": "workspace:*",
     "@kipivo/storage": "workspace:*",
     "@kipivo/tsconfig": "workspace:*",
     "@playwright/test": "1.65.1",

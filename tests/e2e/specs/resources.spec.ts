@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { createServer as createHttpServer } from "node:http";
 import { createServer } from "node:net";
 import { join } from "node:path";
-import { createApiClient } from "@kipivo/api/client";
+import { createApiClient } from "@kipivo/orpc/client";
 import { createCache } from "@kipivo/cache/factory";
 import { createObjectStorage } from "@kipivo/storage/factory";
 import type { APIRequestContext } from "@playwright/test";

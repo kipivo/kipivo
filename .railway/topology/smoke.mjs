@@ -18,6 +18,14 @@ async function expectStatus(path, status, options) {
   return response;
 }
 
+function post(path, body, headers = jsonHeaders) {
+  return expectStatus(path, 200, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(body),
+  });
+}
+
 assert.equal(await (await expectStatus("/gateway-healthz", 200)).text(), "ok");
 assert.equal(await (await expectStatus("/readyz", 200)).text(), "ok");
 assert.deepEqual(await (await expectStatus("/api/v1/setup", 200)).json(), { open: true });
@@ -29,40 +37,27 @@ await expectStatus("/setup", 200);
 
 const email = "topology-admin@example.com";
 const password = crypto.randomUUID();
-await expectStatus("/api/v1/setup", 200, {
-  method: "POST",
-  headers: jsonHeaders,
-  body: JSON.stringify({ name: "Topology Administrator", email, password }),
-});
+await post("/api/v1/setup", { name: "Topology Administrator", email, password });
 assert.deepEqual(await (await expectStatus("/api/v1/setup", 200)).json(), { open: false });
 
-const anonymous = await expectStatus("/api/v1/auth/session?includeAccount=true", 200);
-assert.equal(await anonymous.json(), null);
-const signedIn = await expectStatus("/api/v1/auth/session", 200, {
-  method: "POST",
-  headers: jsonHeaders,
-  body: JSON.stringify({ email, password }),
-});
-assert.deepEqual(await signedIn.json(), { ok: true });
+const readSession = (headers) =>
+  post("/rpc/auth/session/get", { json: { includeAccount: true } }, headers);
+const anonymous = await readSession();
+assert.deepEqual(await anonymous.json(), { json: null });
+const signedIn = await post("/api/auth/sign-in/email", { email, password });
 const sessionCookie = signedIn.headers
   .getSetCookie()
   .find((cookie) => cookie.startsWith("kipivo.session_token="));
 assert.ok(sessionCookie, "Sign-in issues a session cookie through the gateway");
 assert.match(sessionCookie, /;\s*HttpOnly\b/i);
 const Cookie = sessionCookie.split(";", 1)[0];
-const session = await expectStatus("/rpc/auth/session/get", 200, {
-  method: "POST",
-  headers: { ...jsonHeaders, Cookie },
-  body: JSON.stringify({ json: { includeAccount: true } }),
-});
+const signedInHeaders = { ...jsonHeaders, Cookie };
+const session = await readSession(signedInHeaders);
 const { account } = (await session.json()).json;
 assert.equal(account.email, email);
 assert.equal(account.role, "admin");
 
-await expectStatus("/api/v1/auth/session", 200, {
-  method: "DELETE",
-  headers: { ...authHeaders, Cookie },
-});
+await post("/api/auth/sign-out", {}, signedInHeaders);
 await expectStatus("/api/v1/accounts/me", 401, { headers: { Cookie } });
 
 console.log(

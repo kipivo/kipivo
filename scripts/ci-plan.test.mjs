@@ -23,16 +23,38 @@ describe("CI selection", () => {
     ["packages/ui", "@kipivo/ui", ["@kipivo/icons", "@kipivo/shared"]],
     ["packages/shared", "@kipivo/shared", []],
     ["packages/admin", "@kipivo/admin", []],
+    ["packages/auth", "@kipivo/auth", ["@kipivo/db", "@kipivo/env"]],
+    ["packages/contract", "@kipivo/contract", []],
+    ["packages/orpc", "@kipivo/orpc", ["@kipivo/auth", "@kipivo/contract", "@kipivo/core"]],
+    ["packages/core", "@kipivo/core", []],
+    ["packages/db", "@kipivo/db", []],
+    ["packages/env", "@kipivo/env", []],
     ["packages/cache", "@kipivo/cache", []],
     ["packages/storage", "@kipivo/storage", []],
     ["packages/runtime", "@kipivo/runtime", []],
     ["apps/storybook", "storybook", ["@kipivo/ui"]],
     ["apps/docs", "docs", ["@kipivo/ui"]],
-    ["apps/web", "web", ["@kipivo/ui", "@kipivo/admin", "@kipivo/runtime", "docs"]],
-    ["apps/api", "api", ["@kipivo/admin", "@kipivo/cache", "@kipivo/storage"]],
+    [
+      "apps/web",
+      "web",
+      [
+        "@kipivo/ui",
+        "@kipivo/admin",
+        "@kipivo/auth",
+        "@kipivo/contract",
+        "@kipivo/orpc",
+        "@kipivo/runtime",
+        "docs",
+      ],
+    ],
+    [
+      "apps/api",
+      "api",
+      ["@kipivo/admin", "@kipivo/auth", "@kipivo/cache", "@kipivo/orpc", "@kipivo/storage"],
+    ],
     ["apps/cli", "kipivo", ["@kipivo/runtime"]],
     ["apps/mobile", "mobile", []],
-    ["tests/e2e", "@kipivo/e2e", ["@kipivo/cache", "@kipivo/storage"]],
+    ["tests/e2e", "@kipivo/e2e", ["@kipivo/cache", "@kipivo/orpc", "@kipivo/storage"]],
   ];
   let directory;
   let base;
@@ -146,6 +168,35 @@ describe("CI selection", () => {
     const plan = planFor([`packages/${resource}/src/factory.ts`]);
     expect(selected(plan)).toEqual(["check", "auth", "e2e", "web-e2e", "api-image"]);
     expect(plan.reasons.e2e).toEqual([ciTasks.e2e]);
+  });
+  test.each([
+    "packages/auth/src/errors.ts",
+    "packages/auth/src/native/contract.ts",
+    "packages/orpc/src/client/index.ts",
+    "packages/orpc/src/client/errors.ts",
+    "packages/contract/src/index.ts",
+  ])("Turbo selects Web and API jobs for %s", (path) => {
+    expect(selected(planFor([path]))).toEqual([
+      "check",
+      "ui",
+      "auth",
+      "e2e",
+      "web-e2e",
+      "web-image",
+      "api-image",
+    ]);
+  });
+  test.each([
+    "packages/auth/src/factory.ts",
+    "packages/auth/src/session.ts",
+    "packages/auth/src/native/plugin.ts",
+    "packages/db/src/schema.ts",
+    "packages/orpc/src/index.ts",
+    "packages/orpc/src/procedures/accounts.ts",
+    "packages/orpc/src/session.ts",
+    "packages/core/src/access.ts",
+  ])("Turbo selects API jobs for server-only changes to %s", (path) => {
+    expect(selected(planFor([path]))).toEqual(["check", "auth", "e2e", "web-e2e", "api-image"]);
   });
   test("special inputs union with Turbo's scopes without expanding unrelated jobs", () => {
     expect(

@@ -2,7 +2,7 @@ import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createApiClient } from "@kipivo/api/client";
+import { createApiClient } from "@kipivo/orpc/client";
 import { expect, test, type APIRequestContext } from "@playwright/test";
 import postgres from "postgres";
 import { createTestDatabase } from "../fixtures/database";
@@ -11,6 +11,7 @@ import { healthy, launch, launchBuiltApi, repoRoot } from "../fixtures/process";
 const origin = "http://127.0.0.1:4383";
 const apiOrigin = "http://127.0.0.1:4382";
 const authSecret = "kipivo-auth-e2e-disposable-database-secret";
+const authPreload = join(repoRoot, "tests/e2e/fixtures/auth-preload.mjs");
 let api: ReturnType<typeof launch> | undefined;
 let web: ReturnType<typeof launch> | undefined;
 
@@ -28,13 +29,14 @@ test.beforeAll(async ({ playwright }) => {
       DB_MIGRATE_ON_START: "true",
       AUTH_URL: origin,
       AUTH_SECRET: authSecret,
+      API_TRUST_PROXY: "true",
       GOOGLE_CLIENT_ID: "test-google",
       GOOGLE_CLIENT_SECRET: "test-google-secret",
       GITHUB_CLIENT_ID: "test-github",
       GITHUB_CLIENT_SECRET: "test-github-secret",
       E2E_MAIL_FILE: join(inbox, "last.json"),
     },
-    join(repoRoot, "tests/e2e/fixtures/auth-preload.mjs"),
+    authPreload,
   );
   await api.waitFor(
     async () => (await fetch(`${apiOrigin}/readyz`, { signal: AbortSignal.timeout(2000) })).ok,
@@ -179,23 +181,159 @@ test("email authentication persists and revokes sessions through Web", async ({ 
   expect(wrongPassword.status()).toBe(401);
   // The typed transport and the native Better Auth endpoints share the same cookie jar.
   const rpc = `${origin}/rpc/auth`;
-  const login = await request.post(`${rpc}/session/create`, {
+  const login = await request.post(`${url}/sign-in/email`, {
     headers,
-    data: { json: { email, password } },
+    data: { email, password },
   });
-  expect(await login.json()).toEqual({ json: { ok: true } });
-  expect((await (await request.get(`${url}/get-session`)).json()).user.email).toBe(email);
-  const readSession = async () => (await request.post(`${rpc}/session/get`, { data: {} })).json();
-  expect(await readSession()).toEqual({
+  expect(login.status(), await login.text()).toBe(200);
+  expect(login.headers()["cache-control"]).toBe("no-store");
+  const readSession = () => request.post(`${rpc}/session/get`, { data: {} });
+  const current = await (await readSession()).json();
+  expect(current).toEqual({
     json: {
       user: { id: expect.any(String), name: "Kipivo E2E", email },
       session: { id: expect.any(String), expiresAt: expect.any(String) },
     },
   });
-  expect(
-    (await request.post(`${rpc}/session/delete`, { headers, data: { json: {} } })).status(),
-  ).toBe(200);
-  expect(await readSession()).toEqual({ json: null });
+  const expiresSoon = new Date(Date.now() + 60 * 60 * 1000);
+  const sql = postgres(database.url, { max: 1 });
+  try {
+    const aged = await sql`
+      UPDATE auth_session SET expires_at = ${expiresSoon} WHERE id = ${current.json.session.id}
+    `;
+    expect(aged.count).toBe(1);
+  } finally {
+    await sql.end();
+  }
+  const refreshed = await readSession();
+  expect(refreshed.status()).toBe(200);
+  expect(refreshed.headersArray()).toContainEqual({
+    name: expect.stringMatching(/^set-cookie$/i),
+    value: expect.stringMatching(/^kipivo\.session_token=.*;\s*HttpOnly\b/i),
+  });
+  const renewed = await refreshed.json();
+  expect(renewed.json.session.id).toBe(current.json.session.id);
+  expect(Date.parse(renewed.json.session.expiresAt)).toBeGreaterThan(expiresSoon.valueOf());
+  expect((await request.post(`${url}/sign-out`, { headers, data: {} })).status()).toBe(200);
+  expect(await (await readSession()).json()).toEqual({ json: null });
+});
+
+test("trusted Web subdomains share sessions from password and OAuth sign-in", async ({
+  page,
+  request,
+}) => {
+  const primary = "http://kipivo.localhost:4389";
+  const alternate = "http://www.kipivo.localhost:4389";
+  const upstream = "http://127.0.0.1:4390";
+  const name = "Subdomain Account";
+  const email = `subdomain-${randomUUID()}@example.com`;
+  const password = randomUUID();
+  const api = launchBuiltApi(
+    4390,
+    {
+      DATABASE_URL: database.url,
+      AUTH_URL: primary,
+      AUTH_SECRET: authSecret,
+      AUTH_TRUSTED_ORIGINS: alternate,
+      AUTH_COOKIE_DOMAIN: "kipivo.localhost",
+      GOOGLE_CLIENT_ID: "test-google",
+      GOOGLE_CLIENT_SECRET: "test-google-secret",
+    },
+    authPreload,
+  );
+  const web = launch([".output/server/index.mjs"], join(repoRoot, "apps/web"), {
+    PORT: "4389",
+    HOST: "127.0.0.1",
+    API_ORIGIN: upstream,
+  });
+  try {
+    await api.waitFor(async () => (await fetch(`${upstream}/readyz`)).ok);
+    await web.waitFor(() => healthy("http://127.0.0.1:4389"));
+    expect(
+      (
+        await request.post(`${upstream}/api/auth/sign-up/email`, {
+          data: { name, email, password },
+          headers: { Origin: primary },
+        })
+      ).status(),
+    ).toBe(200);
+    expect(
+      (
+        await request.post(`${upstream}/api/auth/sign-in/email`, {
+          data: { email, password },
+          headers: { Origin: "http://unlisted.kipivo.localhost:4389" },
+        })
+      ).status(),
+    ).toBe(403);
+
+    await page.goto(`${alternate}/sign-in`);
+    await page.getByLabel("Email").fill(email);
+    await page.getByLabel("Password", { exact: true }).fill(password);
+    const [login] = await Promise.all([
+      page.waitForResponse(`${alternate}/api/auth/sign-in/email`),
+      page.getByRole("button", { name: "Sign in", exact: true }).click(),
+    ]);
+    expect(login.status()).toBe(200);
+    expect(await login.headerValue("set-cookie")).toMatch(
+      /kipivo\.shared\.session_token=[^\r\n]*Domain=kipivo\.localhost/i,
+    );
+    await expect(page.getByRole("button", { name: "Account menu" })).toBeVisible();
+
+    const update = await page.request.post(`${alternate}/rpc/accounts/me/settings/update`, {
+      data: { json: { menuLabel: "email" } },
+      headers: { Origin: alternate },
+    });
+    expect(update.status(), await update.text()).toBe(200);
+    await page.goto(primary);
+    const menu = page.getByRole("button", { name: "Account menu" });
+    await expect(menu).toBeVisible();
+    await menu.click();
+    await page.getByRole("menuitem", { name: "Sign out" }).click();
+    await expect(page.getByRole("link", { name: "Sign in", exact: true })).toBeVisible();
+    const session = await page.request.post(`${alternate}/rpc/auth/session/get`, { data: {} });
+    expect(await session.json()).toEqual({ json: null });
+
+    await page.route("https://accounts.google.com/o/oauth2/v2/auth?**", async (route) => {
+      const { searchParams } = new URL(route.request().url());
+      const callback = new URL(searchParams.get("redirect_uri")!);
+      expect(callback.href).toBe(`${primary}/api/auth/callback/google`);
+      callback.searchParams.set("state", searchParams.get("state")!);
+      callback.searchParams.set("code", "test-code");
+      await route.fulfill({ status: 302, headers: { location: callback.href } });
+    });
+    await page.goto(`${alternate}/sign-in?next=/settings`);
+    const [socialStart, callback] = await Promise.all([
+      page.waitForResponse(`${alternate}/api/auth/sign-in/social`),
+      page.waitForResponse((response) => {
+        const url = new URL(response.url());
+        return url.origin === primary && url.pathname === "/api/auth/callback/google";
+      }),
+      page.getByRole("button", { name: "Continue with Google" }).click(),
+    ]);
+    expect(socialStart.ok()).toBe(true);
+    expect(await callback.headerValue("set-cookie")).toMatch(
+      /kipivo\.shared\.session_token=[^\r\n]*Domain=kipivo\.localhost/i,
+    );
+    await expect(page.getByRole("button", { name: "Account menu" })).toBeVisible();
+
+    const readSession = (host: string) =>
+      page.request.post(`${host}/rpc/auth/session/get`, { data: {} });
+    const primarySession = await readSession(primary);
+    const alternateSession = await readSession(alternate);
+    expect(primarySession.ok()).toBe(true);
+    expect(alternateSession.ok()).toBe(true);
+    const signedIn = await primarySession.json();
+    expect(signedIn).toMatchObject({
+      json: {
+        user: { email: "google-oauth@example.com" },
+        session: { id: expect.any(String) },
+      },
+    });
+    expect(await alternateSession.json()).toEqual(signedIn);
+  } finally {
+    await web.stop();
+    await api.stop();
+  }
 });
 
 test("RPC and REST enforce roles and publish the same API contract through Web", async ({
@@ -542,6 +680,26 @@ test("account management recovers from sign-in and permission changes in the bro
     await expect(page).toHaveURL(`${origin}/`);
     await page.getByRole("link", { name: "Sign in" }).click();
     await page.getByLabel("Email").fill(email);
+    await page.getByLabel("Password", { exact: true }).fill(password);
+    await page.route(
+      "**/api/auth/sign-in/email",
+      async (route) => {
+        const response = await route.fetch({
+          headers: {
+            ...route.request().headers(),
+            origin: "http://localhost:4383",
+            "x-forwarded-for": "198.51.100.74",
+          },
+        });
+        expect(response.status()).toBe(403);
+        await route.fulfill({ response });
+      },
+      { times: 1 },
+    );
+    await page.getByRole("button", { name: "Sign in", exact: true }).click();
+    await expect(page.getByRole("alert")).toHaveText(
+      "This request was blocked. Check the Kipivo web address and try again.",
+    );
     await page.getByLabel("Password", { exact: true }).fill("wrong-password-123");
     await page.getByRole("button", { name: "Sign in", exact: true }).click();
     await expect(page.getByRole("alert")).toHaveText("The email or password is incorrect.");
@@ -646,19 +804,19 @@ test("native authorization requires Web consent and exchanges a client-bound pro
   await page.getByRole("button", { name: "Create account", exact: true }).click();
   await expect(page.getByText(email, { exact: true })).toBeVisible();
   const authorize = page.waitForResponse((response) =>
-    response.url().endsWith("/rpc/auth/native/authorizations/create"),
+    response.url().endsWith("/api/auth/native/authorize"),
   );
   await page.getByRole("button", { name: "Authorize app" }).click();
   const response = await authorize;
   expect(response.status(), await response.text()).toBe(200);
-  const callback = new URL((await response.json()).json.callback);
+  const callback = new URL((await response.json()).callback);
   expect(`${callback.protocol}//${callback.host}${callback.pathname}`).toBe(
     "kipivo://auth/callback",
   );
   expect([...callback.searchParams.keys()].sort()).toEqual(["code", "state"]);
   expect(callback.searchParams.get("state")).toBe(flow.state);
   const exchange = (data: Record<string, string>, headers?: Record<string, string>) =>
-    request.post(`${origin}/rpc/auth/native/sessions/create`, { data: { json: data }, headers });
+    request.post(`${origin}/api/auth/native/exchange`, { data, headers });
   const body = {
     client_id: "expo",
     code: callback.searchParams.get("code")!,
@@ -775,8 +933,8 @@ test("email code, sign-in link, and password recovery work through their Web pag
     await sql.end();
   }
   await page.context().clearCookies();
-  const methods = await request.post(`${origin}/rpc/auth/methods/email/get`, { data: {} });
-  expect(await methods.json()).toEqual({ json: { enabled: true } });
+  const methods = await request.get(`${origin}/api/auth/email-methods`);
+  expect(await methods.json()).toEqual({ enabled: true });
   const email = `flows-${randomUUID()}@example.com`;
   const headers = { Origin: origin, "X-Forwarded-For": "198.51.100.86" };
   await page.setExtraHTTPHeaders({ "X-Forwarded-For": "198.51.100.87" });
@@ -910,6 +1068,9 @@ for (const [provider, name, authorizeURL, authPage] of [
   ["github", "GitHub", "https://github.com/login/oauth/authorize", "/sign-up"],
 ] as const) {
   test(`${name} returns to the requested page with a member session`, async ({ page }) => {
+    await page.addInitScript(() => {
+      Reflect.deleteProperty(URL, "parse");
+    });
     // Exercise two attempts per provider without sharing one test client's rate-limit bucket.
     await page.setExtraHTTPHeaders({
       "X-Forwarded-For": provider === "google" ? "198.51.100.75" : "198.51.100.76",
@@ -927,6 +1088,7 @@ for (const [provider, name, authorizeURL, authPage] of [
     });
 
     await page.goto(`${origin}${authPage}?next=/settings`);
+    expect(await page.evaluate(() => typeof URL.parse)).toBe("undefined");
     const button = page.getByRole("button", { name: `Continue with ${name}` });
     await button.click();
     await expect(page.getByRole("alert")).toContainText("Authorization was canceled");

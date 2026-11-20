@@ -14,7 +14,8 @@ import {
 import { cn } from "@kipivo/ui/lib/utils";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { accountClient, type CurrentAccount } from "./client";
+import type { CurrentAccount } from "./client";
+import { authRequest } from "./auth-client";
 import { roleLabel } from "./access-labels";
 import { useAccountSession } from "./session";
 
@@ -38,7 +39,7 @@ export default function AccountMenu({
     setError(false);
     setSigningOut(true);
     try {
-      await (await accountClient()).auth.session.delete();
+      await authRequest("/sign-out", { body: {} });
       await navigate({ to: "/", replace: true });
       clearSession();
     } catch {

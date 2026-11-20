@@ -1,6 +1,6 @@
 import "@tanstack/react-start/server-only";
 import { createEnv } from "@kipivo/env";
-import { createApiClient } from "@kipivo/api/client";
+import { createApiClient } from "@kipivo/orpc/client";
 import { resolveApiOrigin, webEnv } from "@/env.server";
 
 export function getInstallClient() {

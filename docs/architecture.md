@@ -31,7 +31,7 @@ Application entry points call `createEnv(preset)` from `@kipivo/env` to read val
 
 ## Web and public API
 
-Web is a TanStack Start SSR application. The public API is a separate Hono application. Nitro connects the Hono entry to Vite development and builds its Bun production server. Hono owns `GET /healthz`. oRPC serves the same procedures at `/rpc` and as REST endpoints under `/api/v1`.
+Web is a TanStack Start SSR application. The public API is a separate Hono application. Nitro connects the Hono entry to Vite development and builds its Bun production server. Hono owns `GET /healthz`. Better Auth handles authentication actions under `/api/auth`. oRPC serves procedures at `/rpc`, including `/rpc/auth/session/get` for the current session and account. System, setup, account, and administration procedures also have REST endpoints under `/api/v1`.
 
 Web server-renders the public home page on each request and inlines its CSS. Fonts are self-hosted, use `font-display: swap`, and receive immutable caching through fingerprinted asset URLs. The heading's fallback font matches Geist's vertical metrics. Font subsets load only when their characters are needed.
 
@@ -41,11 +41,20 @@ The optional Umami Cloud trial sends production homepage pageviews for `/` with 
 
 The API's `src/server.ts` entry point reads the environment and validates Auth, Redis, and S3 configuration. It runs migrations when `DB_MIGRATE_ON_START=true`, then starts the runtime clients. In development, Vite waits for the Nitro worker to finish loading the entry point before opening the port. Runtime initialization releases already-created clients if a later factory or Hono route registration fails. Only a fully initialized runtime exposes `fetch`; Nitro owns its shutdown, not individual requests.
 
-The public contract lives in `@kipivo/api/contract`. Callers can use the typed client from `@kipivo/api/client` or generate a REST client from `/api/openapi.json`. The API health and ping responses work independently of the local runner. See the [public API guide](api.md).
+The public contract lives in `@kipivo/contract`. Callers can use the typed client from `@kipivo/orpc/client` or generate a REST client from `/api/openapi.json`. The API health and ping responses work independently of the local runner. See the [public API guide](api.md).
+
+| Location                               | Responsibility                                                                                              |
+| -------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| [`runtime/`](../apps/api/src/runtime/) | Resource lifecycle, service interfaces, migration commands, and setup status caching.                       |
+| [`http/`](../apps/api/src/http/)       | Session read limits, security headers, and request IDs.                                                     |
+| [`routes/`](../apps/api/src/routes/)   | Hono adapters for health, Better Auth, oRPC, REST, and OpenAPI.                                             |
+| [`packages/orpc/`](../packages/orpc/)  | Procedure implementations, shared session and Origin checks, RPC and REST handlers, and OpenAPI generation. |
 
 Web and API each prune and build their own workspace dependencies from the repository root. Railway deploys them as separate services with independent app-specific watch paths. Changes to shared build inputs may deploy both.
 
 A separate Caddy gateway image lives in `.railway/gateway/`. It forwards `/rpc`, `/api/auth`, and `/api/v1` with their descendants and the exact `/api/openapi.json` and `/readyz` paths to `API_UPSTREAM`. When `DOCS_UPSTREAM` is configured, `/docs` and its descendants reach the Docs service with authentication headers excluded. Other requests reach `WEB_UPSTREAM`, including Web’s `/healthz`. Production `/api/local` routes return `404` at the gateway. `/gateway-healthz` checks the gateway itself. Railway terminates external TLS, and the gateway forwards `X-Forwarded-Proto: https`.
+
+Set `WEB_ALIAS_HOST` for a navigation-only hostname. The gateway redirects its pages to the configured `AUTH_URL` and rejects API requests on the alias. Interactive domains use the [authentication domain configuration](auth.md#web-origins-and-shared-sessions).
 
 The gateway is deployed independently. Public domains continue to use their existing services until a separate domain configuration change is requested; adding the gateway service does not change those bindings.
 
@@ -53,13 +62,22 @@ The gateway is deployed independently. Public domains continue to use their exis
 
 `@kipivo/db` owns PostgreSQL access, the Drizzle schema, and versioned migrations. `@kipivo/auth/factory` configures Better Auth against that database. The API exposes the auth handler at `/api/auth/*`. Its `/readyz` endpoint checks the authentication tables and the account role column.
 
-Web forwards same-origin auth, RPC, REST, and OpenAPI requests to the API. This lets the browser use host-only session cookies on the Web domain. The Hono adapter in `routes/procedures.ts` supplies request headers, request ID, and logger to both transports. The contract implementation in `procedures.ts` receives that context without depending on Hono. An oRPC middleware resolves the signed-in actor from Better Auth for protected procedures only. For procedures declared as trusted writes, that same middleware also requires the configured Web origin. It does not cache role permissions or setup availability. See the [route access matrix](api.md#route-access).
+The API [runtime](../apps/api/src/runtime/resources.ts) owns the resource lifecycle and assembles the business services once per application. It binds the current-account query to the account service and personal settings repository. Both `accounts.me.get` and `auth.session.get({ includeAccount: true })` call that query. The setup service takes its input type from core and binds the setup repository to the Better Auth password hasher.
 
-`createDatabase` binds the accounts and setup repositories to the same pool. During API startup, `runtime.ts` injects `database.repositories.accounts` into `@kipivo/core/access` and connects the setup repository to Better Auth’s password hasher for one-time installation. Each request gets an [Awilix scope](../apps/api/src/context.ts) that inherits the runtime’s `AppServices` from the app's container. The [runtime](../apps/api/src/runtime.ts) owns the clients and closes them at shutdown. Core implements the current-account, directory, and role-change use cases against that repository interface; it does not create a database connection. `@kipivo/account` supplies the shared profile and personal settings schemas, `@kipivo/admin/directory` defines directory inputs and instance settings, and `@kipivo/rbac` defines the role permissions and the rule for assigning another account's role.
+Public contracts live in domain modules under [contract](../packages/contract/src/). A procedure opts into REST explicitly. The REST handler and OpenAPI generator use the same metadata. [oRPC](../packages/orpc/src/index.ts) binds each group of procedures to the operations it uses at startup. Business services perform work for an actor ID, and the database owns transaction-level authorization.
+
+For each request Hono passes the request ID, logger, trusted Origin decision and lazy session reader to the procedure. [The auth adapter](../packages/auth/src/session.ts) handles Better Auth errors and reads the public session or the actor for a protected operation. Hono writes each resulting cookie independently, including when a session expires. It limits explicit session reads before querying authentication. See the [route access matrix](api.md#route-access).
 
 Web applies the assignment rule to the permissions returned by the API to decide whether to show the role-change action. That decision is advisory. Core reads the actor's current role for each operation. Before writing a role, the repository locks the actor and target in a consistent order and applies the same assignment rule with the locked actor's permissions. This ensures a concurrent demotion cannot leave a stale grant in effect. See the [database and authentication guide](auth.md).
 
 The home, sign-in and application routes check `setup.get` in TanStack Router `beforeLoad`, before rendering. `/setup` uses the inverse guard. The API may cache only the terminal `closed` state in instance-scoped Redis for 60 seconds. A miss or Redis failure falls back to PostgreSQL; readiness, registration and the installation transaction never trust this cache. If the API is unavailable the public site remains accessible, but the installer does not show a form. Its account menu loads the current account in the browser through the typed RPC client after hydration. The account directory loads only after the current permissions are available, and the server rechecks authorization for each directory read and role change.
+
+### Adding a business module
+
+1. Define the inputs, outputs and public errors in a domain module under `packages/contract/src`. Register it in the root contract. Mark a procedure with `restRoute` when it also needs a REST endpoint and an OpenAPI entry.
+2. Put use cases shared by multiple endpoints in `packages/core`. Give each use case the repository operations it needs. Implement transactional reads and writes in `packages/db`.
+3. Bind the use case to its oRPC procedures in `packages/orpc/src/procedures`. For a protected operation, take the actor from the request identity. Translate domain outcomes to the errors declared in the contract.
+4. Construct the service once in `apps/api/src/runtime/resources.ts` and pass it to the router. The existing Hono mount serves new procedures. Add a route test through that mount to verify the public response and access policy.
 
 ## Application settings
 

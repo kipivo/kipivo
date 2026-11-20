@@ -1,13 +1,13 @@
-import { requestServices, type AppEnv } from "../context";
 import { Hono } from "hono";
+import type { LoggerEnv } from "@kipivo/logger/hono";
 
-export function createHealthRoutes() {
-  const routes = new Hono<AppEnv>();
+export function createHealthRoutes(checkReadiness?: () => Promise<boolean>) {
+  const routes = new Hono<LoggerEnv>();
   routes.get("/healthz", (context) => context.text("ok"));
   routes.get("/readyz", async (context) => {
     let ready;
     try {
-      ready = await requestServices(context).ready?.();
+      ready = await checkReadiness?.();
     } catch {
       ready = false;
     }

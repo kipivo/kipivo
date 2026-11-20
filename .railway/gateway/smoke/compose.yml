@@ -8,8 +8,8 @@ services:
       WEB_UPSTREAM: upstream:8081
       API_UPSTREAM: upstream:8082
       DOCS_UPSTREAM: upstream:8083
-      # A stale hostname variable must not bypass path routing.
-      LEGACY_API_HOST: api.example.test
+      WEB_ALIAS_HOST: alias.example.test
+      AUTH_URL: HTTPS://xn--bcher-kva.example.test:8443/
     healthcheck:
       test: [CMD, wget, -q, -O, /dev/null, http://127.0.0.1:8080/gateway-healthz]
       interval: 1s

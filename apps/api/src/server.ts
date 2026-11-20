@@ -1,9 +1,9 @@
 import { createEnv } from "@kipivo/env";
 import { configureLogger } from "@kipivo/logger";
 import { defineServerEntry } from "nitro";
-import { migrateDatabase, runDbCommand } from "./db-command";
 import { apiEnv, resolveResourceConfig } from "./env";
-import { startRuntime } from "./runtime";
+import { migrateDatabase, runDbCommand } from "./runtime/database";
+import { startRuntime } from "./runtime/resources";
 
 // The built entry also serves one-shot operator commands. Exit before Nitro binds
 // a port, and before validating environment variables used only by the HTTP API.

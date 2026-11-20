@@ -1,0 +1,7 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "transit": { "dependsOn": ["$TURBO_EXTENDS$", "@kipivo/auth#server", "@kipivo/orpc#server"] }
+  }
+}

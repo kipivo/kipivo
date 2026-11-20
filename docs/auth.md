@@ -6,7 +6,7 @@ Email/password authentication uses database-backed sessions. Passwords require a
 
 `@kipivo/db` exports `database` from `DATABASE_URL`. `@kipivo/auth` exports `auth` from the authentication environment and uses that same database pool. For standalone use, call `database.close()` at shutdown. Applications that manage their own resources can use `createDatabase` from `@kipivo/db/factory` and `createAuth` from `@kipivo/auth/factory`.
 
-Web forms use the typed `api.auth` RPC procedures. Native Better Auth endpoints remain available for existing clients and email callbacks. See the [RPC operations and cookie handling](api.md#authentication-resources).
+Web forms call Better Auth under `/api/auth`. The Web account provider reads the current session, permissions, and personal settings with `api.auth.session.get`. See [authentication and session reads](api.md#authentication-and-session-reads).
 
 ## System-browser sign-in for desktop and Expo
 
@@ -55,13 +55,27 @@ bun run dev:api
 
 In another terminal, run `bun run dev` and open [localhost:3000](http://localhost:3000). Keep the hostname consistent with `AUTH_URL`. The Web development proxy defaults to `http://127.0.0.1:3001`. Override `API_ORIGIN` when the API runs elsewhere. Keep the secret stable across restarts to preserve sessions.
 
-The API expects `DATABASE_URL`, `AUTH_URL`, and `AUTH_SECRET` together. `AUTH_URL` is the public Web HTTP(S) origin. The secret must have at least 32 characters. The API exposes `/healthz` for liveness and `/readyz` for database connectivity, the authentication tables, and the account role column. With authentication unconfigured, its auth endpoints and readiness check return `503`.
+The API expects `DATABASE_URL`, `AUTH_URL`, and `AUTH_SECRET` together. `AUTH_URL` is the public Web HTTP(S) origin. Use the ASCII Punycode form for internationalized hostnames, such as `https://xn--bcher-kva.example`. The scheme is case-insensitive. A port and a trailing slash are optional. The secret must have at least 32 characters. The API exposes `/healthz` for liveness and `/readyz` for database connectivity, the authentication tables, and the account role column. With authentication unconfigured, its auth endpoints and readiness check return `503`.
 
 Startup migrations are off by default. Set `DB_MIGRATE_ON_START=true` to apply pending migrations after configuration validation and before the API initializes its runtime clients. Enabling the switch requires `DATABASE_URL`.
 
+## Web origins and shared sessions
+
+By default, Web authentication uses host-only cookies for the hostname in `AUTH_URL`. For a page alias, set `WEB_ALIAS_HOST=www.kipivo.com` on the gateway and `AUTH_URL=https://kipivo.com` on the API. Railway supplies the API's `AUTH_URL` to the gateway. For a standalone gateway, set the same `AUTH_URL` there. Use different hostnames for the alias and primary. Page GET and HEAD requests redirect with their path and query. Send authentication and RPC requests directly to the primary origin. If the same hostname serves the application on multiple ports, list the additional exact HTTP(S) origins, including non-default ports, in the API's comma-separated `AUTH_TRUSTED_ORIGINS`. Kipivo and Better Auth trust these origins for Web authentication and protected writes. OAuth callbacks and email links use `AUTH_URL`.
+
+When both hosts serve the app, leave `WEB_ALIAS_HOST` unset and set `AUTH_COOKIE_DOMAIN` to their common parent hostname. For example, these API variables allow sign-in from both `kipivo.com` and `www.kipivo.com` and share the session between them.
+
+```sh
+AUTH_URL=https://kipivo.com
+AUTH_TRUSTED_ORIGINS=https://www.kipivo.com
+AUTH_COOKIE_DOMAIN=kipivo.com
+```
+
+Each trusted origin must use the same scheme as `AUTH_URL`. In shared mode the cookie domain must be below a public suffix and cover every interactive hostname. Use HTTPS for deployments and matching HTTP origins for local development. Enable the shared cookie only when you control the subdomains covered by that domain. Browsers send it to all matching subdomains. Enabling it switches to a separate cookie name, so existing browser users sign in again once.
+
 ## Authentication endpoints
 
-Kipivo forms call the typed auth RPC client. Integrations using Better Auth directly can call `/api/auth/*` on the same Web origin. The Web proxy forwards cookies, Origin and X-Forwarded-For to the API and relays each Set-Cookie header. Better Auth uses the forwarded client IP for session metadata and rate limiting. The deployment's edge proxy supplies this header. Authentication responses use `Cache-Control: no-store`.
+Kipivo forms and integrations can call Better Auth under `/api/auth/*` on the same Web origin. The Web proxy forwards cookies, Origin and client address headers to the API and relays each Set-Cookie header. Hono resolves the address using the same [trusted proxy settings as RPC session reads](api.md#authentication-and-session-reads) and supplies it to Better Auth for session metadata and rate limiting. Authentication responses use `Cache-Control: no-store`.
 
 | Method | Path                      | Request body                                                                      |
 | ------ | ------------------------- | --------------------------------------------------------------------------------- |
@@ -70,7 +84,7 @@ Kipivo forms call the typed auth RPC client. Integrations using Better Auth dire
 | GET    | `/api/auth/get-session`   |                                                                                   |
 | POST   | `/api/auth/sign-out`      | `{}`                                                                              |
 
-Use browser `fetch` with JSON content headers and the default same-origin credentials. The session endpoint returns the current user and session, or `null` for a signed-out browser. Server-side API handlers can read a session through the injected auth instance's `api.getSession({ headers })` method.
+Use browser `fetch` with JSON content headers and the default same-origin credentials. The session endpoint returns the current user and session, or `null` for a signed-out browser. Server-side API handlers use the request identity from `@kipivo/auth/session`. Explicit session reads can refresh cookies. Actor lookups for protected operations skip refresh.
 
 ## Google and GitHub sign-in
 
@@ -135,6 +149,7 @@ export DATABASE_URL='postgresql://kipivo:kipivo_local@kipivo-postgres:5432/kipiv
 docker run --rm --name kipivo-api --network kipivo -p 127.0.0.1:3001:3001 \
   --env DATABASE_URL --env DB_MIGRATE_ON_START=true \
   --env AUTH_URL --env AUTH_SECRET \
+  --env AUTH_TRUSTED_ORIGINS --env AUTH_COOKIE_DOMAIN \
   -e PORT=3001 kipivo-api
 ```
 

@@ -1,3 +1,4 @@
+import { installationRequired } from "@kipivo/auth/errors";
 import { Button } from "@kipivo/ui/components/button";
 import { PasswordInput } from "@kipivo/ui/components/password-input";
 import { Input } from "@kipivo/ui/components/input";
@@ -9,16 +10,21 @@ import {
   FieldGroup,
 } from "@kipivo/ui/components/field";
 import { useState, type ReactNode, type SubmitEvent } from "react";
-import { errorStatus, accountClient } from "./client";
+import { authErrorCode, authErrorStatus, authRequest } from "./auth-client";
 import { useAccountSession } from "./session";
+import { SetupRequired } from "./setup-required";
 
-function authErrorMessage(status: number | undefined, creating: boolean) {
-  switch (status) {
+function authErrorMessage(error: unknown, creating: boolean) {
+  if (creating && authErrorCode(error) === installationRequired) return <SetupRequired />;
+  switch (authErrorStatus(error)) {
     case 401:
       return "The email or password is incorrect.";
+    case 403:
+      return "This request was blocked. Check the Kipivo web address and try again.";
     case 429:
       return "Too many attempts. Wait a moment and try again.";
     case 400:
+    case 409:
     case 422:
       return creating
         ? "Could not create this account. Check your details or sign in."
@@ -36,7 +42,14 @@ export function CredentialFields({ creating, passwordAction }: CredentialOptions
       {creating && (
         <Field>
           <FieldLabel htmlFor="account-name">Name</FieldLabel>
-          <Input id="account-name" name="name" autoComplete="name" required className="h-10" />
+          <Input
+            id="account-name"
+            name="name"
+            autoComplete="name"
+            maxLength={128}
+            required
+            className="h-10"
+          />
         </Field>
       )}
       <Field>
@@ -47,6 +60,7 @@ export function CredentialFields({ creating, passwordAction }: CredentialOptions
           placeholder="you@example.com"
           type="email"
           autoComplete="email"
+          maxLength={254}
           required
           className="h-10"
         />
@@ -76,7 +90,7 @@ export function CredentialFields({ creating, passwordAction }: CredentialOptions
 export function CredentialsForm({ creating, passwordAction }: CredentialOptions) {
   const { session, refresh } = useAccountSession();
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<ReactNode>();
 
   async function submit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -92,19 +106,19 @@ export function CredentialsForm({ creating, passwordAction }: CredentialOptions)
       password: String(form.get("password")),
     };
     setBusy(true);
-    setError("");
+    setError(undefined);
     try {
       if (creating) {
-        await (await accountClient()).auth.registrations.create({ ...credentials, name });
+        await authRequest("/sign-up/email", { body: { ...credentials, name } });
       } else {
-        await (await accountClient()).auth.session.create(credentials);
+        await authRequest("/sign-in/email", { body: credentials });
       }
       const current = await refresh();
       if (current && current.status !== "signed-in") {
         setError("Could not load your session. Try signing in again.");
       }
     } catch (cause) {
-      setError(authErrorMessage(errorStatus(cause), creating));
+      setError(authErrorMessage(cause, creating));
     } finally {
       setBusy(false);
     }

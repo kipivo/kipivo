@@ -1,39 +1,19 @@
-import { honoLogger } from "@kipivo/logger/hono";
+import { honoLogger, type LoggerEnv } from "@kipivo/logger/hono";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { requestId } from "hono/request-id";
-import { provideServices, type AppEnv, type AppServices } from "./context";
+import { setResponseRequestId, setSecurityHeaders } from "./http/middleware";
 import { createAuthRoutes } from "./routes/auth";
 import { createHealthRoutes } from "./routes/health";
 import { createProcedureRoutes } from "./routes/procedures";
-
-const securityHeaderDefaults = [
-  ["Referrer-Policy", "no-referrer"],
-  ["X-Content-Type-Options", "nosniff"],
-  ["X-DNS-Prefetch-Control", "off"],
-  ["X-Download-Options", "noopen"],
-  ["X-Permitted-Cross-Domain-Policies", "none"],
-  ["X-XSS-Protection", "0"],
-] as const;
+import type { AppServices } from "./runtime/services";
 
 export function createApp(services: AppServices = {}) {
-  const app = new Hono<AppEnv>();
+  const app = new Hono<LoggerEnv>();
   app.use(requestId({ limitLength: 128 }));
   app.use(honoLogger());
-  app.use(async (context, next) => {
-    await next();
-    const { headers } = context.res;
-    for (const [name, value] of securityHeaderDefaults) {
-      if (!headers.has(name)) headers.set(name, value);
-    }
-  });
-  app.use(provideServices(services));
-  app.use(async (context, next) => {
-    await next();
-    if (context.res.headers.get("X-Request-Id") !== context.var.requestId) {
-      context.header("X-Request-Id", context.var.requestId);
-    }
-  });
+  app.use(setSecurityHeaders);
+  app.use(setResponseRequestId);
 
   app.onError((context) => {
     const { error } = context;
@@ -41,8 +21,8 @@ export function createApp(services: AppServices = {}) {
     return context.text("Internal Server Error", 500);
   });
 
-  app.route("/", createHealthRoutes());
-  app.route("/api/auth", createAuthRoutes());
-  app.route("/", createProcedureRoutes());
+  app.route("/", createHealthRoutes(services.ready));
+  app.route("/api/auth", createAuthRoutes(services.authentication, services.trustProxy));
+  app.route("/", createProcedureRoutes(services));
   return app;
 }

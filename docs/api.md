@@ -1,8 +1,8 @@
 # Public API
 
-Kipivo exposes REST under `/api/v1` and typed RPC under `/rpc`. Use the same Web origin for both. The OpenAPI document at `/api/openapi.json` includes REST schemas, error responses, and the session cookie requirements.
+Kipivo exposes typed RPC under `/rpc` and REST under `/api/v1`. Better Auth handles authentication at `/api/auth` and the typed client reads the session over RPC. Use the same Web origin for both transports. The OpenAPI document at `/api/openapi.json` includes REST schemas, error responses, and session cookie requirements.
 
-The Web client and API use the oRPC v2 protocol and deploy together. Error responses carry the error code in the body and the status in the HTTP response.
+The Web client and API use the oRPC v2 protocol. Both builds track the public contract. Changes confined to server procedures trigger the API build. Error responses carry the error code in the body and the status in the HTTP response.
 
 ## Route access
 
@@ -25,30 +25,21 @@ The Web client and API use the oRPC v2 protocol and deploy together. Error respo
 
 For email settings, omitting `apiKey` preserves the stored key. A string replaces it, and `null` removes it when delivery is disabled. See [email sign-in and recovery](auth.md#email-sign-in-and-password-recovery).
 
-### Authentication resources
+### Authentication and session reads
 
-REST paths below are relative to `/api/v1`. The typed client groups procedures by resource and uses `get`, `list`, `create`, `update`, and `delete`. For example, `api.auth.session.get()` maps to `GET /api/v1/auth/session`. Better Auth serves the protocol endpoints under `/api/auth/*`, including OAuth callbacks and magic-link verification.
+Web forms call the [Better Auth endpoints](auth.md#authentication-endpoints) at `/api/auth/*` for sign-in, registration, sign-out, email codes, password recovery, and native authorization. OAuth and magic-link callbacks are served under the same prefix.
 
-| REST operation                        | RPC procedure                        | Access and response                                                                                       |
-| ------------------------------------- | ------------------------------------ | --------------------------------------------------------------------------------------------------------- |
-| `GET /auth/session`                   | `auth.session.get`                   | Anonymous. Returns `null` for a guest or the public session and user.                                     |
-| `POST /auth/session`                  | `auth.session.create`                | Trusted Web Origin. Creates a session using email and password.                                           |
-| `DELETE /auth/session`                | `auth.session.delete`                | Trusted Web Origin. Signs out and clears the session cookie.                                              |
-| `POST /auth/registrations`            | `auth.registrations.create`          | Trusted Web Origin and completed administrator setup.                                                     |
-| `GET /auth/providers`                 | `auth.providers.list`                | Anonymous. Lists configured social sign-in providers.                                                     |
-| `POST /auth/social/authorizations`    | `auth.social.authorizations.create`  | Trusted Web Origin and completed setup. Returns the provider authorization URL.                           |
-| `GET /auth/methods/email`             | `auth.methods.email.get`             | Anonymous. Indicates whether email sign-in is enabled.                                                    |
-| `POST /auth/magic-links`              | `auth.magicLinks.create`             | Trusted Web Origin. Requests a sign-in link.                                                              |
-| `POST /auth/email-codes`              | `auth.emailCodes.create`             | Trusted Web Origin. Requests a sign-in code.                                                              |
-| `POST /auth/email-code-verifications` | `auth.emailCodeVerifications.create` | Trusted Web Origin. Creates a session using the email code.                                               |
-| `POST /auth/password-resets`          | `auth.passwordResets.create`         | Trusted Web Origin. Requests a reset email.                                                               |
-| `PUT /auth/password`                  | `auth.password.update`               | Trusted Web Origin and a valid reset token.                                                               |
-| `POST /auth/native/authorizations`    | `auth.native.authorizations.create`  | Signed-in browser and trusted Web Origin. Returns a native app callback.                                  |
-| `POST /auth/native/sessions`          | `auth.native.sessions.create`        | Native client with a one-time authorization code and PKCE verifier. Issues an independent session cookie. |
+While the first administrator is waiting to be created, email registration and social sign-in return `409 INSTALLATION_REQUIRED`. The Web form links to `/setup` when it receives this code.
 
-Browser auth writes that accept a body use JSON. Sessions are issued and cleared with HTTP cookies. Server and native clients manage their own cookie jar. Better Auth applies its rate limits and returns `429` with `Retry-After` when available.
+`api.auth.session.get({ includeAccount: true })` calls `POST /rpc/auth/session/get` with the current session cookie. The API reads it through `auth.api.getSession({ headers, returnHeaders: true })` and Hono forwards each `Set-Cookie` header. The procedure returns `null` for a guest, or the public user and session fields plus the account, permissions, and personal settings when requested.
 
-Hono handles request IDs, logging, security headers and service injection. It does **not** apply a blanket login check to `/rpc`, `/api/v1` or `/api/auth`. For new oRPC endpoints, put anonymous operations in the public contract and protected operations in `sessionContract`: choose `sessionRead` for reads or `trustedWrite` for mutations. Both transports execute the same session middleware. It checks the policy of the matched procedure, not the incoming HTTP method (an RPC read can use POST).
+Browser auth writes use JSON. Hono validates a supplied Origin against the configured exact Web origins. Provider callbacks reach Better Auth for protocol-specific validation, and native code exchange has its own client rules. Better Auth handles its endpoint checks, cookies, and rate limits. See [Web origins and shared sessions](auth.md#web-origins-and-shared-sessions).
+
+Hono limits explicit RPC session reads to 100 requests per 10 seconds per client address, per API process. A limited read returns `429 TOO_MANY_REQUESTS` with `Retry-After` before it consults Better Auth. IPv6 clients share a bucket by `/64`, and IPv4-mapped IPv6 addresses share the corresponding IPv4 bucket.
+
+Direct deployments use the socket peer. Set `API_TRUST_PROXY=true` only on a private API whose ingress replaces `X-Real-IP` with a verified client address. Railway supplies that header through its edge. For self-hosting, an ingress can instead strip `X-Real-IP` and replace `X-Forwarded-For` with one verified client address. The Web proxy passes these headers through, so restrict access to the Web proxy to that trusted ingress as well. A malformed `X-Real-IP` or a multi-address `X-Forwarded-For` falls back to the socket peer.
+
+Public operations declare their access rules in the contract. Protected reads and writes share the signed-in middleware across RPC and REST. A protected write also requires a trusted Origin. Protected operations read the actor with session refresh disabled. Both session modes forward any `Set-Cookie` and `Retry-After` produced by Better Auth.
 
 For a protected procedure, missing auth configuration returns `503`; no valid session returns `401`; a missing or untrusted Origin on a protected write returns `403`. After those checks, core evaluates current permissions, and the database rechecks the role-change rule or one-time setup state in the write transaction. Neither request middleware nor the browser is the authority for those decisions.
 
@@ -56,12 +47,12 @@ The account list accepts a `limit` from 1 to 100, defaulting to the instance dir
 
 Installation accepts `{ name, email, password }`. A closed installation returns `409 SETUP_CLOSED`. After a lost response, read `setup.get` and sign in if installation finished; never automatically replay the write.
 
-Send `{ "role": "admin" }` or `{ "role": "member" }` to the role endpoint. Role writes require an `Origin` matching `AUTH_URL`. A missing session returns `401`, insufficient privileges return `403`, and an unknown target account returns `404`. See [database and authentication](auth.md) for sign-in and administrator setup.
+Send `{ "role": "admin" }` or `{ "role": "member" }` to the role endpoint. Role writes require a trusted Web `Origin`. A missing session returns `401`, insufficient privileges return `403`, and an unknown target account returns `404`. See [database and authentication](auth.md) for sign-in and administrator setup.
 
-In browser code, the typed client uses the current origin and the existing session cookie. Use `includeAccount: true` to read the signed-in account, permissions, and personal settings along with the session. The REST equivalent is `GET /api/v1/auth/session?includeAccount=true`.
+In browser code, the typed client uses the current origin and the existing session cookie. Use `includeAccount: true` to read the signed-in account, permissions, and personal settings along with the session.
 
 ```ts
-import { createApiClient } from "@kipivo/api/client";
+import { createApiClient } from "@kipivo/orpc/client";
 
 const api = createApiClient(window.location.origin);
 const session = await api.auth.session.get({ includeAccount: true });

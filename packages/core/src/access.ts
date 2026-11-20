@@ -1,6 +1,7 @@
 import type { AccountProfile } from "@kipivo/account";
 import type { DirectoryListInput } from "@kipivo/admin/directory";
 import { getPermissions, hasPermission, type AccountRole, type Permission } from "@kipivo/rbac";
+import type { SettingsAccess } from "./settings";
 
 type Account = AccountProfile & { role: AccountRole };
 
@@ -56,3 +57,20 @@ export function createAccessService(accounts: AccountRepository) {
 }
 
 export type AccessService = ReturnType<typeof createAccessService>;
+
+export function createCurrentAccountQuery(
+  accounts: Pick<AccessService, "getMe">,
+  settings: Pick<SettingsAccess, "personal">,
+) {
+  return async (actorId: string) => {
+    const result = await accounts.getMe(actorId);
+    if (result.status !== "ok") return result;
+
+    return {
+      status: "ok",
+      value: { ...result.value, settings: await settings.personal(actorId) },
+    } as const;
+  };
+}
+
+export type CurrentAccountQuery = ReturnType<typeof createCurrentAccountQuery>;

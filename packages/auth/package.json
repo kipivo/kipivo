@@ -4,7 +4,9 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./errors": "./src/errors.ts",
     "./native": "./src/native/contract.ts",
+    "./session": "./src/session.ts",
     "./factory": "./src/factory.ts",
     "./env": "./src/env.ts"
   },
@@ -18,6 +20,8 @@
     "@kipivo/email": "workspace:*",
     "@kipivo/env": "workspace:*",
     "better-auth": "1.7.25",
+    "better-call": "1.4.5",
+    "tldts": "7.5.5",
     "zod": "catalog:"
   },
   "devDependencies": {

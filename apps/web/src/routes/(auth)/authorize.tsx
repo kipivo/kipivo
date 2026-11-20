@@ -1,4 +1,4 @@
-import { accountClient, errorStatus } from "@/features/account/client";
+import { authErrorStatus, authRequest } from "@/features/account/auth-client";
 import { PageTitle } from "@kipivo/ui/blocks/page";
 import {
   nativeAuthorization,
@@ -45,15 +45,17 @@ function Authorization({ request }: { request: NativeAuthorization }) {
     setBusy(true);
     setError("");
     try {
-      const { callback: url } = await (
-        await accountClient()
-      ).auth.native.authorizations.create({ ...request, account_id: session.account.id });
+      const response = await authRequest("/native/authorize", {
+        body: { ...request, account_id: session.account.id },
+      });
+      const { callback: url } = await response.json();
       if (typeof url !== "string" || !readNativeCode(url, request))
         throw new Error("Invalid callback");
       setCallback(url);
       window.location.assign(url);
     } catch (cause) {
-      if (errorStatus(cause) === 401 || errorStatus(cause) === 409) await refresh();
+      const status = authErrorStatus(cause);
+      if (status === 401 || status === 409) await refresh();
       setError("Could not authorize the app. Check your account and try again.");
     } finally {
       setBusy(false);

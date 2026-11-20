@@ -1,0 +1,23 @@
+{
+  "name": "@kipivo/contract",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@kipivo/account": "workspace:*",
+    "@kipivo/admin": "workspace:*",
+    "@kipivo/email": "workspace:*",
+    "@kipivo/rbac": "workspace:*",
+    "@orpc/contract": "2.0.0-beta.52",
+    "@orpc/openapi": "2.0.0-beta.52",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@kipivo/tsconfig": "workspace:*"
+  }
+}

@@ -4,7 +4,7 @@ import { Field, FieldError, FieldLabel } from "@kipivo/ui/components/field";
 import { Navigate, useRouter } from "@tanstack/react-router";
 import { useState, type SubmitEvent } from "react";
 import { afterSignIn, type AuthSearch, useEmailMethods } from "./auth-navigation";
-import { errorStatus, accountClient } from "./client";
+import { authErrorStatus, authRequest } from "./auth-client";
 import { useAccountSession } from "./session";
 
 type Method = "link" | "code" | "reset";
@@ -36,28 +36,31 @@ export function EmailForm({ method, ...search }: { method: Method } & AuthSearch
     setBusy(true);
     try {
       if (checkingCode) {
-        await (
-          await accountClient()
-        ).auth.emailCodeVerifications.create({ email: sentTo, otp: String(data.get("code")) });
+        await authRequest("/sign-in/email-otp", {
+          body: { email: sentTo, otp: String(data.get("code")) },
+        });
         if ((await refresh())?.status !== "signed-in")
           setError("Could not load your session. Try signing in again.");
       } else {
         if (method === "link")
-          await (
-            await accountClient()
-          ).auth.magicLinks.create({
-            email,
-            callbackURL: router.buildLocation(afterSignIn(search)).href,
-            errorCallbackURL: router.buildLocation({ to: "/magic-link", search }).href,
+          await authRequest("/sign-in/magic-link", {
+            body: {
+              email,
+              callbackURL: router.buildLocation(afterSignIn(search)).href,
+              errorCallbackURL: router.buildLocation({ to: "/magic-link", search }).href,
+            },
           });
         else if (method === "reset")
-          await (await accountClient()).auth.passwordResets.create({ email });
-        else await (await accountClient()).auth.emailCodes.create({ email, type: "sign-in" });
+          await authRequest("/request-password-reset", { body: { email } });
+        else
+          await authRequest("/email-otp/send-verification-otp", {
+            body: { email, type: "sign-in" },
+          });
         setSentTo(email);
       }
     } catch (cause) {
       setError(
-        errorStatus(cause) === 429
+        authErrorStatus(cause) === 429
           ? "Too many attempts. Wait a moment and try again."
           : checkingCode
             ? "Could not sign in. Check the code or request a new one."

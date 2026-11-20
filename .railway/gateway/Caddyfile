@@ -14,6 +14,27 @@
 		respond "ok" 200
 	}
 
+	@webAlias expression `{env.WEB_ALIAS_HOST} != "" && {http.request.host}.lowerAscii() == {env.WEB_ALIAS_HOST}.lowerAscii()`
+	handle @webAlias {
+		# Keep the AUTH_URL syntax in sync with packages/auth/src/env.ts.
+		map {env.AUTH_URL} {canonicalOrigin} {
+			~^([Hh][Tt][Tt][Pp][Ss]?://(?:[a-zA-Z0-9._-]+|\[[a-fA-F0-9:.]+\])(?::[0-9]+)?)/?$ ${1}
+			default ""
+		}
+
+		@aliasPage {
+			method GET HEAD
+			not path /api /api/* /rpc /rpc/* /healthz /healthz/* /readyz /readyz/*
+			expression `{canonicalOrigin} != ""`
+		}
+		handle @aliasPage {
+			redir {canonicalOrigin}{uri} 308
+		}
+		handle {
+			respond 404
+		}
+	}
+
 	@local path /api/local /api/local/*
 	handle @local {
 		respond 404

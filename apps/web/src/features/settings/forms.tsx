@@ -1,4 +1,4 @@
-import type { ApiClient } from "@kipivo/api/contract";
+import type { ApiClient } from "@kipivo/contract";
 import { Button } from "@kipivo/ui/components/button";
 import { Input } from "@kipivo/ui/components/input";
 import { Field, FieldLabel, FieldSet } from "@kipivo/ui/components/field";

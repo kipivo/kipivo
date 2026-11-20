@@ -3,7 +3,9 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./access": "./src/access.ts"
+    "./access": "./src/access.ts",
+    "./settings": "./src/settings.ts",
+    "./setup": "./src/setup.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
@@ -12,6 +14,7 @@
   "dependencies": {
     "@kipivo/account": "workspace:*",
     "@kipivo/admin": "workspace:*",
+    "@kipivo/email": "workspace:*",
     "@kipivo/rbac": "workspace:*"
   },
   "devDependencies": {

@@ -9,6 +9,7 @@ const requestHeaders = [
   "origin",
   "referer",
   "x-forwarded-for",
+  "x-real-ip",
   "x-request-id",
   "sec-fetch-site",
   "sec-fetch-mode",

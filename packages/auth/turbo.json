@@ -1,0 +1,20 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "transit": {
+      "dependsOn": [],
+      "inputs": [
+        "src/errors.ts",
+        "src/native/contract.ts",
+        "package.json",
+        "tsconfig.json",
+        "turbo.json"
+      ]
+    },
+    "build": { "dependsOn": ["transit"], "inputs": ["package.json"] },
+    "server": { "dependsOn": ["^build", "^transit"], "inputs": ["$TURBO_DEFAULT$", "!README.md"] },
+    "test": { "dependsOn": ["server"] },
+    "typecheck": { "dependsOn": ["$TURBO_EXTENDS$", "server"] }
+  }
+}

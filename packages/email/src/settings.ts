@@ -11,4 +11,5 @@ export const emailSettingsInput = z.strictObject({
   from: address,
   apiKey: z.string().trim().min(1).max(2048).nullable().optional(),
 });
+export type EmailSettings = z.infer<typeof emailSettings>;
 export type EmailSettingsInput = z.infer<typeof emailSettingsInput>;
