@@ -1,0 +1,21 @@
+docs/testing.md
+  s_5b0ad29f5a4d17::t_9adc7ce3558980 17
+  s_5b0ad29f5a4d17::t_5587ee994d4bec 5-8,15-16,18-20
+  s_5b0ad29f5a4d17::t_f9ff8016713f81 9-14
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "e6be53e63cde71fb74a33030d587c3c9174b9e5d",
+  "prompts": {},
+  "sessions": {
+    "s_5b0ad29f5a4d17": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1f3ce-2e2d-7b72-9d22-76b8b8fc80e9",
+        "model": "gpt-6.2-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
