@@ -1,10 +1,10 @@
 import { FolderIcon } from "@kipivo/icons";
 import { Wordmark } from "@kipivo/ui";
+import { ThemeToggle } from "@kipivo/ui/components/theme-toggle";
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import logo from "@assets/logo.svg?no-inline";
 import { AccountControl } from "@/features/account/control";
-import { ThemeToggle } from "@/features/theme/toggle";
 import { WorkspaceNav } from "./workspace-nav";
 import { SidebarToggle } from "./sidebar";
 import { useSidebarStore } from "./sidebar-store";

@@ -5,6 +5,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./globals.css": "./src/styles/globals.css",
+    "./theme-transition.css": "./src/styles/theme-transition.css",
     "./blocks/*": "./src/blocks/*.tsx",
     "./components/*": "./src/components/*.tsx",
     "./lib/*": "./src/lib/*.ts"

@@ -1,4 +1,3 @@
-import { ThemeSelector, type ThemePreference } from "@kipivo/ui/components/theme-selector";
 import {
   createContext,
   useCallback,
@@ -8,9 +7,11 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { ThemeSelector, type ThemePreference } from "./theme-selector";
+
+export const defaultTheme = "dark";
 
 const storageKey = "kipivo-theme";
-const defaultTheme = "dark";
 const systemQuery = "(prefers-color-scheme: dark)";
 const reducedMotionQuery = "(prefers-reduced-motion: reduce)";
 const themeColors = { light: "#fcf9f7", dark: "#111112" };
@@ -26,7 +27,10 @@ const ThemeContext = createContext<{
 const themeScript = `(() => {
   let theme;
   try { theme = localStorage.getItem(${JSON.stringify(storageKey)}); } catch {}
-  const dark = theme === "system" ? matchMedia(${JSON.stringify(systemQuery)}).matches : theme !== "light";
+  if (theme !== "light" && theme !== "dark" && theme !== "system") {
+    theme = ${JSON.stringify(defaultTheme)};
+  }
+  const dark = theme === "system" ? matchMedia(${JSON.stringify(systemQuery)}).matches : theme === "dark";
   document.documentElement.classList.toggle("dark", dark);
   const meta = document.createElement("meta");
   meta.name = "theme-color";

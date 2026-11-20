@@ -20,12 +20,12 @@ Available components include Button, BackToTopButton, Input, PasswordInput, Init
 
 ### Component ownership
 
-| Shared UI                                                                                                    | Web                                                                                                                                          |
-| ------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `BackToTopButton` renders the accessible control and its reduced-motion-aware rocket animation.              | The landing page observes its hero, positions the button, scrolls the document and returns focus to its header.                              |
-| `ThemeSelector` renders the preference controls and reports the selection event.                             | The theme provider resolves system preferences, persists the choice, applies SSR and browser theme colors, and animates the page transition. |
-| `InitialsAvatar` derives decorative initials from a supplied name. `PasswordInput` owns password visibility. | Account screens supply identity, field labels, password policy, authentication and navigation.                                               |
-| `copyText` from `@kipivo/ui/lib/clipboard` reports whether the browser copied a string.                      | Quickstart supplies the commands and manual-copy instructions. Storybook gives feedback suited to its code and token examples.               |
+| Shared UI                                                                                                                       | Web                                                                                                                            |
+| ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `BackToTopButton` renders the accessible control and its reduced-motion-aware rocket animation.                                 | The landing page observes its hero, positions the button, scrolls the document and returns focus to its header.                |
+| `ThemeProvider` applies, persists, and animates the theme. `ThemeSwitch` and `ThemeToggle` read and update the same preference. | Each app places the three-option switch or compact toggle in its layout.                                                       |
+| `InitialsAvatar` derives decorative initials from a supplied name. `PasswordInput` owns password visibility.                    | Account screens supply identity, field labels, password policy, authentication and navigation.                                 |
+| `copyText` from `@kipivo/ui/lib/clipboard` reports whether the browser copied a string.                                         | Quickstart supplies the commands and manual-copy instructions. Storybook gives feedback suited to its code and token examples. |
 
 For in-place detail editing, use `<DialogContent presentation="detail">` with the usual dialog title and description. It docks on the right at the desktop breakpoint and keeps the centered modal on smaller screens. Use the default centered presentation for confirmations.
 
@@ -39,7 +39,9 @@ Consumers install the Tailwind Vite plugin and import the shared stylesheet once
 @source ".";
 ```
 
-The shared stylesheet scans UI source, self-hosts Geist, and owns semantic colors, radii, focus, and reduced-motion behavior. Light mode uses warm white surfaces; `.dark` on the document element selects neutral charcoal surfaces. Coral marks primary actions, amber marks accents, and the base radius is 10px. `ThemeSelector` offers Light, Dark, and System as a radio group. Web defaults to dark and saves the choice in the browser. Storybook exposes both palettes through its toolbar.
+The shared stylesheet scans UI source, self-hosts Geist, and owns semantic colors, radii, focus, and reduced-motion behavior. Light mode uses warm white surfaces. `.dark` on the document element selects neutral charcoal surfaces. Coral marks primary actions, amber marks accents, and the base radius is 10px. Storybook exposes both palettes through its toolbar.
+
+Use `ThemeHead` and `ThemeProvider` from `@kipivo/ui/components/theme-provider` in the document head and around the app, respectively. Import `ThemeSwitch` from the same module for the Light, Dark, and System radio group. Use `ThemeToggle` from `@kipivo/ui/components/theme-toggle` for a compact button that switches between light and dark. Import `@kipivo/ui/theme-transition.css` alongside the shared stylesheet for the reveal animation. Web and Docs default to dark and share the saved choice on the same origin.
 
 Use semantic classes such as `bg-background`, `text-foreground`, `bg-primary`, `text-muted-foreground`, and `border-border`. The opaque `primary-hover` token preserves button text contrast in both themes. Input borders and focus rings are stronger than decorative borders; destructive colors remain readable on tinted surfaces, including hover states. Five `chart-*` tokens are also exposed as Tailwind colors.
 

@@ -1,9 +1,9 @@
+import { defaultTheme, ThemeHead, ThemeProvider } from "@kipivo/ui/components/theme-provider";
+import { TooltipProvider } from "@kipivo/ui/components/tooltip";
 import { createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import type { ReactNode } from "react";
-import { TooltipProvider } from "@kipivo/ui/components/tooltip";
 import { CloudflareAnalytics } from "@/cloudflare-analytics";
 import { AccountProvider } from "@/features/account/session";
-import { ThemeHead, ThemeProvider } from "@/features/theme/appearance";
 import { NotFound } from "@/features/errors/not-found";
 import "@/styles/globals.css";
 
@@ -27,7 +27,7 @@ function RootDocument({ children }: { children: ReactNode }) {
   return (
     <html
       lang="en"
-      className="dark bg-background font-sans text-foreground has-data-[public-frame]:scrollbar-gutter-stable"
+      className={`${defaultTheme} bg-background font-sans text-foreground has-data-[public-frame]:scrollbar-gutter-stable`}
       suppressHydrationWarning
     >
       <head>

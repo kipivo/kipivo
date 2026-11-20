@@ -118,6 +118,8 @@ export default defineRailway(() => {
         "/bunfig.toml",
         "/.dockerignore",
         "/packages/tsconfig/**",
+        "/packages/ui/**",
+        "/packages/icons/**",
         "/assets/logo.svg",
         "/apps/docs/**",
       ],

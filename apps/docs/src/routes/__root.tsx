@@ -1,3 +1,4 @@
+import { defaultTheme, ThemeHead, ThemeProvider } from "@kipivo/ui/components/theme-provider";
 import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
 import { RootProvider } from "fumadocs-ui/provider/tanstack";
 import type { ReactNode } from "react";
@@ -20,17 +21,25 @@ export const Route = createRootRoute({
 
 function Document({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`${defaultTheme} bg-background text-foreground`}
+      suppressHydrationWarning
+    >
       <head>
         <HeadContent />
+        <ThemeHead />
       </head>
-      <body className="min-h-svh font-sans antialiased">
-        <RootProvider
-          components={{ Link: DocsLink }}
-          search={{ options: { type: "static", api: `${docsBase}/search.json` } }}
-        >
-          {children}
-        </RootProvider>
+      <body className="theme-switch-icons min-h-svh">
+        <ThemeProvider>
+          <RootProvider
+            components={{ Link: DocsLink }}
+            search={{ options: { type: "static", api: `${docsBase}/search.json` } }}
+            theme={{ enabled: false }}
+          >
+            {children}
+          </RootProvider>
+        </ThemeProvider>
         <Scripts />
       </body>
     </html>

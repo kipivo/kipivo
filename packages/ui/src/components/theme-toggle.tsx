@@ -1,6 +1,6 @@
 import { MoonIcon, SunIcon } from "@kipivo/icons";
-import { Button } from "@kipivo/ui/components/button";
-import { useThemeSelection } from "./appearance";
+import { Button } from "./button";
+import { useThemeSelection } from "./theme-provider";
 
 export function ThemeToggle() {
   const { theme, selectTheme } = useThemeSelection();

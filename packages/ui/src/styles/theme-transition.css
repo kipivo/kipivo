@@ -1,3 +1,4 @@
+/* Both Web apps use the same motion and respect the browser's reduced-motion preference. */
 @property --theme-reveal-progress {
   syntax: "<percentage>";
   inherits: true;

@@ -1,11 +1,9 @@
 @import "@kipivo/ui/globals.css";
-@import "./theme-transition.css";
+@import "@kipivo/ui/theme-transition.css";
 
 @source "..";
 
 @theme {
-  --color-brand-coral: #ff6b4a;
-  --color-brand-amber: #ffb02e;
   --color-plate: #151516;
   --color-on-plate: #fffaf4;
   --color-plate-border: #38383b;
@@ -66,19 +64,6 @@
 
 @utility mask-drafting-traces {
   mask-image: url("../features/brand/traces.svg?no-inline");
-}
-
-@utility home-theme-icons {
-  & [data-theme-icon="light"] {
-    color: light-dark(var(--color-amber-700), var(--color-brand-amber));
-  }
-  & [data-theme-icon="dark"] {
-    color: light-dark(var(--color-indigo-600), var(--color-indigo-300));
-    & path {
-      fill: currentColor;
-      stroke: none;
-    }
-  }
 }
 
 /* Dialogs and menus opened in the workspace are portaled to the document body. */

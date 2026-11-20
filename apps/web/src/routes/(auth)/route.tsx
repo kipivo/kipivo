@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, useMatches } from "@tanstack/react-router";
 import { Assembly } from "@/features/brand/assembly";
-import { ThemeSwitch } from "@/features/theme/appearance";
+import { ThemeSwitch } from "@kipivo/ui/components/theme-provider";
 import { HomeLink } from "@/layout/home-link";
 
 export const Route = createFileRoute("/(auth)")({ component: AuthLayout });

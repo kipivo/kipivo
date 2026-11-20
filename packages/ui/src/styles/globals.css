@@ -34,7 +34,22 @@
   }
 }
 
+@utility theme-switch-icons {
+  & [data-theme-icon="light"] {
+    color: light-dark(var(--color-amber-700), var(--color-brand-amber));
+  }
+  & [data-theme-icon="dark"] {
+    color: light-dark(var(--color-indigo-600), var(--color-indigo-300));
+    & path {
+      fill: currentColor;
+      stroke: none;
+    }
+  }
+}
+
 @theme {
+  --color-brand-coral: #ff6b4a;
+  --color-brand-amber: #ffb02e;
   --animate-rocket-launch: rocket-launch 640ms ease-in both;
 
   @keyframes rocket-launch {

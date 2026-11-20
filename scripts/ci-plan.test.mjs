@@ -27,7 +27,7 @@ describe("CI selection", () => {
     ["packages/storage", "@kipivo/storage", []],
     ["packages/runtime", "@kipivo/runtime", []],
     ["apps/storybook", "storybook", ["@kipivo/ui"]],
-    ["apps/docs", "docs", []],
+    ["apps/docs", "docs", ["@kipivo/ui"]],
     ["apps/web", "web", ["@kipivo/ui", "@kipivo/admin", "@kipivo/runtime", "docs"]],
     ["apps/api", "api", ["@kipivo/admin", "@kipivo/cache", "@kipivo/storage"]],
     ["apps/cli", "kipivo", ["@kipivo/runtime"]],
@@ -113,6 +113,7 @@ describe("CI selection", () => {
       "e2e",
       "web-e2e",
       "web-image",
+      "docs-image",
     ]);
   });
   test("Turbo selects the affected admin directory consumers", () => {
@@ -130,7 +131,7 @@ describe("CI selection", () => {
     "packages/ui/src/button.tsx",
     "packages/icons/src/index.tsx",
     "packages/shared/input.ts",
-  ])("Turbo follows %s to its transitive UI and Web consumers", (path) => {
+  ])("Turbo follows %s to its transitive UI, Web, and Docs consumers", (path) => {
     expect(selected(planFor([path]))).toEqual([
       "check",
       "ui",
@@ -138,6 +139,7 @@ describe("CI selection", () => {
       "e2e",
       "web-e2e",
       "web-image",
+      "docs-image",
     ]);
   });
   test.each(["cache", "storage"])("Turbo selects the %s resource consumers", (resource) => {
@@ -287,7 +289,7 @@ describe("CI selection", () => {
     try {
       process.chdir(directory);
       const args = ["--base", base, "--head", head];
-      const expected = ["check", "ui", "auth", "e2e", "web-e2e", "web-image"];
+      const expected = ["check", "ui", "auth", "e2e", "web-e2e", "web-image", "docs-image"];
       expect(selected(planFromArgs(args))).toEqual(expected);
       const nextPlan = planFromArgs(args, { useRailwayBuilds: true });
       expect(selected(nextPlan)).toEqual(["check", "ui", "auth", "e2e", "web-e2e"]);

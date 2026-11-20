@@ -8,9 +8,9 @@ import {
   DialogTrigger,
 } from "@kipivo/ui/components/dialog";
 import { cn } from "@kipivo/ui/lib/utils";
+import { ThemeSwitch } from "@kipivo/ui/components/theme-provider";
 import { Link, useHydrated, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type MouseEvent } from "react";
-import { ThemeSwitch } from "@/features/theme/appearance";
 import { HeaderActions } from "@/layout/header-actions";
 import { HomeLink } from "@/layout/home-link";
 import { homeScrollBehavior } from "./scroll";
@@ -49,7 +49,7 @@ export function HomeNavigation() {
 export function HomeHeaderActions() {
   return (
     <HeaderActions>
-      <div className="home-theme-icons hidden items-center gap-2 lg:flex xl:gap-3">
+      <div className="theme-switch-icons hidden items-center gap-2 lg:flex xl:gap-3">
         <a
           href={repositoryUrl}
           aria-label="GitHub"
@@ -160,7 +160,7 @@ export function HomeMenu() {
             ))}
           </ul>
         </nav>
-        <div className="home-theme-icons mt-auto flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
+        <div className="theme-switch-icons mt-auto flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
           <span className="text-sm font-medium text-muted-foreground">Appearance</span>
           <ThemeSwitch />
         </div>

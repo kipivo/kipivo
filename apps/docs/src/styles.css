@@ -1,11 +1,49 @@
-@import "tailwindcss";
-@import "fumadocs-ui/css/neutral.css";
+@import "fumadocs-ui/css/lib/default-colors.css";
 @import "fumadocs-ui/css/preset.css";
+@import "@kipivo/ui/globals.css";
+@import "@kipivo/ui/theme-transition.css";
 
-@theme {
-  --color-fd-primary: oklch(0.49 0.17 34);
+@source ".";
+
+:root {
+  --color-fd-background: var(--background);
+  --color-fd-foreground: var(--foreground);
+  --color-fd-muted: var(--muted);
+  --color-fd-muted-foreground: var(--muted-foreground);
+  --color-fd-popover: var(--popover);
+  --color-fd-popover-foreground: var(--popover-foreground);
+  --color-fd-card: var(--card);
+  --color-fd-card-foreground: var(--card-foreground);
+  --color-fd-border: var(--border);
+  --color-fd-primary: light-dark(var(--primary-hover), var(--primary));
+  --color-fd-primary-foreground: var(--primary-foreground);
+  --color-fd-secondary: var(--secondary);
+  --color-fd-secondary-foreground: var(--secondary-foreground);
+  --color-fd-accent: var(--accent);
+  --color-fd-accent-foreground: var(--accent-foreground);
+  --color-fd-ring: var(--ring);
 }
 
-.dark {
-  --color-fd-primary: oklch(0.76 0.15 39);
+#nd-notebook-layout {
+  --docs-gutter: clamp(1.5rem, 8vw, 6rem);
+}
+
+#nd-notebook-layout:has(> #nd-subnav) {
+  --fd-header-height: 4rem;
+}
+
+#nd-subnav [data-header-body] {
+  height: var(--fd-header-height);
+  padding-inline: var(--docs-gutter);
+}
+
+/* TanStack marks the current mounted Docs link with aria-current. */
+a[data-active][aria-current="page"] {
+  @apply bg-fd-primary/10 text-fd-primary;
+}
+
+@media (width < 48rem) {
+  #nd-page {
+    padding-inline: var(--docs-gutter);
+  }
 }

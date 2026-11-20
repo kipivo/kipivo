@@ -1,6 +1,8 @@
+import { Wordmark } from "@kipivo/ui";
+import { ThemeSwitch } from "@kipivo/ui/components/theme-provider";
 import { createFileRoute, notFound } from "@tanstack/react-router";
-import { DocsLayout } from "fumadocs-ui/layouts/docs";
-import { DocsBody, DocsDescription, DocsPage, DocsTitle } from "fumadocs-ui/layouts/docs/page";
+import { DocsLayout } from "fumadocs-ui/layouts/notebook";
+import { DocsBody, DocsDescription, DocsPage, DocsTitle } from "fumadocs-ui/layouts/notebook/page";
 import mdxComponents from "fumadocs-ui/mdx";
 import { use } from "react";
 import logo from "@assets/logo.svg?no-inline";
@@ -37,20 +39,20 @@ function Guide() {
   return (
     <DocsLayout
       tree={source.getPageTree()}
+      containerProps={{ className: "[--fd-layout-width:84rem]" }}
       nav={{
+        mode: "top",
         url: docsBase,
-        title: (
-          <>
-            <img src={logo} alt="" width={24} height={24} />
-            Kipivo Docs
-          </>
-        ),
+        title: <Wordmark logo={logo} name="Kipivo Docs" variant="framed" />,
       }}
-      links={[{ text: "Kipivo", url: "/" }]}
+      links={[{ text: "Back to Kipivo", url: "/", active: "none" }]}
       githubUrl="https://github.com/kipivo/kipivo"
+      slots={{ themeSwitch: ThemeSwitch }}
     >
       <DocsPage toc={toc}>
-        <DocsTitle>{title}</DocsTitle>
+        <DocsTitle className="font-heading text-3xl font-[650] tracking-tight sm:text-4xl">
+          {title}
+        </DocsTitle>
         <DocsDescription>{description}</DocsDescription>
         <DocsBody>
           <Content components={mdxComponents} />
