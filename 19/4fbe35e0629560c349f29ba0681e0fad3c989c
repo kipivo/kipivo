@@ -1,0 +1,33 @@
+scripts/commitlint.mjs
+  s_242b86721d85a2::t_a7f257702f98e0 53-55
+  s_f9b46c998fffca::t_5cdca34ec06ed1 1-52,56-66,69-112
+  s_f9b46c998fffca::t_298f924ec2aa59 67-68
+CONTRIBUTING.md
+  s_f9b46c998fffca::t_5cdca34ec06ed1 18
+package.json
+  s_f9b46c998fffca::t_5cdca34ec06ed1 44,53
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "194fbe35e0629560c349f29ba0681e0fad3c989c",
+  "prompts": {},
+  "sessions": {
+    "s_242b86721d85a2": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1f717-b456-78c3-a391-37b974e8978c",
+        "model": "gpt-6.2-astra"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_f9b46c998fffca": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1f771-ec6e-7811-814b-919a1682c896",
+        "model": "gpt-6.2-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
