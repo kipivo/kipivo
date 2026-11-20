@@ -23,8 +23,8 @@ export default defineCommand({
     },
     json: { type: "boolean", description: "Print the plan as JSON (plan)" },
   },
-  async run({ cmd, args: { target }, rawArgs }) {
-    const options = rawArgs.slice(2);
+  async run({ cmd, rawArgs }) {
+    const [target, ...options] = rawArgs;
     if (!target || HELP_FLAGS.includes(target) || HELP_FLAGS.includes(options[0])) {
       console.log(await renderUsage(cmd));
       return;

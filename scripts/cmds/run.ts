@@ -37,10 +37,10 @@ export default function createRunCommand(runnableScripts: string[]) {
       },
       list: { type: "boolean", description: "List scripts available to run" },
     },
-    async run({ cmd, args: { list, script }, rawArgs }) {
-      if (rawArgs[0] === "--list") {
-        if (!list || rawArgs.length !== 1)
-          throw new Error("Use kpdev run --list without other arguments.");
+    async run({ cmd, rawArgs }) {
+      const [script, ...args] = rawArgs;
+      if (script === "--list") {
+        if (args.length) throw new Error("Use kpdev run --list without other arguments.");
         for (const name of runnableScripts) console.log(name);
         return;
       }
@@ -53,7 +53,7 @@ export default function createRunCommand(runnableScripts: string[]) {
         const hint = suggestion ? `Did you mean "${suggestion}"?` : "Run kpdev run --list.";
         throw new Error(`Unknown repository script "${script}". ${hint}`);
       }
-      execute(process.execPath, ["run", script, ...rawArgs.slice(2)]);
+      execute(process.execPath, ["run", script, ...args]);
     },
   });
 }

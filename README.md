@@ -16,10 +16,10 @@ mise exec -- bun run kpdev dev
 
 Open [Web](http://localhost:3000) or [Docs](http://localhost:3000/docs). See the [contributing guide](CONTRIBUTING.md) for commit conventions.
 
-The workspace in `scripts/` provides `kpdev` after installation. Run `bun run kpdev --help` from the repository root to list development commands, or `bun run kpdev help <command>` to see its subcommands. You can call `kpdev` directly when the repository's `node_modules/.bin` is on your `PATH`.
+The workspace in `scripts/` provides `kpdev` after installation. Run `bun run kpdev --help` from the repository root to list development commands. Add `--help` after a command to see its options and subcommands. You can call `kpdev` directly when the repository's `node_modules/.bin` is on your `PATH`.
 
 ```sh
-bun run kpdev help test
+bun run kpdev test --help
 bun run kpdev check
 bun run kpdev test e2e all
 bun run kpdev runner --help

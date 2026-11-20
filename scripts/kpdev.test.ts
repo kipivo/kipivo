@@ -119,9 +119,12 @@ test("discovers root scripts and offers scoped help without running a task", () 
   const result = run("test", "--help");
   expect(result.code).toBe(0);
   expect(result.out).toContain("Run the test:sample task");
-  expect(run("help", "test", "sample").out).toMatch(/USAGE.+kpdev test sample/);
+  expect(run("test", "sample", "--help").out).toMatch(/USAGE.+kpdev test sample/);
   expect(stripVTControlCharacters(result.out).match(/^USAGE /gm)).toHaveLength(1);
-  expect(run().out).not.toContain("  prepare");
+  const rootHelp = run("--help");
+  expect(rootHelp.code).toBe(0);
+  expect(rootHelp.out).toBe(run().out);
+  expect(rootHelp.out).not.toContain("  prepare");
 });
 
 test("runs from the repo root and preserves flags, positional arguments and exit status", () => {
@@ -140,11 +143,11 @@ test("shows built-in check help without running the check suite", () => {
   const help = run("check", "--help");
   expect(help.code).toBe(0);
   expect(help.out).toContain("Run repository validation");
-  expect(run("help", "check").out).toBe(help.out);
+  expect(run("check", "-h").out).toBe(help.out);
 });
 
 test("runs the built-in CI planner and shows its nested help", () => {
-  const help = run("help", "ci", "plan");
+  const help = run("ci", "plan", "--help");
   expect(help.code).toBe(0);
   expect(help.out).toContain("kpdev ci plan");
   expect(help.out).toContain("--full");
@@ -155,7 +158,7 @@ test("runs the built-in CI planner and shows its nested help", () => {
 });
 
 test("commit lint handles nested help and message paths relative to the repository", () => {
-  const help = run("help", "commit", "lint");
+  const help = run("commit", "lint", "--help");
   expect(help.code).toBe(0);
   expect(help.out).toContain("kpdev commit lint");
   expect(help.out).toContain("--edit");
@@ -182,7 +185,7 @@ test("runs a public script by its exact name and hands off the remaining argumen
   expect(help.code).toBe(0);
   expect(help.out).toMatch(/USAGE.+kpdev run.+SCRIPT/);
   expect(help.out).toContain("--list");
-  expect(run("help", "run", "test:sample")).toMatchObject({ code: 0, out: help.out });
+  expect(run("run")).toMatchObject({ code: 0, out: help.out });
   const result = run("run", "test:sample", "two words", "--grep", "$HOME", "--help", "--list");
   expect(result.code).toBe(23);
   expect(JSON.parse(result.out)).toEqual({
@@ -253,7 +256,7 @@ test("forwards runner subcommands to the product CLI", () => {
   const runner = run("runner", "serve", "--port", "0");
   expect(runner.code).toBe(23);
   expect(JSON.parse(runner.out).args).toEqual(["serve", "--port", "0"]);
-  expect(JSON.parse(run("help", "runner", "run", "check").out).args).toEqual([
+  expect(JSON.parse(run("runner", "run", "check", "--help").out).args).toEqual([
     "run",
     "check",
     "--help",
@@ -270,7 +273,7 @@ test("forwards Turbo commands and keeps builds under the turbo subcommand", () =
     out: turbo.out,
   });
   expect(run("turbo", "--", "--help").out.split("\0")).toEqual([root, "--", "--help", ""]);
-  expect(run("help", "turbo", "query").out.split("\0")).toEqual([root, "query", "--help", ""]);
+  expect(run("turbo", "query", "--help").out.split("\0")).toEqual([root, "query", "--help", ""]);
   const help = run().out;
   expect(help).toContain("Run Turborepo commands");
   expect(help).not.toContain("`build`");
@@ -282,7 +285,7 @@ test("forwards Turbo commands and keeps builds under the turbo subcommand", () =
 });
 
 test("runs smoke targets directly and passes through the supplied tag", () => {
-  const help = run("help", "smoke");
+  const help = run("smoke", "--help");
   expect(help.out).toContain("Smoke target to run");
   const api = run("smoke", "api", "example:local");
   expect(api.code).toBe(23);
@@ -305,7 +308,7 @@ test("runs smoke targets directly and passes through the supplied tag", () => {
 });
 
 test("shows shared smoke help and forwards options for the selected target", () => {
-  const help = run("help", "smoke", "plan", "--base", "HEAD");
+  const help = run("smoke", "plan", "--help");
   expect(help.code).toBe(0);
   expect(help.out).toMatch(/USAGE.+kpdev smoke.+TARGET/);
   expect(help.out).toContain("--base");
@@ -326,9 +329,9 @@ test("rejects unknown tasks, including typos below a known task", () => {
   const result = run("test", "sample", "typo");
   expect(result.code).toBe(1);
   expect(result.err).toContain("Unknown command");
-  expect(run("help", "test", "missing").code).toBe(1);
+  expect(run("test", "missing", "--help").code).toBe(1);
   expect(run("prepare").code).toBe(1);
-  for (const command of ["smoke:plan", "turbo:build"]) {
+  for (const command of ["help", "smoke:plan", "turbo:build"]) {
     expect(run(command)).toMatchObject({
       code: 1,
       err: expect.stringContaining("Unknown command"),

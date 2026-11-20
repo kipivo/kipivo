@@ -20,9 +20,9 @@ type TaskCommand = {
   run: (context: CommandContext) => void | Promise<void>;
 };
 
-export function createTaskCommands(taskNames: string[], options: string[], helpCommand: boolean) {
+export function createTaskCommands(taskNames: string[], options: string[]) {
   const taskArgs = options[0] === "--" ? options.slice(1) : options;
-  const help = helpCommand || ["-h", "--help"].includes(options[0]);
+  const help = ["-h", "--help"].includes(options[0]);
 
   function action(task?: string): TaskCommand["run"] {
     return async ({ cmd, rawArgs }) => {

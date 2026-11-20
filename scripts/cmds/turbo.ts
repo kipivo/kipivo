@@ -8,6 +8,6 @@ export default defineCommand({
   run({ rawArgs }) {
     const turbo = Bun.which("turbo", { PATH: join(ROOT, "node_modules", ".bin") });
     if (!turbo) throw new Error("Install the workspace dependencies to run Turbo.");
-    execute(turbo, rawArgs.slice(1));
+    execute(turbo, rawArgs);
   },
 });
