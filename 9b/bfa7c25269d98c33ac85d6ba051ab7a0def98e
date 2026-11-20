@@ -1,0 +1,43 @@
+docs/architecture.md
+  s_d77957266a33b1::t_401499f2596e23 14
+  s_d77957266a33b1::t_de9c3e6b2094ee 58
+apps/api/src/context.ts
+  s_d77957266a33b1::t_859a46694d92e5 2,14-15,17,21-23,25,27-30,34
+  s_d77957266a33b1::t_cc34e286d3ce25 3-4,24
+  s_d77957266a33b1::t_076c5bc451fe44 26
+apps/api/package.json
+  s_d77957266a33b1::t_859a46694d92e5 25-26
+apps/api/src/app.test.ts
+  s_d77957266a33b1::t_eb2fb77ee83c7c 1-26
+apps/api/src/context.test.ts
+  s_d77957266a33b1::t_859a46694d92e5 1,5,14-15,18-22,24,27,30-31
+  s_d77957266a33b1::t_cc34e286d3ce25 2,13,16-17,23,25-26,28-29,32
+  s_d77957266a33b1::t_a68be7c33ac37d 33
+packages/logger/package.json
+  s_d77957266a33b1::t_401499f2596e23 24,28
+package.json
+  s_d77957266a33b1::t_401499f2596e23 11
+AGENTS.md
+  s_d77957266a33b1::t_401499f2596e23 35
+apps/api/src/app.ts
+  s_d77957266a33b1::t_1b13dc8d8a48e2 10-18,23-29
+  s_d77957266a33b1::t_059b42a00bdb08 38-39
+bun.lock
+  s_d77957266a33b1::t_53590d5fd5f88a 35-36,315,319,397,1473-1474,1881,2625
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "9bbfa7c25269d98c33ac85d6ba051ab7a0def98e",
+  "prompts": {},
+  "sessions": {
+    "s_d77957266a33b1": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1f66a-d621-7693-9966-c7017179ac5b",
+        "model": "gpt-6.2-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
