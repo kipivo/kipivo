@@ -1,6 +1,7 @@
 for (const [name, port] of [
   ["web", 8081],
   ["api", 8082],
+  ["docs", 8083],
 ]) {
   Bun.serve({
     hostname: "::",
@@ -30,6 +31,7 @@ for (const [name, port] of [
           method: request.method,
           body: await request.text(),
           cookie: request.headers.get("cookie"),
+          authorization: request.headers.get("authorization"),
           origin: request.headers.get("origin"),
           host: request.headers.get("host"),
           proto: request.headers.get("x-forwarded-proto"),

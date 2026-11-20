@@ -26,6 +26,18 @@
 		}
 	}
 
+	@docs {
+		path /docs /docs/*
+		expression `{env.DOCS_UPSTREAM} != ""`
+	}
+	handle @docs {
+		reverse_proxy {$DOCS_UPSTREAM:127.0.0.1:4321} {
+			header_up X-Forwarded-Proto https
+			header_up -Cookie
+			header_up -Authorization
+		}
+	}
+
 	handle {
 		reverse_proxy {$WEB_UPSTREAM} {
 			header_up X-Forwarded-Proto https

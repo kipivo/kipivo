@@ -1,0 +1,26 @@
+---
+title: Local runner
+description: Use the Kipivo CLI to start the runner, inspect checks, and find logs.
+---
+
+The local runner executes the checkout's `bun run check` script. Follow the [Quickstart](/docs/quickstart) to submit a run.
+
+| Task                        | Command                          |
+| --------------------------- | -------------------------------- |
+| Show the available commands | `bun run kipivo --help`          |
+| Start the runner            | `bun run kipivo serve`           |
+| Submit a check              | `bun run kipivo run check`       |
+| Read the status             | `bun run kipivo status <run-id>` |
+| Read the logs               | `bun run kipivo logs <run-id>`   |
+
+`kpvo` is an alias for `kipivo`. Run commands from the checkout where you started the runner.
+
+## Inspect runs in a browser
+
+With the runner active, start `bun run --cwd apps/web dev` and open [Local runs](http://localhost:3000/runs). This page is available on the development server.
+
+## Troubleshoot a check
+
+- If the CLI cannot connect, check that the runner is still open and that both terminals use the same checkout and `KIPIVO_HOME`.
+- The runner accepts one active check and defaults to `127.0.0.1:4310`. If the previous check is still running, inspect its status before submitting another.
+- Run history is stored under `~/.kipivo` by default. Set `KIPIVO_HOME` to a private directory in both terminals to use separate runner state.

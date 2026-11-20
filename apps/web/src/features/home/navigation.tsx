@@ -15,10 +15,11 @@ import { HeaderActions } from "@/layout/header-actions";
 import { HomeLink } from "@/layout/home-link";
 import { homeScrollBehavior } from "./scroll";
 
-const sections = [
+const homeLinks = [
   { href: "#example", label: "Example run" },
   { href: "#quickstart", label: "Quickstart" },
   { href: "#workspace-guide", label: "Workspace guide" },
+  { href: "/docs", label: "Docs" },
 ];
 
 const repositoryUrl = "https://github.com/kipivo/kipivo";
@@ -30,7 +31,7 @@ export function HomeNavigation() {
   return (
     <nav aria-label="On this page" className="hidden lg:block">
       <ul className="flex items-center justify-center gap-1 text-sm font-medium text-muted-foreground">
-        {sections.map(({ href, label }) => (
+        {homeLinks.map(({ href, label }) => (
           <li key={href}>
             <a
               href={href}
@@ -146,11 +147,11 @@ export function HomeMenu() {
         </div>
         <nav aria-label="On this page">
           <ul className="grid gap-1">
-            {sections.map(({ href, label }) => (
+            {homeLinks.map(({ href, label }) => (
               <li key={href}>
                 <a
                   href={href}
-                  onClick={selectSection}
+                  onClick={href.startsWith("#") ? selectSection : undefined}
                   className="control-focus flex min-h-11 items-center rounded-lg px-3 font-medium transition-colors hover:bg-muted"
                 >
                   {label}
@@ -190,7 +191,7 @@ export function HomeFooter() {
                 Workbench
               </Link>
             </li>
-            {sections.map(({ href, label }) => (
+            {homeLinks.map(({ href, label }) => (
               <li key={href}>
                 <a href={href} className={footerLink}>
                   {label}

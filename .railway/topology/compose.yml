@@ -5,10 +5,11 @@ services:
       context: ../..
       dockerfile: .railway/gateway/Dockerfile
     pull_policy: never
-    depends_on: [web, api]
+    depends_on: [web, api, docs]
     environment:
       WEB_UPSTREAM: web:8080
       API_UPSTREAM: api:3001
+      DOCS_UPSTREAM: docs:4321
     healthcheck:
       test: [CMD, wget, -q, -O, /dev/null, http://127.0.0.1:8080/gateway-healthz]
       interval: 1s
@@ -54,6 +55,17 @@ services:
       interval: 1s
       timeout: 2s
       retries: 60
+  docs:
+    image: ${KIPIVO_TOPOLOGY_DOCS_IMAGE:-kipivo-docs:topology}
+    build:
+      context: ../..
+      dockerfile: apps/docs/Dockerfile
+    pull_policy: never
+    healthcheck:
+      test: [CMD, bun, -e, 'if (!(await fetch("http://127.0.0.1:4321/docs/")).ok) process.exit(1)']
+      interval: 1s
+      timeout: 2s
+      retries: 60
   postgres:
     image: postgres:17-alpine
     environment:
@@ -84,6 +96,7 @@ services:
     volumes:
       - ./smoke.mjs:/smoke/topology.mjs:ro
       - ../../scripts/smoke-web.mjs:/smoke/web.mjs:ro
+      - ../../scripts/smoke-docs.mjs:/smoke/smoke-docs.mjs:ro
 networks:
   default:
     internal: true

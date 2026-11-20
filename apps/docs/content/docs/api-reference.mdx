@@ -1,0 +1,22 @@
+---
+title: API reference
+description: Call the Kipivo REST API and download its generated OpenAPI schema.
+---
+
+Kipivo serves REST under `/api/v1` and typed RPC under `/rpc`. Use the public Web origin for both. Get request and response schemas from the instance's [OpenAPI JSON](/api/openapi.json).
+
+## Check API connectivity
+
+`GET /api/v1/system/ping` accepts anonymous requests and returns `{"ok":true}`.
+
+```sh
+curl --fail https://kipivo.example.com/api/v1/system/ping
+```
+
+Replace `https://kipivo.example.com` with your Web origin.
+
+## Authentication
+
+Protected operations use the Web session cookie. Writes that require a trusted `Origin` expect the public Web origin configured on that instance. The generated OpenAPI schema describes the cookie and header requirements for each REST operation.
+
+See the [API access guide](https://github.com/kipivo/kipivo/blob/next/docs/api.md#route-access) for permissions and typed RPC examples.

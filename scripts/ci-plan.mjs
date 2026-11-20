@@ -23,16 +23,20 @@ const imageDefinitions = {
   "web-image": { app: "web", dockerfile: "apps/web/Dockerfile" },
   "api-image": { app: "api", dockerfile: "apps/api/Dockerfile" },
   "gateway-image": { app: "gateway", dockerfile: ".railway/gateway/Dockerfile" },
+  "docs-image": { app: "docs", dockerfile: "apps/docs/Dockerfile" },
 };
 const imageJobs = Object.keys(imageDefinitions);
 export const jobs = [...Object.keys(ciTasks), ...imageJobs];
 const imageInputs = new Map([
   ["apps/web/Dockerfile", ["web-image"]],
   ["apps/api/Dockerfile", ["api-image"]],
+  ["apps/docs/Dockerfile", ["docs-image"]],
   ["scripts/smoke-web-image.sh", ["web-image"]],
   ["scripts/smoke-web.mjs", ["web-image"]],
   ["scripts/smoke-api-image.sh", ["api-image"]],
   ["scripts/smoke-gateway-image.sh", ["gateway-image"]],
+  ["scripts/smoke-docs-image.sh", ["docs-image"]],
+  ["scripts/smoke-docs.mjs", ["web-image", "docs-image"]],
   ["scripts/check-image.sh", imageJobs],
   [".dockerignore", imageJobs],
 ]);
@@ -225,6 +229,10 @@ export function planFromArgs(args, { useRailwayBuilds = false } = {}) {
         const builds = runAffected(["build"]);
         if (builds.has("web#build")) (reasons["web-image"] ??= []).push("web#build");
         if (builds.has("api#build")) (reasons["api-image"] ??= []).push("api#build");
+        // Web includes Docs as a build dependency even when only Web changed.
+        if (builds.has("docs#build") && runAffected(["docs#build"]).has("docs#build")) {
+          (reasons["docs-image"] ??= []).push("docs#build");
+        }
       }
       return makePlan(reasons, base);
     });

@@ -1,0 +1,14 @@
+---
+title: Mobile
+description: Connect Kipivo for iOS or Android to your Web workspace.
+---
+
+1. Open **Connection** in the mobile app.
+2. Choose **Set workspace address** and enter your Kipivo Web or gateway origin, including `https://`.
+3. Run the connectivity check, then open the workspace to sign in.
+
+Use an origin such as `https://kipivo.example.com`. The address ends after the host and optional port. Production builds require HTTPS.
+
+The connectivity check calls `GET /api/v1/system/ping` and verifies that the device can reach the API. Sign-in happens separately in the browser.
+
+For Expo Go, simulators, and local network addresses, see the [mobile development guide](https://github.com/kipivo/kipivo/blob/next/apps/mobile/README.md#run-in-expo-go).

@@ -38,9 +38,9 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - uses: oven-sh/setup-bun@v2
+      - uses: jdx/mise-action@v5
         with:
-          bun-version-file: package.json
+          install_args: bun
       - name: Install only the pinned Turbo binary
         if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/next')
         shell: bash
@@ -146,6 +146,9 @@ jobs:
       - name: Smoke test the Web image
         if: matrix.app == 'web'
         run: scripts/smoke-web-image.sh kipivo-web:ci
+      - name: Smoke test the Docs image
+        if: matrix.app == 'docs'
+        run: bash scripts/smoke-docs-image.sh kipivo-docs:ci
       - name: Verify API image migrations and readiness
         if: matrix.app == 'api'
         timeout-minutes: 10
@@ -256,9 +259,9 @@ jobs:
     runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v6
-      - uses: oven-sh/setup-bun@v2
+      - uses: jdx/mise-action@v5
         with:
-          bun-version-file: package.json
+          install_args: bun
       - name: Require all selected blocking jobs to succeed
         env:
           CI_PLAN: ${{ needs.changes.outputs.plan }}

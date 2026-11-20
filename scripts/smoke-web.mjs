@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { verifyDocs } from "./smoke-docs.mjs";
 
 const base = new URL(process.argv[2] ?? "http://localhost:3000");
 
@@ -44,6 +45,8 @@ if (process.argv.includes("--production")) {
   assert.ok(font, "Inline styles reference the self-hosted Latin font");
   const fontResponse = await get(font);
   assert.match(fontResponse.headers.get("content-type") ?? "", /^font\/woff2\b/);
+
+  await verifyDocs(base);
 
   for (const path of [
     "/runs",

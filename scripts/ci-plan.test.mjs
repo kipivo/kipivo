@@ -27,7 +27,8 @@ describe("CI selection", () => {
     ["packages/storage", "@kipivo/storage", []],
     ["packages/runtime", "@kipivo/runtime", []],
     ["apps/storybook", "storybook", ["@kipivo/ui"]],
-    ["apps/web", "web", ["@kipivo/ui", "@kipivo/admin", "@kipivo/runtime"]],
+    ["apps/docs", "docs", []],
+    ["apps/web", "web", ["@kipivo/ui", "@kipivo/admin", "@kipivo/runtime", "docs"]],
     ["apps/api", "api", ["@kipivo/admin", "@kipivo/cache", "@kipivo/storage"]],
     ["apps/cli", "kipivo", ["@kipivo/runtime"]],
     ["apps/mobile", "mobile", []],
@@ -159,6 +160,7 @@ describe("CI selection", () => {
       "e2e",
       "web-e2e",
       "web-image",
+      "docs-image",
     ]);
     for (const path of [".dockerignore", "scripts/check-image.sh"]) {
       expect(selected(planFor([path]))).toEqual([
@@ -166,11 +168,13 @@ describe("CI selection", () => {
         "web-image",
         "api-image",
         "gateway-image",
+        "docs-image",
       ]);
     }
   });
   test.each([
     ["apps/web/Dockerfile", "web-image"],
+    ["apps/docs/Dockerfile", "docs-image"],
     ["scripts/smoke-web-image.sh", "web-image"],
     ["scripts/smoke-web.mjs", "web-image"],
     ["scripts/smoke-api-image.sh", "api-image"],
@@ -178,9 +182,20 @@ describe("CI selection", () => {
     [".railway/gateway/Caddyfile", "gateway-image"],
     [".railway/gateway/future-config.json", "gateway-image"],
     ["scripts/smoke-gateway-image.sh", "gateway-image"],
+    ["scripts/smoke-docs-image.sh", "docs-image"],
     ["scripts/smoke-cli.sh", "cli"],
   ])("%s selects only %s alongside check", (path, job) => {
     expect(selected(planFor([path]))).toEqual(["check", job]);
+  });
+  test("docs content and shared smoke checks select both images that serve docs", () => {
+    const content = planFor(["apps/docs/content/docs/quickstart.mdx"]);
+    expect(content["docs-image"]).toBe(true);
+    expect(content["web-image"]).toBe(true);
+    expect(selected(planFor(["scripts/smoke-docs.mjs"]))).toEqual([
+      "check",
+      "web-image",
+      "docs-image",
+    ]);
   });
   test("gateway inputs union with workspace selections and Railway IaC remains shared", () => {
     expect(selected(planFor([".railway/gateway/Caddyfile", "apps/cli/src/index.ts"]))).toEqual([

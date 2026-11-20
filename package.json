@@ -17,6 +17,7 @@
   "scripts": {
     "dev": "turbo run dev --filter=!storybook",
     "dev:api": "bun run --cwd apps/api serve",
+    "dev:docs": "bun run --cwd apps/docs dev",
     "dev:mobile": "bun run --cwd apps/mobile start",
     "dev:storybook": "bun run --cwd apps/storybook dev",
     "build:storybook": "turbo run build --filter=storybook",

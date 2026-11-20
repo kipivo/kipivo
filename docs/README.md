@@ -4,7 +4,7 @@
 
 | Task                | Documentation                                                                                                                                                         |
 | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Run Kipivo locally  | [Development setup](../README.md#development) · [CLI commands](../README.md#cli) · [Run a local check](architecture.md#local-runner)                                  |
+| Run Kipivo locally  | [Development setup](../README.md#development) · [CLI commands](../README.md#cli) · [Run a local check](../apps/docs/content/docs/quickstart.mdx)                      |
 | Connect a phone     | [Mobile development and workspace connection](../apps/mobile/README.md)                                                                                               |
 | Set up an instance  | [Database and authentication](auth.md) · [Administration and account directory](admin.md) · [Redis and object storage](resources.md)                                  |
 | Work on the API     | [Architecture](architecture.md) · [Public API and access requirements](api.md) · [Product events in API logs](telemetry.md)                                           |
@@ -18,6 +18,7 @@
 | --------------------------------------------- | ---------------------------------------------- |
 | [`apps/web`](../apps/web)                     | TanStack Start web app                         |
 | [`apps/api`](../apps/api)                     | Nitro, Hono, and oRPC public API               |
+| [`apps/docs`](../apps/docs)                   | TanStack Start and Fumadocs site at `/docs`    |
 | [`apps/mobile`](../apps/mobile)               | Expo app for iOS and Android                   |
 | [`apps/cli`](../apps/cli)                     | Bun CLI with `kipivo` and `kpvo` commands      |
 | [`apps/storybook`](../apps/storybook)         | Storybook component examples and browser tests |

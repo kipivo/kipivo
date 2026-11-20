@@ -7,6 +7,7 @@ services:
     environment:
       WEB_UPSTREAM: upstream:8081
       API_UPSTREAM: upstream:8082
+      DOCS_UPSTREAM: upstream:8083
       # A stale hostname variable must not bypass path routing.
       LEGACY_API_HOST: api.example.test
     healthcheck:
@@ -27,7 +28,7 @@ services:
         - bun
         - -e
         - |
-          for (const port of [8081, 8082]) {
+          for (const port of [8081, 8082, 8083]) {
             const response = await fetch(`http://127.0.0.1:$${port}/healthz`);
             if (!response.ok) process.exit(1);
           }

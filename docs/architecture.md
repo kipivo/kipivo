@@ -45,7 +45,7 @@ The public contract lives in `@kipivo/api/contract`. Callers can use the typed c
 
 Web and API each prune and build their own workspace dependencies from the repository root. Railway deploys them as separate services with independent app-specific watch paths. Changes to shared build inputs may deploy both.
 
-A separate Caddy gateway image lives in `.railway/gateway/`. It forwards `/rpc`, `/api/auth`, and `/api/v1` with their descendants and the exact `/api/openapi.json` and `/readyz` paths to `API_UPSTREAM`. Other requests reach `WEB_UPSTREAM`, including Web’s `/healthz`. Production `/api/local` routes return `404` at the gateway. `/gateway-healthz` checks the gateway itself. Railway terminates external TLS, and the gateway forwards `X-Forwarded-Proto: https` while preserving request cookies, Origin, and upstream response headers.
+A separate Caddy gateway image lives in `.railway/gateway/`. It forwards `/rpc`, `/api/auth`, and `/api/v1` with their descendants and the exact `/api/openapi.json` and `/readyz` paths to `API_UPSTREAM`. When `DOCS_UPSTREAM` is configured, `/docs` and its descendants reach the Docs service with authentication headers excluded. Other requests reach `WEB_UPSTREAM`, including Web’s `/healthz`. Production `/api/local` routes return `404` at the gateway. `/gateway-healthz` checks the gateway itself. Railway terminates external TLS, and the gateway forwards `X-Forwarded-Proto: https`.
 
 The gateway is deployed independently. Public domains continue to use their existing services until a separate domain configuration change is requested; adding the gateway service does not change those bindings.
 
@@ -76,21 +76,7 @@ Instance overrides are stored in `config_app`. Editable settings use the catalog
 
 ## Local runner
 
-On macOS or Linux, open two terminals at the root of a trusted Kipivo checkout with its dependencies installed. In the first terminal, start the runner and leave it running.
-
-```sh
-bun run kipivo serve
-```
-
-In the second terminal, save the run ID and use it to read the status and logs.
-
-```sh
-id=$(bun run kipivo run check)
-bun run kipivo status "$id"
-bun run kipivo logs "$id"
-```
-
-To submit or inspect checks in a browser, start `bun run --cwd apps/web dev` with the runner active and open [Local runs](http://localhost:3000/runs).
+Follow the [Quickstart](../apps/docs/content/docs/quickstart.mdx) to start the runner and submit a check. The [local runner guide](../apps/docs/content/docs/local-runner.mdx) covers the CLI commands and browser inspector.
 
 The runner binds to `127.0.0.1:4310` by default and runs the checkout's fixed `bun run check` script. It accepts one active check, with a five-minute timeout and a 256 KiB log limit per run. SQLite history lives in `~/.kipivo`. Use a separate private `KIPIVO_HOME` to isolate history.
 

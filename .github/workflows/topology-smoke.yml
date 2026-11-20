@@ -26,12 +26,13 @@ jobs:
           builder: default
           source: .
           files: .railway/topology/compose.yml
-          targets: gateway,web,api
+          targets: gateway,web,api,docs
           set: |
             *.context=.
             gateway.cache-from=type=gha,scope=kipivo-gateway
             web.cache-from=type=gha,scope=kipivo-web
             api.cache-from=type=gha,scope=kipivo-api
+            docs.cache-from=type=gha,scope=kipivo-docs
       - name: Verify the production topology
         run: bash scripts/smoke-topology.sh
       - name: Report an advisory failure

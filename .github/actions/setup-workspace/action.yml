@@ -1,5 +1,5 @@
 name: Set up workspace
-description: Install pinned Bun and workspace dependencies with Bun, Turbo, Vite, and Storybook caches.
+description: Install the pinned mise toolchain and workspace dependencies with Bun, Turbo, Vite, and Storybook caches.
 
 inputs:
   cache-scope:
@@ -15,10 +15,14 @@ inputs:
 runs:
   using: composite
   steps:
-    - uses: oven-sh/setup-bun@v2
-      id: bun
+    - uses: jdx/mise-action@v5
       with:
-        bun-version-file: package.json
+        install_args: ${{ inputs.install-dependencies == 'false' && 'bun' || '' }}
+    - name: Read the Bun version for cache keys
+      if: inputs.install-dependencies == 'true' || inputs.cache-build == 'true'
+      id: bun
+      shell: bash
+      run: printf 'bun-version=%s\n' "$(bun --version)" >> "$GITHUB_OUTPUT"
     - name: Cache Bun packages
       if: inputs.install-dependencies == 'true'
       uses: actions/cache@v6
@@ -40,6 +44,6 @@ runs:
           node_modules/.vite
           apps/*/node_modules/.vite
           apps/storybook/node_modules/.cache/storybook
-        key: tasks-v1-${{ runner.os }}-${{ runner.arch }}-${{ inputs.cache-scope }}-${{ steps.bun.outputs.bun-version }}-${{ hashFiles('bun.lock', 'bunfig.toml', 'package.json') }}-${{ github.sha }}
+        key: tasks-v1-${{ runner.os }}-${{ runner.arch }}-${{ inputs.cache-scope }}-${{ steps.bun.outputs.bun-version }}-${{ hashFiles('bun.lock', 'bunfig.toml', 'package.json', 'mise.toml', 'mise.lock') }}-${{ github.sha }}
         restore-keys: |
-          tasks-v1-${{ runner.os }}-${{ runner.arch }}-${{ inputs.cache-scope }}-${{ steps.bun.outputs.bun-version }}-${{ hashFiles('bun.lock', 'bunfig.toml', 'package.json') }}-
+          tasks-v1-${{ runner.os }}-${{ runner.arch }}-${{ inputs.cache-scope }}-${{ steps.bun.outputs.bun-version }}-${{ hashFiles('bun.lock', 'bunfig.toml', 'package.json', 'mise.toml', 'mise.lock') }}-

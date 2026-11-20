@@ -1,0 +1,14 @@
+---
+title: Self-hosting
+description: Deploy Kipivo and finish the first administrator setup.
+---
+
+Kipivo uses a Web service, an API service, and PostgreSQL. Start with the repository's [Railway instructions](https://github.com/kipivo/kipivo/blob/next/README.md#railway) for the managed deployment, or follow the [Docker build instructions](https://github.com/kipivo/kipivo/blob/next/README.md#docker) to build the images yourself.
+
+## Configure and verify the instance
+
+1. Connect the API to PostgreSQL and apply the database migrations.
+2. Configure `BETTER_AUTH_URL` with the public Web origin and set `BETTER_AUTH_SECRET` on the API. Follow the [authentication deployment guide](https://github.com/kipivo/kipivo/blob/next/docs/auth.md#docker-and-railway) for the exact settings.
+3. Check Web at `/healthz` and API readiness at `/readyz`. Open the Web origin to create the first administrator.
+
+Use the Web origin when configuring [Mobile](/docs/mobile) or calling the [public API](/docs/api-reference).

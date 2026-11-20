@@ -1,0 +1,28 @@
+---
+title: Quickstart
+description: Start the local runner and read the result of your first check.
+---
+
+Install [mise](https://mise.jdx.dev/getting-started.html) on macOS or Linux. Open two terminals in a [trusted Kipivo checkout](https://github.com/kipivo/kipivo).
+
+## Start the runner
+
+In the first terminal, install dependencies and leave the runner open.
+
+```sh
+mise install --locked
+mise exec -- bun install --frozen-lockfile
+mise exec -- bun run kipivo serve
+```
+
+## Submit a check
+
+In the second terminal, save the run ID and use it to read the status and logs.
+
+```sh
+id=$(mise exec -- bun run kipivo run check)
+mise exec -- bun run kipivo status "$id"
+mise exec -- bun run kipivo logs "$id"
+```
+
+The status includes the result when the check finishes. See the [local runner guide](/docs/local-runner) for more CLI commands and troubleshooting.

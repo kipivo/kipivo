@@ -2,20 +2,25 @@
 
 Kipivo (/kɪˈpiːvoʊ/) gives developers AI bots that understand their projects, do the work, and show what they did.
 
-See the [documentation index](docs/README.md) for the workspace layout and guides.
+Start with the [Kipivo Quickstart](apps/docs/content/docs/quickstart.mdx). See the [repository documentation index](docs/README.md) for the workspace layout and contributor guides.
 
 ## Development
 
-Install Bun 1.4.4.
+Install [mise](https://mise.jdx.dev/getting-started.html) to use the Bun and Node.js versions pinned in [mise.toml](mise.toml). Run these commands from the repository root.
 
 ```sh
-bun install --frozen-lockfile
-bun run dev
+mise install --locked
+mise exec -- bun install --frozen-lockfile
+mise exec -- bun run dev
 ```
+
+Once mise is activated in your shell, use `bun` directly for the commands below.
 
 See the [contributing guide](CONTRIBUTING.md) for commit messages and the local Git hook.
 
 Open [localhost:3000](http://localhost:3000). Run `bun run check` to verify formatting, lint, types, Knip, and tests. Use `bun run format` to apply formatting.
+
+Open [localhost:3000/docs](http://localhost:3000/docs) for the user guides, or run `bun run dev:docs` to work on the [documentation app](apps/docs/README.md) by itself.
 
 To start the Web production build locally, run `bun run build --filter=web` followed by `bun run start`.
 
@@ -31,7 +36,7 @@ Once setup is complete, administrators can open [`/admin`](docs/admin.md) from t
 
 After installing the workspace dependencies, run `bun run kipivo --help` or `bun run kpvo --help` from the repository root. Both commands accept `--version`.
 
-To start the runner, submit a check and inspect its output, follow the [local runner walkthrough](docs/architecture.md#local-runner).
+To start the runner, submit a check and inspect its output, follow the [Quickstart](apps/docs/content/docs/quickstart.mdx).
 
 Run `bun run build --filter=kipivo` to bundle the CLI, then run `bun apps/cli/dist/kipivo.js --help` to use the bundle.
 
@@ -56,6 +61,8 @@ Run `scripts/smoke-web-image.sh kipivo-web` to smoke-test the image in a tempora
 
 Build the API image with `docker build -f apps/api/Dockerfile -t kipivo-api .`. See the [testing guide](docs/testing.md) for its HTTP checks.
 
+Build the Docs image with `docker build -f apps/docs/Dockerfile -t kipivo-docs:ci .` and run `bash scripts/smoke-docs-image.sh` to verify the standalone `/docs` service.
+
 Build the standalone gateway with `docker build -f .railway/gateway/Dockerfile -t kipivo-gateway:ci .` and run `scripts/smoke-gateway-image.sh` with Docker Compose installed to verify routing on an isolated network.
 
 ## Railway
@@ -69,8 +76,8 @@ railway link
 railway config plan
 ```
 
-Select the project's `next` environment when linking. Review the plan before running `railway config apply`. The configuration declares `gateway`, `web`, `api`, `postgres`, and `redis` resources, including the private database and Redis connection references. Configure the external private S3-compatible bucket on the API service using the [resource guide](docs/resources.md#railway).
+Select the project's `next` environment when linking. Review the plan before running `railway config apply`. The configuration declares `gateway`, `web`, `api`, `docs`, `postgres`, and `redis` resources, including the private database and Redis connection references. Configure the external private S3-compatible bucket on the API service using the [resource guide](docs/resources.md#railway).
 
 The source configuration enables **Wait for CI**. Keep the existing Web and API public domains while deploying the gateway as a separate service; domain changes are a separate step. Configure the API's `BETTER_AUTH_URL` and `BETTER_AUTH_SECRET` using the [authentication deployment steps](docs/auth.md#docker-and-railway). Railway checks Web's `/healthz` and API's `/readyz` before switching traffic and uses each service's watch paths to decide what to rebuild. Verify the Web deployment with `bun scripts/smoke-web.mjs https://<web-domain> --production`. Verify the API over HTTPS using the [testing guide](docs/testing.md).
 
-The gateway uses `WEB_UPSTREAM` and `API_UPSTREAM` for its private upstreams. Use `/gateway-healthz` to check the gateway itself. The [routing guide](docs/architecture.md#web-and-public-api) covers REST, RPC, authentication, and health checks.
+The gateway uses `WEB_UPSTREAM`, `API_UPSTREAM`, and `DOCS_UPSTREAM` for its private upstreams. It forwards `/docs` to Docs, and Railway checks `/docs/` before switching traffic to a new Docs deployment. Use `/gateway-healthz` to check the gateway itself. The [routing guide](docs/architecture.md#web-and-public-api) covers REST, RPC, authentication, and health checks.

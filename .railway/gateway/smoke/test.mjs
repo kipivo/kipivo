@@ -15,7 +15,11 @@ for (const path of [
   "/api/v1/admin/accounts/example/role",
   "/api/openapi.json",
   "/readyz",
+  "/docs",
+  "/docs/",
+  "/docs/assets/main.js",
   "/",
+  "/docs-other",
   "/rpc-other",
   "/rpcish/foo",
   "/api/authentication",
@@ -31,12 +35,15 @@ for (const path of [
     path,
   )
     ? "api"
-    : "web";
+    : /^\/docs(?:\/|$)/.test(path)
+      ? "docs"
+      : "web";
   const response = await fetch(`${base}${path}?a=1&a=2&encoded=a%2Fb`, {
     method: "POST",
     body: "payload=hello",
     headers: {
       Cookie: "session=original; other=two",
+      Authorization: "Bearer example",
       Origin: "https://app.example.test",
       Host: "app.example.test",
       "X-Forwarded-Proto": "http",
@@ -57,7 +64,8 @@ for (const path of [
       query: "?a=1&a=2&encoded=a%2Fb",
       method: "POST",
       body: "payload=hello",
-      cookie: "session=original; other=two",
+      cookie: name === "docs" ? null : "session=original; other=two",
+      authorization: name === "docs" ? null : "Bearer example",
       origin: "https://app.example.test",
       host: "app.example.test",
       proto: "https",

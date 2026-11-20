@@ -1,6 +1,6 @@
 {
   "$schema": "https://turborepo.dev/schema.json",
-  "globalDependencies": ["bunfig.toml"],
+  "globalDependencies": ["bunfig.toml", "mise.toml", "mise.lock"],
   "futureFlags": { "affectedUsingTaskInputs": true },
   "tasks": {
     "transit": {

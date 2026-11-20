@@ -29,6 +29,8 @@ export default defineRailway(() => {
       PORT: "8080",
       WEB_UPSTREAM: "${{web.RAILWAY_PRIVATE_DOMAIN}}:8080",
       API_UPSTREAM: "${{api.RAILWAY_PRIVATE_DOMAIN}}:3001",
+      DOCS_UPSTREAM: "${{docs.RAILWAY_PRIVATE_DOMAIN}}:4321",
+      LEGACY_API_HOST: preserve(),
     },
     healthcheck: "/gateway-healthz",
     replicas: 1,
@@ -84,6 +86,7 @@ export default defineRailway(() => {
         ...common,
         "/assets/logo.svg",
         "/apps/web/**",
+        "/apps/docs/**",
         "/packages/auth/**",
         "/packages/account/**",
         "/packages/admin/**",
@@ -103,6 +106,26 @@ export default defineRailway(() => {
     healthcheck: "/healthz",
     replicas: 1,
   });
+  const docs = service("docs", {
+    source,
+    build: {
+      builder: "DOCKERFILE",
+      dockerfilePath: "/apps/docs/Dockerfile",
+      watchPatterns: [
+        "/package.json",
+        "/bun.lock",
+        "/turbo.json",
+        "/bunfig.toml",
+        "/.dockerignore",
+        "/packages/tsconfig/**",
+        "/assets/logo.svg",
+        "/apps/docs/**",
+      ],
+    },
+    env: { HOST: "::", PORT: "4321" },
+    healthcheck: "/docs/",
+    replicas: 1,
+  });
 
-  return project("kipivo", { resources: [gateway, web, api, db, cache] });
+  return project("kipivo", { resources: [gateway, web, api, docs, db, cache] });
 });
