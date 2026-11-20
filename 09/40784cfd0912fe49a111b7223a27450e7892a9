@@ -1,0 +1,37 @@
+apps/docs/README.md
+  s_d77957266a33b1::t_f383058642c085 7
+.railway/railway.ts
+  s_d77957266a33b1::t_f383058642c085 128
+apps/docs/vite.config.ts
+  s_d77957266a33b1::t_7f05ab77efc6d0 19-21,23-24,26-27
+  s_d77957266a33b1::t_751dfa66a2be75 17-18
+scripts/smoke-docs-image.sh
+  s_d77957266a33b1::t_f383058642c085 23
+.railway/topology/compose.yml
+  s_d77957266a33b1::t_e3e313ac8a4122 65-71
+README.md
+  s_d77957266a33b1::t_f383058642c085 83
+apps/docs/src/router.tsx
+  s_d77957266a33b1::t_751dfa66a2be75 2,6-22
+scripts/smoke-docs.mjs
+  s_d77957266a33b1::t_f383058642c085 13,15-17
+apps/docs/src/styles.css
+  s_d77957266a33b1::t_cce52edd004911 49-51
+  s_d77957266a33b1::t_4128d355ba699e 41-45,52
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "0940784cfd0912fe49a111b7223a27450e7892a9",
+  "prompts": {},
+  "sessions": {
+    "s_d77957266a33b1": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1f66a-d621-7693-9966-c7017179ac5b",
+        "model": "gpt-6.2-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
