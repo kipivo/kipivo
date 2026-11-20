@@ -1,0 +1,386 @@
+apps/api/src/runtime/resources.test.ts
+  s_242b86721d85a2::t_6837b86442109c 3-5,14,86-96,115-116,124-125,130,133-135,161-188
+  s_242b86721d85a2::t_07efd494b984fe 131-132
+packages/orpc/src/procedures/setup.ts
+  s_242b86721d85a2::t_9867ff18d255d0 1-24
+apps/web/src/features/account/setup-required.tsx
+  s_242b86721d85a2::t_5f15dc2226b2e9 7-10
+  s_242b86721d85a2::t_8551a4b337dd36 1-6,11-15
+packages/contract/src/setup.ts
+  s_242b86721d85a2::t_287c416297789a 1-32
+tests/e2e/fixtures/process.ts
+  s_242b86721d85a2::t_018d5aee0b1331 92,94
+  s_242b86721d85a2::t_07efd494b984fe 93
+packages/auth/src/session.test.ts
+  s_242b86721d85a2::t_cc6732a4665fc6 1-2
+  s_242b86721d85a2::t_579e5b44b676b7 3-63
+packages/contract/src/admin.ts
+  s_242b86721d85a2::t_287c416297789a 1-7,9-35,38,40-61,63-82,85
+  s_242b86721d85a2::t_417e98acf7f3d5 36,39
+apps/api/src/routes/access.test.ts
+  s_242b86721d85a2::t_f0b01111ea5625 318,320-323,325-328,351-352,566-567,569-571,573,626-628,632,649
+  s_242b86721d85a2::t_1da8959c2c3aee 568,572,574-582,586,588-595,597,599-600,603,605-612
+  s_242b86721d85a2::t_0218b2b5f38f4a 234-238,240-262,264-265
+  s_242b86721d85a2::t_7f4631cbbb05f6 1,100,104,110-112,115
+  s_242b86721d85a2::t_6837b86442109c 5,7,538-547,554-559,563-565,613-619,621-625,630-631,633-648,650-655,660
+  s_242b86721d85a2::t_2700e354d4b956 101-103,105-109,113-114
+  s_242b86721d85a2::t_074a84ba903334 2,4,76-86,88-94,96-99,117-118,120,129,172-174,179,291,329-332,342,383,397,412-416,585,602
+  s_242b86721d85a2::t_8a4c015bd11bdb 405
+  s_242b86721d85a2::t_888b7c69e898f6 8,75,282,333-341,343-350
+  s_242b86721d85a2::t_2534748947411e 123-128,184-215,217-222,225-226,286,306,310,319,324,358,363,373,378,387,392,402,406,421,424,435,438,449,452,467,472,485,488,498,501,509,512,520,523,536-537,548-549,560-562,584,587,601,604,620,629,656-659
+  s_242b86721d85a2::t_4f5c110f0b6705 239,263
+apps/api/AGENTS.md
+  s_242b86721d85a2::t_2700e354d4b956 4-5
+  s_242b86721d85a2::t_2e953f0f4d5195 3
+packages/auth/src/factory.ts
+  s_242b86721d85a2::t_018d5aee0b1331 11,25,28,32,48,60,137-140
+  s_242b86721d85a2::t_af94611b0adad7 12,131
+apps/api/package.json
+  s_242b86721d85a2::t_1cb4d491d8ee41 21,23
+  s_242b86721d85a2::t_72902db2e4cd35 22
+  s_242b86721d85a2::t_947929b0fef14b 19,28
+packages/orpc/src/procedures/builders.ts
+  s_242b86721d85a2::t_7a6fecd55add04 3,13-14
+  s_242b86721d85a2::t_dc0d0f9368c4b9 15,19,25
+  s_242b86721d85a2::t_9867ff18d255d0 1,5,7-9,16,18,20,22,27-28,33-34
+  s_242b86721d85a2::t_adfd5b502133be 29-32
+  s_242b86721d85a2::t_10ca52f76cd2a4 2
+apps/api/src/runtime/services.ts
+  s_242b86721d85a2::t_1cb4d491d8ee41 1-2,4-10,12-13,15
+  s_242b86721d85a2::t_b5df692abfa5de 3,11,14,16
+apps/api/scripts/db.ts
+  s_242b86721d85a2::t_6837b86442109c 1
+.railway/railway.ts
+  s_242b86721d85a2::t_018d5aee0b1331 69-70
+  s_242b86721d85a2::t_947929b0fef14b 53
+  s_242b86721d85a2::t_98b80c9e94fc12 95-99
+  s_242b86721d85a2::t_fac640c1c01581 103-106
+  s_242b86721d85a2::t_28e53a72bea212 49,102
+  s_242b86721d85a2::t_a8a4d0b8f65924 33-34,64
+tests/e2e/specs/api.spec.ts
+  s_242b86721d85a2::t_4c6bc4c2e23d62 3
+  s_242b86721d85a2::t_c11e0fba8af76c 55-57
+  s_242b86721d85a2::t_d94d74603e7748 53-54,76
+apps/web/src/features/account/credentials-form.tsx
+  s_242b86721d85a2::t_d4827b50fc6167 45-52,63
+  s_242b86721d85a2::t_89351578db5695 22-23
+  s_242b86721d85a2::t_8551a4b337dd36 15,18
+  s_242b86721d85a2::t_af94611b0adad7 1,13,17,19,27,93,109,121
+  s_242b86721d85a2::t_724a76989f270b 112,114
+.railway/gateway/smoke/compose.yml
+  s_242b86721d85a2::t_a8a4d0b8f65924 11
+  s_242b86721d85a2::t_080279b593e0f5 12
+AGENTS.md
+  s_242b86721d85a2::t_2e953f0f4d5195 12,44
+docs/api.md
+  s_242b86721d85a2::t_424852005826e5 50
+  s_242b86721d85a2::t_85f532c15831dc 34
+  s_242b86721d85a2::t_db2c7ae03db2a1 3,28,30
+  s_242b86721d85a2::t_19573ee30d6bf6 52
+  s_242b86721d85a2::t_2700e354d4b956 36,42
+  s_242b86721d85a2::t_0218b2b5f38f4a 38-40
+  s_242b86721d85a2::t_a89809973d3f06 55
+  s_242b86721d85a2::t_4c2485ba92f9d1 5
+  s_242b86721d85a2::t_a4bd2f710daebe 32
+  s_242b86721d85a2::t_054ced9362aec4 37
+  s_242b86721d85a2::t_f63b6526bd222a 41
+apps/api/src/app.test.ts
+  s_242b86721d85a2::t_07efd494b984fe 7-9,13-20,34-39
+  s_242b86721d85a2::t_2700e354d4b956 10-12
+  s_242b86721d85a2::t_9753cec4924575 40
+apps/api/src/routes/auth.ts
+  s_242b86721d85a2::t_1e0ec3775f915f 30-32
+  s_242b86721d85a2::t_72902db2e4cd35 3,6,23-29
+  s_242b86721d85a2::t_1cb4d491d8ee41 1,4,7,9-14,21-22
+  s_242b86721d85a2::t_2700e354d4b956 15-20
+apps/api/src/http/middleware.ts
+  s_242b86721d85a2::t_1cb4d491d8ee41 2,13,21
+  s_242b86721d85a2::t_6837b86442109c 4-11,14-19,22-26
+tests/e2e/specs/resources.spec.ts
+  s_242b86721d85a2::t_4c6bc4c2e23d62 5
+tests/e2e/specs/setup.spec.ts
+  s_242b86721d85a2::t_5eb92db1e17ab2 64,84-88,104,112
+  s_242b86721d85a2::t_8551a4b337dd36 95-99,101-103,105-110,113
+  s_242b86721d85a2::t_8145d49b2b843c 65-83,89-94,100,111
+apps/api/src/http/session-limit.test.ts
+  s_242b86721d85a2::t_81b10ce10c804a 40,43-84
+  s_242b86721d85a2::t_2700e354d4b956 1-39,41-42,85-86
+.railway/topology/smoke.mjs
+  s_242b86721d85a2::t_db2c7ae03db2a1 43-44
+  s_242b86721d85a2::t_6c942a1f0d8f62 23-24,26-28,46,54
+  s_242b86721d85a2::t_70ae7a53f971b0 21-22,25,40,45,47,55,60
+packages/contract/src/system.ts
+  s_242b86721d85a2::t_287c416297789a 1-9
+packages/core/AGENTS.md
+  s_242b86721d85a2::t_fcd489a515155b 1,7
+  s_242b86721d85a2::t_adfd5b502133be 4-5
+packages/orpc/src/procedures/accounts.ts
+  s_242b86721d85a2::t_ce9f10de5f05e4 5
+  s_242b86721d85a2::t_9867ff18d255d0 2,7,9,14-15,19,26,28-29
+  s_242b86721d85a2::t_7a6fecd55add04 6,10,13,18,27
+  s_242b86721d85a2::t_dc0d0f9368c4b9 1,3,8,11-12,16-17,20-25
+  s_242b86721d85a2::t_96cbbf672fe3c1 4
+apps/web/src/features/account/social-sign-in.tsx
+  s_242b86721d85a2::t_55b2ec74ccab80 63
+  s_242b86721d85a2::t_724a76989f270b 11-12,36-41,54-60,62,64,72
+  s_242b86721d85a2::t_8551a4b337dd36 1,6,8-9,32,67-70
+apps/api/src/routes/procedures.ts
+  s_242b86721d85a2::t_07efd494b984fe 2-4,6-7,9,14-22,25-26,30,32,35
+  s_242b86721d85a2::t_2700e354d4b956 10-13,23-24,36-37
+  s_242b86721d85a2::t_b7a6deaac5c84d 52
+  s_242b86721d85a2::t_018d5aee0b1331 1
+apps/api/src/env.ts
+  s_242b86721d85a2::t_1cb4d491d8ee41 29
+  s_242b86721d85a2::t_2700e354d4b956 11-14
+apps/web/src/features/account/auth-client.ts
+  s_242b86721d85a2::t_af94611b0adad7 1-2,4-7,14-17,30-42
+  s_242b86721d85a2::t_724a76989f270b 3,8-13,18-29,43
+docs/README.md
+  s_242b86721d85a2::t_30a96f3eed9eb4 28
+  s_242b86721d85a2::t_f1303c7dc292cf 17-26,29-43
+  s_242b86721d85a2::t_2e953f0f4d5195 27
+packages/auth/turbo.json
+  s_242b86721d85a2::t_c0655cb8632fa1 7-13
+  s_242b86721d85a2::t_98b80c9e94fc12 1-6,14-20
+packages/contract/AGENTS.md
+  s_242b86721d85a2::t_287c416297789a 3-4
+  s_242b86721d85a2::t_0f9f07fa4bdf3e 1-2,5-6
+packages/orpc/AGENTS.md
+  s_242b86721d85a2::t_adfd5b502133be 6
+  s_242b86721d85a2::t_f2af3e7e6a7271 2
+  s_242b86721d85a2::t_a89809973d3f06 1,5,9
+  s_242b86721d85a2::t_2e953f0f4d5195 3
+  s_242b86721d85a2::t_fcd489a515155b 7
+  s_242b86721d85a2::t_df22427b575513 8
+  s_242b86721d85a2::t_e660aab2b5c095 4
+packages/contract/package.json
+  s_242b86721d85a2::t_0f9f07fa4bdf3e 6
+  s_242b86721d85a2::t_28e53a72bea212 2
+apps/api/src/runtime/resources.ts
+  s_242b86721d85a2::t_6837b86442109c 2,9-12
+  s_242b86721d85a2::t_1cb4d491d8ee41 4
+  s_242b86721d85a2::t_7f4631cbbb05f6 6
+  s_242b86721d85a2::t_cdff7a8f934438 40,42-72
+packages/orpc/turbo.json
+  s_242b86721d85a2::t_fac640c1c01581 1-5,7-8,15-16
+  s_242b86721d85a2::t_98b80c9e94fc12 10-14
+  s_242b86721d85a2::t_4dda217134a963 6
+  s_242b86721d85a2::t_52afd0b6b0a757 9
+packages/orpc/src/procedures/auth.ts
+  s_242b86721d85a2::t_9867ff18d255d0 2,4-5,7-31
+  s_242b86721d85a2::t_dc0d0f9368c4b9 1,6
+  s_242b86721d85a2::t_712f3aef914cb6 3
+apps/api/src/routes/health.ts
+  s_242b86721d85a2::t_1cb4d491d8ee41 2,4-5,10
+apps/web/src/routes/(auth)/reset-password.tsx
+  s_242b86721d85a2::t_724a76989f270b 14,49,55
+packages/contract/src/policies.ts
+  s_242b86721d85a2::t_287c416297789a 1-2,13,22,24,28,30,33-38,40
+  s_242b86721d85a2::t_d09613741b1b22 4,29,31-32,39,41
+tests/e2e/specs/auth.spec.ts
+  s_242b86721d85a2::t_fed0514bb4d70f 276
+  s_242b86721d85a2::t_db2c7ae03db2a1 217,222-224
+  s_242b86721d85a2::t_76d255e9498adc 688-692
+  s_242b86721d85a2::t_55b2ec74ccab80 1071-1073,1091
+  s_242b86721d85a2::t_85f532c15831dc 190-192,198-216,218
+  s_242b86721d85a2::t_72902db2e4cd35 32
+  s_242b86721d85a2::t_70ae7a53f971b0 184,186,188-189,262-263,273,685,807,812,819,936-937
+  s_242b86721d85a2::t_421c58585bb503 683-684,686-687,693-702
+  s_242b86721d85a2::t_4c6bc4c2e23d62 5
+  s_242b86721d85a2::t_424852005826e5 277-279
+  s_242b86721d85a2::t_aaa56249ff54f5 225-230,244-252,259-260,267-272,274-275,280-294,333-336
+  s_242b86721d85a2::t_15ad98ebe7be49 253-258,261,264-266
+  s_242b86721d85a2::t_74a71f21d8c924 14,39,221,231-243,295-332
+  s_242b86721d85a2::t_32624e088b28d4 219-220
+packages/orpc/src/procedures/router.ts
+  s_242b86721d85a2::t_9867ff18d255d0 1-10,12-13,15-17
+  s_242b86721d85a2::t_dc0d0f9368c4b9 11,14
+packages/contract/src/rest.ts
+  s_242b86721d85a2::t_d09613741b1b22 4-7
+  s_242b86721d85a2::t_287c416297789a 1-3,8-20
+packages/contract/src/auth.ts
+  s_242b86721d85a2::t_287c416297789a 1-2,19-27
+apps/web/package.json
+  s_242b86721d85a2::t_95d96374b079ea 19
+  s_242b86721d85a2::t_28e53a72bea212 15
+packages/contract/src/index.ts
+  s_242b86721d85a2::t_287c416297789a 1-20
+packages/orpc/src/services.ts
+  s_242b86721d85a2::t_fcd489a515155b 2,8-9
+  s_242b86721d85a2::t_7a6fecd55add04 4,11
+  s_242b86721d85a2::t_9867ff18d255d0 3,5,10
+  s_242b86721d85a2::t_dc0d0f9368c4b9 1,6-7
+packages/auth/src/session.ts
+  s_242b86721d85a2::t_52a760baf7c57f 1-23,28-33,38-81
+  s_242b86721d85a2::t_cc6732a4665fc6 34-37
+  s_242b86721d85a2::t_576d0ff5fd1477 24-27
+apps/api/src/runtime/setup-status.test.ts
+  s_242b86721d85a2::t_6837b86442109c 1-46
+apps/web/src/features/settings/forms.tsx
+  s_242b86721d85a2::t_28e53a72bea212 1
+apps/api/src/http/session-limit.ts
+  s_242b86721d85a2::t_07efd494b984fe 1-2,4-8,10-18
+  s_242b86721d85a2::t_72902db2e4cd35 3,9
+docs/architecture.md
+  s_242b86721d85a2::t_2700e354d4b956 49,65-67,69
+  s_242b86721d85a2::t_aa5a5b37e3d955 46-48,50-51
+  s_242b86721d85a2::t_2e953f0f4d5195 44
+  s_242b86721d85a2::t_0e1793263a1af5 75-81
+  s_242b86721d85a2::t_dfb1a9dfef94ad 34
+  s_242b86721d85a2::t_cdff7a8f934438 57-58
+  s_242b86721d85a2::t_ad09ae3429d2d9 45
+packages/auth/src/native/plugin.ts
+  s_242b86721d85a2::t_018d5aee0b1331 12,24-25
+packages/core/package.json
+  s_242b86721d85a2::t_9867ff18d255d0 7-8
+  s_242b86721d85a2::t_fcd489a515155b 6,17
+packages/auth/src/env.ts
+  s_242b86721d85a2::t_fc4085d843fa01 72-78,84-86,91-92
+  s_242b86721d85a2::t_080279b593e0f5 22-25,56-59
+  s_242b86721d85a2::t_018d5aee0b1331 1-2,10-11,37,50,63-66,68,70-71,82-83,94-95,100,107-110
+  s_242b86721d85a2::t_15ad98ebe7be49 41-49,88-90
+  s_242b86721d85a2::t_9341a1703ae924 62,67,69,79-80,87,99
+  s_f9b46c998fffca::t_541d4d6d792884 81,93,111
+apps/api/turbo.json
+  s_242b86721d85a2::t_98b80c9e94fc12 5
+  s_242b86721d85a2::t_fac640c1c01581 1-4,6-7
+docs/testing.md
+  s_242b86721d85a2::t_98b80c9e94fc12 36
+  s_242b86721d85a2::t_9e6aaa7e8d2601 37
+tests/e2e/specs/local-runs.spec.ts
+  s_242b86721d85a2::t_70ae7a53f971b0 347-348
+packages/contract/src/accounts/procedures.ts
+  s_242b86721d85a2::t_287c416297789a 1-39
+apps/api/src/server.ts
+  s_242b86721d85a2::t_6837b86442109c 5-6
+packages/orpc/src/session.ts
+  s_242b86721d85a2::t_9867ff18d255d0 1,15-20
+  s_242b86721d85a2::t_7a6fecd55add04 3
+  s_242b86721d85a2::t_27bb226889386d 21
+apps/web/src/features/account/email-form.tsx
+  s_242b86721d85a2::t_724a76989f270b 7,39-41,46-51,63
+  s_242b86721d85a2::t_db2c7ae03db2a1 54-58
+apps/api/src/runtime/database.ts
+  s_242b86721d85a2::t_6837b86442109c 1-23
+.railway/gateway/Caddyfile
+  s_242b86721d85a2::t_a8a4d0b8f65924 18,20,22-37
+  s_242b86721d85a2::t_08d38d932e362d 17
+  s_242b86721d85a2::t_080279b593e0f5 19,21
+packages/core/src/settings.ts
+  s_242b86721d85a2::t_fcd489a515155b 1-18,23
+  s_242b86721d85a2::t_ede1f458479da9 19-22
+packages/auth/src/errors.ts
+  s_242b86721d85a2::t_af94611b0adad7 1
+packages/orpc/src/index.ts
+  s_242b86721d85a2::t_95d96374b079ea 2-8,10,14-17,20-27,29-39,41-68
+  s_242b86721d85a2::t_adfd5b502133be 1,28,40
+  s_242b86721d85a2::t_9867ff18d255d0 9,11-13,18-19
+apps/web/src/features/account/menu.tsx
+  s_242b86721d85a2::t_724a76989f270b 17-18,42
+packages/contracts/AGENTS.md
+  s_242b86721d85a2::t_2e953f0f4d5195 4
+packages/auth/package.json
+  s_242b86721d85a2::t_af94611b0adad7 7
+  s_242b86721d85a2::t_52a760baf7c57f 9,23
+  s_242b86721d85a2::t_ceee2a487b1f39 24
+packages/core/src/access.ts
+  s_242b86721d85a2::t_9867ff18d255d0 4,60-74
+  s_242b86721d85a2::t_dc0d0f9368c4b9 75-76
+packages/orpc/package.json
+  s_242b86721d85a2::t_95d96374b079ea 6,18,23
+  s_242b86721d85a2::t_34aaadaa6c959e 7-8
+  s_242b86721d85a2::t_9867ff18d255d0 14
+  s_242b86721d85a2::t_e6b0eaf4dec795 26-27
+  s_242b86721d85a2::t_7a6fecd55add04 1-5,9-13,16-17,19-22,24-25,28-29
+  s_242b86721d85a2::t_28e53a72bea212 15
+apps/api/src/http/client-address.ts
+  s_242b86721d85a2::t_72902db2e4cd35 1-22
+.railway/gateway/smoke/test.mjs
+  s_242b86721d85a2::t_3f7721f07a23fb 94-105,109-136,142
+  s_242b86721d85a2::t_080279b593e0f5 106-108
+apps/web/src/features/account/client.ts
+  s_242b86721d85a2::t_28e53a72bea212 1
+  s_242b86721d85a2::t_4c6bc4c2e23d62 2,12
+packages/core/src/setup.ts
+  s_242b86721d85a2::t_9867ff18d255d0 1-10
+packages/orpc/tsconfig.json
+  s_242b86721d85a2::t_7a6fecd55add04 1-2,4-5
+  s_242b86721d85a2::t_e6b0eaf4dec795 3
+apps/web/src/api-proxy.server.ts
+  s_242b86721d85a2::t_07efd494b984fe 12
+apps/api/src/plugins/resources.ts
+  s_242b86721d85a2::t_6837b86442109c 2
+tests/e2e/package.json
+  s_242b86721d85a2::t_95d96374b079ea 14
+docs/auth.md
+  s_242b86721d85a2::t_dfb1a9dfef94ad 9
+  s_242b86721d85a2::t_0218b2b5f38f4a 78
+  s_242b86721d85a2::t_fc4085d843fa01 87
+  s_242b86721d85a2::t_080279b593e0f5 58
+  s_242b86721d85a2::t_cdff7a8f934438 64,66
+  s_242b86721d85a2::t_424852005826e5 62-63,65,67-73
+  s_242b86721d85a2::t_ab978075a36a93 152
+  s_242b86721d85a2::t_509a60721fe5e0 74-75
+apps/web/src/features/account/auth-client.test.ts
+  s_242b86721d85a2::t_8145d49b2b843c 1-12,17,23-31
+  s_242b86721d85a2::t_1e181e9b9ae3b5 13-16,18-22
+packages/auth/src/env.test.ts
+  s_242b86721d85a2::t_579e5b44b676b7 1-8,25-26,28-36,38-71,74-77,80-82,84,87-90,92-94,96
+  s_242b86721d85a2::t_080279b593e0f5 9-24
+  s_242b86721d85a2::t_576d0ff5fd1477 27,37
+  s_f9b46c998fffca::t_4de4ced8e6399e 72-73,78-79,83,86,91,95
+apps/web/src/features/account/install-status.server.ts
+  s_242b86721d85a2::t_4c6bc4c2e23d62 3
+apps/web/src/routes/(auth)/authorize.tsx
+  s_242b86721d85a2::t_724a76989f270b 1,48-51,57-58
+apps/web/src/features/account/auth-navigation.tsx
+  s_242b86721d85a2::t_724a76989f270b 1,54-56
+scripts/ci-plan.test.mjs
+  s_242b86721d85a2::t_98b80c9e94fc12 26,28,30-31,43,50-54,173-174,190-193
+  s_242b86721d85a2::t_fac640c1c01581 175-176
+  s_242b86721d85a2::t_4c6bc4c2e23d62 57,172,178-179,181,185
+  s_242b86721d85a2::t_947929b0fef14b 180,182-184,186-187
+  s_242b86721d85a2::t_28e53a72bea212 27,37-39,49,177
+  s_242b86721d85a2::t_a4bd2f710daebe 188-189,194-200
+  s_242b86721d85a2::t_20d9d8b3099361 40-42,44-48
+  s_242b86721d85a2::t_b6d116edf763c2 29
+packages/email/src/settings.ts
+  s_242b86721d85a2::t_fcd489a515155b 14
+apps/api/src/app.ts
+  s_242b86721d85a2::t_72902db2e4cd35 25
+  s_242b86721d85a2::t_1cb4d491d8ee41 1,12,24,26
+  s_242b86721d85a2::t_6837b86442109c 5,9,15-16
+packages/orpc/src/procedures/admin.ts
+  s_242b86721d85a2::t_8a4c015bd11bdb 5,15,21,34,61
+  s_242b86721d85a2::t_9867ff18d255d0 2,7-10,16-17,22,26-33,35-36,39,43-49,52,56-60,62
+  s_242b86721d85a2::t_dc0d0f9368c4b9 4,12-14,18-20,23-25,37-38,40-42,50-51,53-55
+  s_242b86721d85a2::t_84efa8f2f250ec 1,3,6,11,63
+packages/orpc/src/client/index.ts
+  s_242b86721d85a2::t_d36ec15d6fd561 1
+packages/orpc/src/procedures/errors.ts
+  s_242b86721d85a2::t_92f66b11ee283d 1
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "3f01c35f60bb47f2e539bf8e5eebcea01e7bbadc",
+  "prompts": {},
+  "sessions": {
+    "s_242b86721d85a2": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1f717-b456-78c3-a391-37b974e8978c",
+        "model": "gpt-6.2-astra"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_f9b46c998fffca": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1f771-ec6e-7811-814b-919a1682c896",
+        "model": "gpt-6.2-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
