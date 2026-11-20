@@ -1,6 +1,6 @@
 # Testing
 
-`bun run check` runs formatting, lint, TypeScript, Knip, and the Bun and Vitest tests. `bun run lint` checks workspace import boundaries and runs the rule's examples with Bun. Web generates its route types using Vite without making a production bundle. Use `bun run knip` for the workspace usage analysis alone.
+`bun run kpdev check` runs formatting, lint, TypeScript, Knip, and the Bun and Vitest tests. `bun run kpdev lint` checks workspace import boundaries and runs the rule's examples with Bun. Web generates its route types using Vite without making a production bundle. Use `bun run kpdev knip` for the workspace usage analysis alone.
 
 ## Test standards
 
@@ -46,12 +46,12 @@ Storybook component interactions and browser checks are required through `ui` fo
 Reproduce and test the plan locally:
 
 ```sh
-bun run ci:plan --base <base-sha> --head <head-sha>
-bun run ci:plan --full
-bun run ci:test
+bun run kpdev ci plan --base <base-sha> --head <head-sha>
+bun run kpdev ci plan --full
+bun run kpdev ci test
 ```
 
-`ci:test` also runs as part of `bun run check`. The planner job installs the pinned Turbo binary without installing workspace dependencies. When replaying a different head or working from a dirty tree, the planner checks out the committed head in a temporary clone with Git history. It installs that revision’s pinned Turbo into a temporary directory if needed.
+`ci:test` also runs as part of `bun run kpdev check`. The planner job installs the pinned Turbo binary without installing workspace dependencies. When replaying a different head or working from a dirty tree, the planner checks out the committed head in a temporary clone with Git history. It installs that revision’s pinned Turbo into a temporary directory if needed.
 
 ## CI caches
 
@@ -69,15 +69,25 @@ These caches need no remote Turbo account or additional repository secrets. A ca
 
 ## Component tests
 
-Run `bun run test:ui:install` once, then `bun run test:stories` to run all Storybook stories as Chromium component tests through the Vitest addon. The same tests can be run and watched from Storybook's sidebar testing widget.
+Run `bun run kpdev test ui install` once, then `bun run kpdev test stories` to run all Storybook stories as Chromium component tests through the Vitest addon. The same tests can be run and watched from Storybook's sidebar testing widget.
 
-Run `bun run test:ui` to check the Storybook application in Chromium in both light and dark themes. Playwright builds and serves it on loopback port 4384. The suite protects core interactions, accessible labels and descriptions, native Controls and Docs, narrow screens, and browser-composited color contrast without backend services. `bun run build:storybook` verifies the static build. See the [component stories guide](../apps/storybook/README.md). CI runs both suites in the `ui` job.
+Run `bun run kpdev test ui` to check the Storybook application in Chromium in both light and dark themes. Playwright builds and serves it on loopback port 4384. The suite protects core interactions, accessible labels and descriptions, native Controls and Docs, narrow screens, and browser-composited color contrast without backend services. `bun run kpdev turbo run build --filter=storybook` verifies the static build. See the [component stories guide](../apps/storybook/README.md). CI runs both suites in the `ui` job.
 
 ## End-to-end tests
 
+With workspace dependencies installed and a local Docker engine running, run the full end-to-end suite from the repository root.
+
 ```sh
-bun run test:e2e:install --only-shell
-bun run test:e2e
+bun run kpdev test e2e all
+```
+
+This checks Docker, installs the Playwright Chromium headless shell if needed, builds the API, Web and CLI, and runs the `api`, `auth`, `resources` and `chromium` projects against the local build. The command starts PostgreSQL 17 on a random loopback port and removes its container and volume on exit. Set `TEST_DATABASE_URL` to reuse an existing disposable PostgreSQL server with permission to create databases. The resource tests manage their own Redis and RustFS containers.
+
+To run just the API and Chromium projects, use the focused entry point.
+
+```sh
+bun run kpdev test e2e install --only-shell
+bun run kpdev test e2e
 ```
 
 Playwright starts a built API for HTTP checks and shares one Web development server across the Chromium tests. The runner tests use the built CLI and give each test a fresh SQLite database, temporary checkout, and controlled check script. The suite uses loopback ports 4380 and 4381 and assigns each runner an ephemeral port. CI retains traces when tests fail.
@@ -89,14 +99,25 @@ Use the Playwright page clock for browser timers. The local-run tests wait for t
 ## Resource tests
 
 ```sh
-bun run test:resources
+bun run kpdev test resources
 ```
 
-This command uses the Docker CLI to start temporary `redis:8-alpine` and `rustfs/rustfs:1.0.5` containers on random loopback ports. The suite provisions its own private bucket and removes the containers on exit. Run it with Docker running locally. CI runs `bun run test:resources --project=api` for the blocking integration job. Use `bun run test:e2e --project=resources` to run API, Chromium, and resource tests together locally.
+This command uses the Docker CLI to start temporary `redis:8-alpine` and `rustfs/rustfs:1.0.5` containers on random loopback ports. The suite provisions its own private bucket and removes the containers on exit. A container that exits before readiness reports its recent logs. CI runs the `api` and `resources` projects together in the blocking integration job.
 
 ## Database and authentication tests
 
-Install Chromium with `bun run test:e2e:install`, set `TEST_DATABASE_URL` to a disposable PostgreSQL database, then run `bun run test:auth`. The suite starts the built Web and API on ports 4383 and 4382 with API startup migrations enabled. It verifies registration, session cookies, origin checks, concurrent role changes, and the browser account management flow. Both auth specs create and drop their own databases on the same server (the test role needs `CREATEDB`). The setup race test also uses ports 4385–4387. CI starts a PostgreSQL service for this job. See the [database setup](auth.md).
+Install Chromium with `bun run kpdev test e2e install`, set `TEST_DATABASE_URL` to a disposable PostgreSQL database, then run `bun run kpdev test auth`. The suite starts the built Web and API on ports 4383 and 4382 with API startup migrations enabled. It verifies registration, session cookies, origin checks, concurrent role changes, and the browser account management flow. Both auth specs create and drop their own databases on the same server (the test role needs `CREATEDB`). The setup race test also uses ports 4385–4387. CI starts a PostgreSQL service for this job. See the [database setup](auth.md).
+
+## Smoke tests for changed targets
+
+Preview the selected checks and their reasons, then build and test the affected targets:
+
+```sh
+bun run kpdev smoke plan
+bun run kpdev smoke changed --build
+```
+
+Both commands compare the working tree, including staged and untracked files, with the merge base of the checked-out branch and the locally known default branch on `origin`. If that ref is unavailable, they try the branch upstream and then `HEAD`. Pass `--base <ref>` to choose another comparison. Planning does not require Docker. A selected topology check builds all four images required by Compose. Individual image checks and topology reuse the same build when both are selected.
 
 ## Web and Docs production image smoke tests
 
@@ -104,9 +125,9 @@ Build and test both images from the repository root with Docker running.
 
 ```sh
 docker build -f apps/web/Dockerfile -t kipivo-web:ci .
-scripts/smoke-web-image.sh kipivo-web:ci
+bun run kpdev smoke web kipivo-web:ci
 docker build -f apps/docs/Dockerfile -t kipivo-docs:ci .
-bash scripts/smoke-docs-image.sh kipivo-docs:ci
+bun run kpdev smoke docs kipivo-docs:ci
 ```
 
 ## API production image smoke test
@@ -115,7 +136,7 @@ Run with Docker running locally, Bun available, and workspace dependencies insta
 
 ```sh
 docker build -f apps/api/Dockerfile -t kipivo-api:ci .
-scripts/smoke-api-image.sh
+bun run kpdev smoke api
 ```
 
 Pass an image tag or ID as the first argument to test a different local build. Use the checkout the image was built from so its migration journal matches the image.
@@ -125,13 +146,13 @@ The API image job runs this script against a disposable PostgreSQL 17 container 
 ## Verify running services
 
 ```sh
-bun scripts/smoke-web.mjs https://<web-domain> --production
+bun scripts/smoke/web.ts https://<web-domain> --production
 E2E_API_ORIGIN=https://<api-domain> bun run --bun --cwd tests/e2e test:e2e --project=api
 ```
 
 The Web check covers the SSR home page, stylesheet, logo, `/healthz`, and the production `404` for local tasks. The API test checks `/healthz`, calls `system.ping` through the typed oRPC client, and verifies unknown HTTP and RPC paths return `404`.
 
-For a local Web production build, run `bun run build --filter=web` and `bun run start`. Then run `bun scripts/smoke-web.mjs http://127.0.0.1:3000 --production`.
+For a local Web production build, run `bun run kpdev turbo run build --filter=web` and `bun run kpdev start`. Then run `bun scripts/smoke/web.ts http://127.0.0.1:3000 --production`.
 
 ## Gateway production image smoke test
 
@@ -139,20 +160,21 @@ Run with Docker and the Compose plugin available locally.
 
 ```sh
 docker build -f .railway/gateway/Dockerfile -t kipivo-gateway:ci .
-scripts/smoke-gateway-image.sh
+bun run kpdev smoke gateway
 ```
 
 Pass a local image tag or ID as the first argument to check another build. CI runs the same script for the gateway image matrix entry. Compose starts the built gateway and `oven/bun:1.4.4-slim` mock upstreams on an isolated network and waits for their health checks. The script runs the Bun assertions inside the mock service, prints service logs on failure, and removes the Compose project on exit. The checks cover routing boundaries, production local-route rejection, gateway health, HTTPS forwarding, HTML compression, and preservation of query strings, POST bodies, Host, Origin, cookies, Set-Cookie, and upstream security headers.
 
 ## Production topology smoke test
 
-Pushes to `next` that select image checks also run **Topology smoke (advisory)** alongside the image jobs. CI calls the same **Production topology smoke** workflow available for manual runs. Docker Bake builds the three targets from the Compose file and reads the existing image job caches. To run the same checks locally, build the images and run the smoke script with Docker Compose available.
+Pushes to `next` that select image checks or change topology inputs run **Topology smoke (advisory)**. CI calls the same **Production topology smoke** workflow available for manual runs. Docker Bake builds the four targets from the Compose file and reads the existing image job caches. To run the same checks locally, build the images and run the smoke script with Docker Compose available.
 
 ```sh
 docker build -f .railway/gateway/Dockerfile -t kipivo-gateway:topology .
 docker build -f apps/web/Dockerfile -t kipivo-web:topology .
 docker build -f apps/api/Dockerfile -t kipivo-api:topology .
-bash scripts/smoke-topology.sh
+docker build -f apps/docs/Dockerfile -t kipivo-docs:topology .
+bun run kpdev smoke topology
 ```
 
 Compose pulls any missing PostgreSQL, Redis, and Bun images in parallel, then starts the real gateway, Web, and API images with disposable PostgreSQL and Redis on an internal network. After the services are healthy, a one-shot Bun container calls the gateway over HTTP to check readiness, Web's redirect before setup, first administrator creation, sign-in, the account session over RPC, and session revocation. It then runs the existing production SSR and asset checks through the gateway. The script prints service logs on failure and removes the containers, network, and database volume on exit.

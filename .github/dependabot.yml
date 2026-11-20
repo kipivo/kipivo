@@ -1,0 +1,21 @@
+version: 2
+updates:
+  - package-ecosystem: bun
+    directory: /
+    target-branch: next
+    schedule:
+      interval: weekly
+    # Match the entries in workspaces.catalog in the root package.json.
+    allow:
+      - dependency-name: hono
+      - dependency-name: vite
+      - dependency-name: vitest
+      - dependency-name: zod
+      - dependency-name: "@vitest/browser-playwright"
+      - dependency-name: "@vitest/coverage-v8"
+    groups:
+      vitest:
+        patterns:
+          - vitest
+          - "@vitest/browser-playwright"
+          - "@vitest/coverage-v8"

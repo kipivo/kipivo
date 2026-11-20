@@ -1,0 +1,28 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "ignorePresets": [":ignoreModulesAndTests"],
+  "baseBranchPatterns": ["next"],
+  "semanticCommits": "enabled",
+  "packageRules": [
+    {
+      "description": "Keep the Bun versions in package.json, mise, and container images aligned",
+      "matchManagers": ["bun", "mise", "dockerfile", "docker-compose"],
+      "matchPackageNames": ["bun", "oven-sh/bun", "oven/bun"],
+      "groupName": "Bun runtime"
+    },
+    {
+      "description": "Let Dependabot update the Bun catalog",
+      "matchManagers": ["bun"],
+      "matchPackageNames": [
+        "hono",
+        "vite",
+        "vitest",
+        "zod",
+        "@vitest/browser-playwright",
+        "@vitest/coverage-v8"
+      ],
+      "enabled": false
+    }
+  ]
+}

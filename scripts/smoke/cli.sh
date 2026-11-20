@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/../.."
 version=$(bun apps/cli/dist/kipivo.js --version)
 test -n "$version"
 for command in kipivo kpvo; do

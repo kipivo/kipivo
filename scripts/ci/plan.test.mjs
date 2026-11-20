@@ -12,8 +12,15 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { ciTasks, fullPlan, jobs, planForNextPush, planFromArgs } from "./ci-plan.mjs";
-import { validateResults } from "./ci-result.mjs";
+import {
+  ciTasks,
+  fullPlan,
+  jobs,
+  planForNextPush,
+  planFromArgs,
+  planWorkingTree,
+} from "./plan.mjs";
+import { validateResults } from "./result.mjs";
 
 const selected = (plan) => ["check", ...jobs.filter((job) => plan[job])];
 
@@ -66,7 +73,7 @@ describe("CI selection", () => {
     git("config", "user.name", "CI test");
     git("config", "user.email", "ci@example.test");
     const { devDependencies, packageManager } = JSON.parse(
-      readFileSync(new URL("../package.json", import.meta.url), "utf8"),
+      readFileSync(new URL("../../package.json", import.meta.url), "utf8"),
     );
     const writeJson = (path, value) => writeFileSync(join(directory, path), JSON.stringify(value));
     writeJson("package.json", {
@@ -75,17 +82,17 @@ describe("CI selection", () => {
       packageManager,
       devDependencies: { turbo: devDependencies.turbo },
     });
-    copyFileSync(new URL("../turbo.json", import.meta.url), join(directory, "turbo.json"));
+    copyFileSync(new URL("../../turbo.json", import.meta.url), join(directory, "turbo.json"));
     const lockWorkspaces = workspaces.map(([path, name, dependencies]) => {
       mkdirSync(join(directory, path), { recursive: true });
-      const source = new URL(`../${path}/package.json`, import.meta.url);
+      const source = new URL(`../../${path}/package.json`, import.meta.url);
       const manifest = {
         name,
         scripts: existsSync(source) ? JSON.parse(readFileSync(source, "utf8")).scripts : {},
         dependencies: Object.fromEntries(dependencies.map((dep) => [dep, "workspace:*"])),
       };
       writeJson(`${path}/package.json`, manifest);
-      const config = new URL(`../${path}/turbo.json`, import.meta.url);
+      const config = new URL(`../../${path}/turbo.json`, import.meta.url);
       if (existsSync(config)) copyFileSync(config, join(directory, path, "turbo.json"));
       return [path, { name, dependencies: manifest.dependencies }];
     });
@@ -200,7 +207,21 @@ describe("CI selection", () => {
   });
   test("special inputs union with Turbo's scopes without expanding unrelated jobs", () => {
     expect(
-      selected(planFor(["scripts/workspace-lint.mjs", "scripts/workspace-lint.test.mjs"])),
+      selected(
+        planFor([
+          "scripts/cli/commands.ts",
+          "scripts/cli/commands/smoke.ts",
+          "scripts/cli/kpdev.mjs",
+          "scripts/cli/tasks.ts",
+          "scripts/cli/index.ts",
+          "scripts/cli/index.test.ts",
+        ]),
+      ),
+    ).toEqual(["check"]);
+    expect(
+      selected(
+        planFor(["scripts/check/workspace-lint.mjs", "scripts/check/workspace-lint.test.mjs"]),
+      ),
     ).toEqual(["check"]);
     const plan = planFor(["apps/web/Dockerfile", "apps/storybook/package.json"]);
     expect(selected(plan)).toEqual(["check", "ui", "web-image"]);
@@ -215,7 +236,7 @@ describe("CI selection", () => {
       "web-image",
       "docs-image",
     ]);
-    for (const path of [".dockerignore", "scripts/check-image.sh"]) {
+    for (const path of [".dockerignore", "scripts/smoke/image-files.sh"]) {
       expect(selected(planFor([path]))).toEqual([
         "check",
         "web-image",
@@ -228,15 +249,14 @@ describe("CI selection", () => {
   test.each([
     ["apps/web/Dockerfile", "web-image"],
     ["apps/docs/Dockerfile", "docs-image"],
-    ["scripts/smoke-web-image.sh", "web-image"],
-    ["scripts/smoke-web.mjs", "web-image"],
-    ["scripts/smoke-api-image.sh", "api-image"],
+    ["scripts/smoke/web.ts", "web-image"],
+    ["scripts/smoke/api-image.sh", "api-image"],
+    ["scripts/smoke/turbo.ts", "cli"],
     [".railway/gateway/Dockerfile", "gateway-image"],
     [".railway/gateway/Caddyfile", "gateway-image"],
     [".railway/gateway/future-config.json", "gateway-image"],
-    ["scripts/smoke-gateway-image.sh", "gateway-image"],
-    ["scripts/smoke-docs-image.sh", "docs-image"],
-    ["scripts/smoke-cli.sh", "cli"],
+    ["scripts/smoke/gateway-image.sh", "gateway-image"],
+    ["scripts/smoke/cli.sh", "cli"],
   ])("%s selects only %s alongside check", (path, job) => {
     expect(selected(planFor([path]))).toEqual(["check", job]);
   });
@@ -244,11 +264,36 @@ describe("CI selection", () => {
     const content = planFor(["apps/docs/content/docs/quickstart.mdx"]);
     expect(content["docs-image"]).toBe(true);
     expect(content["web-image"]).toBe(true);
-    expect(selected(planFor(["scripts/smoke-docs.mjs"]))).toEqual([
-      "check",
-      "web-image",
-      "docs-image",
-    ]);
+    for (const path of ["scripts/smoke/docs.ts", "scripts/smoke/http-image.ts"]) {
+      expect(selected(planFor([path]))).toEqual(["check", "web-image", "docs-image"]);
+    }
+  });
+  test("local planning picks up committed, staged and untracked workspace changes", () => {
+    git("checkout", "--quiet", "--detach", base);
+    writeFileSync(join(directory, "apps/cli/branch.ts"), "export {};\n");
+    git("add", "apps/cli/branch.ts");
+    git("commit", "--quiet", "-m", "Change the CLI on this branch");
+    const staged = "apps/web/staged.ts";
+    const untracked = "apps/docs/untracked.ts";
+    writeFileSync(join(directory, staged), "export {};\n");
+    git("add", staged);
+    writeFileSync(join(directory, untracked), "export {};\n");
+    const status = git("status", "--porcelain");
+    const previous = process.cwd();
+    try {
+      process.chdir(directory);
+      const local = planWorkingTree(base);
+      expect(local.cli).toBe(true);
+      expect(local.images.map(({ app }) => app)).toEqual(["web", "docs"]);
+      expect(local.topology).toBe(false);
+      expect(planFromArgs(["--base", base, "--head", "HEAD"]).images).toEqual([]);
+      expect(git("status", "--porcelain")).toBe(status);
+    } finally {
+      process.chdir(previous);
+      git("restore", "--staged", staged);
+      rmSync(join(directory, staged));
+      rmSync(join(directory, untracked));
+    }
   });
   test("gateway inputs union with workspace selections and Railway IaC remains shared", () => {
     expect(selected(planFor([".railway/gateway/Caddyfile", "apps/cli/src/index.ts"]))).toEqual([
@@ -299,7 +344,7 @@ describe("CI selection", () => {
   test("shared and unmapped inputs conservatively select the full suite", () => {
     for (const path of [
       ".github/workflows/ci.yml",
-      "scripts/ci-install-turbo.sh",
+      "scripts/ci/install-turbo.sh",
       "bun.lock",
       "package.json",
       "apps/unknown/a.ts",
@@ -395,11 +440,11 @@ describe("next push baseline", () => {
       git("init", "--quiet");
       git("config", "user.name", "CI test");
       git("config", "user.email", "ci@example.test");
-      mkdirSync(join(dir, "scripts"));
+      mkdirSync(join(dir, "scripts/smoke"), { recursive: true });
       const older = commit("README.md", "Repository baseline");
       const unrelated = commit("README.md", "Push on previous next history");
       git("checkout", "--quiet", "--detach", older);
-      const baseline = commit("scripts/smoke-api-image.sh", "Latest verified next push");
+      const baseline = commit("scripts/smoke/api-image.sh", "Latest verified next push");
       mkdirSync(join(dir, "apps/web"), { recursive: true });
       const failed = commit("apps/web/Dockerfile", "Failed Web image check");
       const head = commit("README.md", "Documentation follow-up");
@@ -460,6 +505,13 @@ describe("next push baseline", () => {
       expect(selected(ciPlan)).toEqual(["check", "ui", "cli", "mobile", "auth", "e2e", "web-e2e"]);
       expect(ciPlan.images).toEqual([]);
       expect(ciPlan.base).toBe("");
+
+      git("checkout", "--quiet", "--detach", baseline);
+      const topologyHead = commit("scripts/smoke/topology.sh", "Change the topology smoke script");
+      const topology = await planForNextPush({ ...env, GITHUB_SHA: topologyHead });
+      expect(topology.topology).toBe(true);
+      expect(topology.images).toEqual([]);
+      expect(topology.reasons.topology).toEqual(["scripts/smoke/topology.sh"]);
     } finally {
       server?.stop(true);
       process.chdir(previous);
@@ -521,17 +573,20 @@ describe("CI result", () => {
   });
   test("the Web browser job is advisory while Storybook and integrations gate CI", () => {
     const workflow = Bun.YAML.parse(
-      readFileSync(new URL("../.github/workflows/ci.yml", import.meta.url), "utf8"),
+      readFileSync(new URL("../../.github/workflows/ci.yml", import.meta.url), "utf8"),
     );
     const web = workflow.jobs["web-e2e"];
     expect(web["continue-on-error"]).toBe(true);
     expect(web.if).toBe("needs.changes.outputs.web-e2e == 'true'");
     expect(workflow.jobs.ui["continue-on-error"]).toBeUndefined();
+    const { scripts } = JSON.parse(
+      readFileSync(new URL("../../package.json", import.meta.url), "utf8"),
+    );
+    expect(scripts["smoke:cli"]).toContain(ciTasks.cli);
     for (const [job, task] of Object.entries(ciTasks)) {
       expect(workflow.jobs[job].env.TURBO_SCM_BASE).toBe("${{ needs.changes.outputs.base }}");
-      const run = workflow.jobs[job].steps.find((step) =>
-        step.run?.includes(`turbo run '${task}'`),
-      );
+      const command = job === "cli" ? "bun run smoke:cli" : `turbo run '${task}'`;
+      const run = workflow.jobs[job].steps.find((step) => step.run?.includes(command));
       expect(run?.run).toContain("--affected");
     }
     expect(workflow.jobs.result.needs).toContain("ui");

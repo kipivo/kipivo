@@ -32,4 +32,4 @@ Provision a private bucket with an external S3-compatible provider and give the 
 
 ## Local verification
 
-Run `bun run test:resources` from the repository root with Docker running. The suite starts temporary Redis and RustFS containers and provisions its own bucket. See [resource tests](testing.md#resource-tests) for details.
+Run `bun run kpdev test resources` from the repository root with Docker running. The suite starts temporary Redis and RustFS containers and provisions its own bucket. See [resource tests](testing.md#resource-tests) for details.

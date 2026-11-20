@@ -2,7 +2,7 @@
 
 ![Workbench in the light theme, with workspace navigation on the left and the current task, progress, and three-column task board on the right.](workbench.webp)
 
-Run `bun run --cwd apps/web dev` from the repository root. Use the [Workbench](http://localhost:3000/workbench) to create and edit tasks. Guests and signed-in accounts each have their own board in the current browser. With the local runner active, open [Local runs](http://localhost:3000/runs) to submit a check and read its logs. The [Design guide](http://localhost:3000/design-guide) shows the workspace palette, type scale, and interaction patterns.
+Run `bun run kpdev dev --filter=web` from the repository root. Use the [Workbench](http://localhost:3000/workbench) to create and edit tasks. Guests and signed-in accounts each have their own board in the current browser. With the local runner active, open [Local runs](http://localhost:3000/runs) to submit a check and read its logs. The [Design guide](http://localhost:3000/design-guide) shows the workspace palette, type scale, and interaction patterns.
 
 The workbench uses the Kipivo K mark, Geist, and the shared theme. The focus card shows the current task alongside board progress. The board groups tasks by stage. Moving a task to **Done** updates both the completed count and the progress bar.
 

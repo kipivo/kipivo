@@ -26,14 +26,33 @@ async function publishedPort(name: string, containerPort: number) {
   return match[1];
 }
 
-async function waitForService(name: string, ready: () => Promise<boolean>) {
+async function waitForService(
+  name: string,
+  containerPort: number,
+  ready: (port: string) => Promise<boolean>,
+) {
   const deadline = Date.now() + 60_000;
+  let port: string | undefined;
+  let lastError: unknown;
+  let state = "running";
   while (Date.now() < deadline) {
-    if (await ready().catch(() => false)) return;
+    try {
+      port ??= await publishedPort(name, containerPort);
+      if (await ready(port)) return port;
+    } catch (error) {
+      lastError = error;
+    }
+    state = await docker(["inspect", "--format", "{{.State.Status}}", name]);
+    if (state !== "running") break;
     await delay(250);
   }
   const logs = await exec("docker", ["logs", "--tail", "50", name], { timeout: 10_000 });
-  throw new Error(`${name} did not become ready\n${logs.stdout}${logs.stderr}`);
+  throw new Error(
+    `${name} did not become ready (container ${state})\n${logs.stdout}${logs.stderr}`,
+    {
+      cause: lastError,
+    },
+  );
 }
 
 interface ObjectStorageSettings {
@@ -70,9 +89,9 @@ export const test = base.extend<
           ],
           300_000,
         );
-        const port = await publishedPort(name, 6379);
-        await waitForService(
+        const port = await waitForService(
           name,
+          6379,
           async () => (await docker(["exec", name, "redis-cli", "PING"])) === "PONG",
         );
         await use(`redis://127.0.0.1:${port}`);
@@ -116,16 +135,16 @@ export const test = base.extend<
           ],
           300_000,
         );
-        const endpoint = `http://127.0.0.1:${await publishedPort(name, 9000)}`;
         const client = new AwsClient({ ...credentials, region, service: "s3", retries: 0 });
         // RustFS can serve /health before its S3 operations are ready.
-        await waitForService(name, async () => {
-          const response = await client.fetch(`${endpoint}/`, {
+        const port = await waitForService(name, 9000, async (port) => {
+          const response = await client.fetch(`http://127.0.0.1:${port}/`, {
             signal: AbortSignal.timeout(1500),
           });
           await response.text();
           return response.ok;
         });
+        const endpoint = `http://127.0.0.1:${port}`;
         const response = await client.fetch(`${endpoint}/${bucket}`, {
           method: "PUT",
           signal: AbortSignal.timeout(10_000),

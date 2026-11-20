@@ -12,10 +12,10 @@ bun run --cwd apps/storybook storybook tools docs show --id components-button --
 ```
 
 ```sh
-bun run dev:storybook
+bun run kpdev dev storybook
 ```
 
-Open [localhost:6006](http://localhost:6006). Storybook runs independently of Web, the API, and a database. `bun run dev` excludes this workspace.
+Open [localhost:6006](http://localhost:6006). Storybook runs independently of Web, the API, and a database. `bun run kpdev dev` excludes this workspace.
 
 ## Browse and inspect
 
@@ -32,19 +32,19 @@ Follow the [theme contrast constraints](../../packages/ui/README.md#contrast-con
 ## Build and verify
 
 ```sh
-bun run build:storybook
-bun run test:ui:install
-bun run test:stories
-bun run test:ui
+bun run kpdev turbo run build --filter=storybook
+bun run kpdev test ui install
+bun run kpdev test stories
+bun run kpdev test ui
 ```
 
 The static build is written to `apps/storybook/dist` and cached by Turbo. `bun run --cwd apps/storybook preview` serves it on port 6006. Playwright builds through Turbo and serves the same output on loopback port 4384. Tests cover component states, labels/errors, dialog/menu focus, tooltips, native Controls and documentation, theme switching, the inspector, clipboard fallback, narrow screens, and browser-composited contrast.
 
 CI retains Bun's package cache, Turbo artifacts, Vite dependencies, and Storybook's manager/builder cache. It runs browser tests in the `ui` job and retains traces/screenshots on failure. On Linux, add `--with-deps` to browser installation if system libraries are missing.
 
-`bun run check` covers formatting, lint, types, unused code, and unit tests. Browser checks run separately. The [Vitest addon](https://storybook.js.org/docs/writing-tests/integrations/vitest-addon/) turns stories into Chromium component tests. Run them with `bun run test:stories`, or use **Run tests** in Storybook's sidebar testing widget. Its eye toggle reruns affected stories while editing. Stories with a `play` function also check their documented interactions.
+`bun run kpdev check` covers formatting, lint, types, unused code, and unit tests. Browser checks run separately. The [Vitest addon](https://storybook.js.org/docs/writing-tests/integrations/vitest-addon/) turns stories into Chromium component tests. Run them with `bun run kpdev test stories`, or use **Run tests** in Storybook's sidebar testing widget. Its eye toggle reruns affected stories while editing. Stories with a `play` function also check their documented interactions.
 
-V8 coverage is installed. Enable **Coverage** in the testing widget, or run `bun run test:stories --coverage` to write a report to `apps/storybook/coverage`.
+V8 coverage is installed. Enable **Coverage** in the testing widget, or run `bun run kpdev test stories --coverage` to write a report to `apps/storybook/coverage`.
 
 The addon and CLI share one project in `vitest.config.ts`. In panel mode the addon names projects by Storybook config directory, so registering this directory more than once causes duplicate project names. The preview's theme decorator and TooltipProvider are loaded automatically by Storybook 11; a manual `setProjectAnnotations` setup file is unnecessary. Playwright's separate suite checks both themes, the manager UI, and contrast. CI runs both suites in the `ui` job using the same installed Chromium binary.
 

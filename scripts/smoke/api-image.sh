@@ -6,7 +6,7 @@ if (( $# > 1 )); then
   exit 2
 fi
 
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/../.."
 image=$(docker image inspect --format '{{.Id}}' -- "${1:-kipivo-api:ci}")
 expected_migrations=$(bun -e 'console.log((await Bun.file("packages/db/drizzle/meta/_journal.json").json()).entries.length)')
 (( expected_migrations > 0 ))

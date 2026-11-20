@@ -15,11 +15,11 @@ ci: cache browser binaries
 
 ## Checking locally
 
-Run `bun install --frozen-lockfile` from the repository root. In a development clone this sets up Husky's `commit-msg` hook, which checks each commit message using the rules in [scripts/commitlint.mjs](scripts/commitlint.mjs).
+Run `bun install --frozen-lockfile` from the repository root. In a development clone this sets up Husky's `commit-msg` hook, which checks each commit message using the rules in [scripts/check/commitlint.mjs](scripts/check/commitlint.mjs).
 
 If you manage your own Git hooks, set `HUSKY=0` before installing to keep your hooks path and call `bun run --silent commitlint --edit "$1"` from your own `commit-msg` hook. To check messages without installing a hook:
 
 ```sh
-printf '%s\n' 'fix(web): restore focus after saving' | bun run --silent commitlint
-bun run commitlint --from origin/next --to HEAD
+printf '%s\n' 'fix(web): restore focus after saving' | bun run kpdev commitlint
+bun run kpdev commitlint --from origin/next --to HEAD
 ```

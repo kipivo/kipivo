@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
-import { verifyDocs } from "./smoke-docs.mjs";
+import { verifyDocs } from "./docs";
 
 const base = new URL(process.argv[2] ?? "http://localhost:3000");
 
-async function get(path, headers) {
+async function get(path: string, headers?: RequestInit["headers"]) {
   const url = new URL(path, base);
   const response = await fetch(url, { headers, signal: AbortSignal.timeout(5000) });
   assert.equal(response.status, 200, `GET ${url}`);

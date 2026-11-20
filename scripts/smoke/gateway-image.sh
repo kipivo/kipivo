@@ -5,7 +5,7 @@ if (( $# > 1 )); then
   printf 'Usage: %s [gateway-image]\n' "$0" >&2
   exit 2
 fi
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/../.."
 export KIPIVO_GATEWAY_SMOKE_IMAGE
 KIPIVO_GATEWAY_SMOKE_IMAGE=$(docker image inspect --format '{{.Id}}' -- "${1:-kipivo-gateway:ci}")
 compose=(

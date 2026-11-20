@@ -12,7 +12,7 @@ In the first terminal, install dependencies and leave the runner open.
 ```sh
 mise install --locked
 mise exec -- bun install --frozen-lockfile
-mise exec -- bun run kipivo serve
+mise exec -- bun run kpdev runner serve
 ```
 
 ## Submit a check
@@ -20,9 +20,9 @@ mise exec -- bun run kipivo serve
 In the second terminal, save the run ID and use it to read the status and logs.
 
 ```sh
-id=$(mise exec -- bun run kipivo run check)
-mise exec -- bun run kipivo status "$id"
-mise exec -- bun run kipivo logs "$id"
+id=$(mise exec -- bun run kpdev runner run check)
+mise exec -- bun run kpdev runner status "$id"
+mise exec -- bun run kpdev runner logs "$id"
 ```
 
 The status includes the result when the check finishes. See the [local runner guide](/docs/local-runner) for more CLI commands and troubleshooting.

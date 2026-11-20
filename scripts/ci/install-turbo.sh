@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/../.."
 version=$(bun -e 'console.log((await Bun.file("package.json").json()).devDependencies.turbo)')
 install_dir="${RUNNER_TEMP:?Set RUNNER_TEMP to a temporary directory}/ci-turbo"
 mkdir -p "$install_dir"

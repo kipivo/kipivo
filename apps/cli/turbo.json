@@ -4,7 +4,7 @@
   "tasks": {
     "ci:cli": {
       "dependsOn": ["build"],
-      "inputs": ["$TURBO_ROOT$/scripts/smoke-cli.sh"],
+      "inputs": ["$TURBO_ROOT$/scripts/smoke/cli.sh", "$TURBO_ROOT$/scripts/smoke/turbo.ts"],
       "cache": false
     }
   }

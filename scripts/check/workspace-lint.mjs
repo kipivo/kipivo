@@ -1,7 +1,7 @@
 import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const root = fileURLToPath(new URL("../", import.meta.url));
+const root = fileURLToPath(new URL("../../", import.meta.url));
 const runnerConnection = "@kipivo/runtime/local/connection";
 const serverPackages = new Set([
   "@kipivo/auth",
@@ -82,7 +82,7 @@ function create(context) {
       specifier.startsWith(".") || isAbsolute(specifier)
         ? repoPath(resolve(dirname(context.filename), specifier))
         : "";
-    const owner = /^((?:apps|packages|tests)\/[^/]+)(?:\/|$)/.exec(target)?.[1];
+    const owner = /^((?:apps|packages|tests)\/[^/]+|scripts)(?:\/|$)/.exec(target)?.[1];
     if (
       (owner && !importer.startsWith(owner + "/")) ||
       /^@kipivo\/[^/]+\/src(?:\/|$)/.test(specifier)

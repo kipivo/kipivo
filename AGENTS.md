@@ -33,13 +33,14 @@ Use the directory guide for Kipivo conventions and the linked skill for framewor
 
 - Use the Bun and Node.js versions pinned in root `mise.toml`. Keep the Bun pin aligned with `packageManager` in `package.json` and the Web and API Docker base images. Run `mise install --locked` and `mise exec -- bun install --frozen-lockfile` from the repository root.
 - Declare dependencies in the workspace that imports them. Use `workspace:*` for local packages and `catalog:` for Hono, Zod, Vite, and Vitest. Edit catalog versions in the root manifest and update `bun.lock` when dependencies change.
-- Use the root scripts and Turbo filters, such as `bun run build --filter=api`. Use `bun x oxfmt <paths>` to format changed files with the root Oxfmt configuration, including SVGs under `assets/`.
+- Use `kpdev` for repository workflows such as `bun run kpdev check`. Run workspace builds with Turbo, for example `bun run kpdev turbo run build --filter=api`. Use `bun x oxfmt <paths>` to format changed files with the root Oxfmt configuration, including SVGs under `assets/`.
 
 ## Workspace boundaries
 
 - Keep app code in `apps/<app>` and reusable code in `packages/<package>`. App package names use their directory names, with `apps/cli` named `kipivo`. The CLI exposes `kipivo` and `kpvo` and builds with tsdown.
+- Keep repository tooling in the private `@kipivo/scripts` workspace. Put `kpdev` command handling in `scripts/cli/`, repository checks in `scripts/check/`, CI planning in `scripts/ci/`, and smoke tests in `scripts/smoke/`.
 - Import another workspace's code through its package exports. Keep single-app features in their app. Extract shared rules when a second app needs them.
-- Use `@kipivo/orpc/client` and `@kipivo/orpc/errors` in browser code. Server-only exports in Web belong in `.server.ts` or `.server.tsx` modules with a side-effect import of `@tanstack/react-start/server-only`. Public contracts use shared schemas, and core use cases receive repository operations through interfaces. The [workspace lint rule](scripts/workspace-lint.mjs) checks these direct imports and re-exports, including type-only dependencies.
+- Use `@kipivo/orpc/client` and `@kipivo/orpc/errors` in browser code. Server-only exports in Web belong in `.server.ts` or `.server.tsx` modules with a side-effect import of `@tanstack/react-start/server-only`. Public contracts use shared schemas, and core use cases receive repository operations through interfaces. The [workspace lint rule](scripts/check/workspace-lint.mjs) checks these direct imports and re-exports, including type-only dependencies.
 - Keep Web feature code in `apps/web/src/features/<feature>/` and TanStack Start route registration and guards in `apps/web/src/routes/`. Turbo generates `apps/web/src/routeTree.gen.ts` during Web builds and type checks.
 - Use `@kipivo/contracts/runs` for local run schemas. Import `@kipivo/runtime/local/connection` only in the CLI or a Web `.server.ts` module marked with `@tanstack/react-start/server-only`.
 - Add Hono route groups under `apps/api/src/routes/` and mount them in `apps/api/src/app.ts`. Define the public API in `packages/contract` and keep the typed client and server procedures in `packages/orpc`. Keep the local runner contract in `packages/contracts`. Use the existing logger adapters to carry the Hono request ID into oRPC.
@@ -50,23 +51,24 @@ Use the directory guide for Kipivo conventions and the linked skill for framewor
 - Put environment presets in the owning workspace's `src/env.ts`, using the package name for the preset. Apps compose presets with `extends` and read them with `createEnv(appEnv)` from `@kipivo/env`. For Web, keep server environment reads in server-only modules such as `src/env.server.ts`.
 - Use the shared server packages' `/factory` exports when an app owns resource lifecycle and their `/env` exports for presets and validation. The package root provides the environment-configured instance for standalone use. See the [architecture guide](docs/architecture.md).
 - Keep API startup in `apps/api/src/server.ts`. Validate configuration, run migrations if enabled, then create runtime resources and serve requests. Startup migrations default to off. Railway sets `DB_MIGRATE_ON_START=true`. Nitro closes resources on shutdown. `/healthz` reports liveness and `/readyz` checks PostgreSQL and the auth tables.
-- After changing the Drizzle schema, run `bun run db:generate --name=<change>` and review the SQL. Include the generated migration and its metadata under `packages/db/drizzle/`. See the [database guide](docs/auth.md).
+- After changing the Drizzle schema, run `bun run kpdev db generate --name=<change>` and review the SQL. Include the generated migration and its metadata under `packages/db/drizzle/`. See the [database guide](docs/auth.md).
 
 ## Validation
 
-Use `bun run check` for formatting, lint, CI planner tests, Drizzle metadata, TypeScript, Knip, and unit tests. Run additional checks for the affected behavior.
+Use `bun run kpdev check` for formatting, lint, CI planner tests, Drizzle metadata, TypeScript, Knip, and unit tests. Run additional checks for the affected behavior.
 
-| Area                                 | Check                                                                                     |
-| ------------------------------------ | ----------------------------------------------------------------------------------------- |
-| Web, CLI runner, or public API flows | `bun run test:e2e`                                                                        |
-| Shared UI and Storybook              | `bun run test:stories` and `bun run test:ui`                                              |
-| Database and Auth                    | `bun run test:auth` with `TEST_DATABASE_URL` pointing to a disposable PostgreSQL database |
-| Redis and S3                         | `bun run test:resources` with Docker running                                              |
-| CI selection                         | `bun run ci:test` and `bun run ci:plan --base <sha> --head <sha>`                         |
+| Area                                 | Check                                                                                           |
+| ------------------------------------ | ----------------------------------------------------------------------------------------------- |
+| Full local end-to-end suite          | `bun run kpdev test e2e all` with Docker running                                                |
+| Web, CLI runner, or public API flows | `bun run kpdev test e2e`                                                                        |
+| Shared UI and Storybook              | `bun run kpdev test stories` and `bun run kpdev test ui`                                        |
+| Database and Auth                    | `bun run kpdev test auth` with `TEST_DATABASE_URL` pointing to a disposable PostgreSQL database |
+| Redis and S3                         | `bun run kpdev test resources` with Docker running                                              |
+| CI selection                         | `bun run kpdev ci test` and `bun run kpdev ci plan --base <sha> --head <sha>`                   |
 
 The [testing guide](docs/testing.md) covers browser installation, test services, and image smoke checks.
 
 ## CI and deployment
 
 - Use `next` as the development and Railway deployment branch. Create PRs only when requested. Declare package-specific CI task inputs and dependencies in the workspace's `turbo.json`. PRs select CI jobs with `turbo run --affected`, which follows the task graph and workspace dependencies. Pushes to `next` use the most recent successful CI ancestor and fall back to the full suite when no baseline is available. Pushes to `main` and manual CI runs run the full suite. Register framework entry points in `knip.json` when Knip cannot infer them.
-- Build the Web, API, and `.railway/gateway/Dockerfile` images from the repository root. When runtime dependencies change, check the corresponding service's watch paths in `.railway/railway.ts`. Keep the gateway independent of Web/API startup and public domain bindings. Verify gateway changes with `scripts/smoke-gateway-image.sh`; its health check is `/gateway-healthz`. Preview infrastructure changes with `railway config plan`. See the [deployment steps](apps/docs/content/docs/self-hosting.mdx#railway).
+- Build the Web, API, and `.railway/gateway/Dockerfile` images from the repository root. When runtime dependencies change, check the corresponding service's watch paths in `.railway/railway.ts`. Keep the gateway independent of Web/API startup and public domain bindings. Verify gateway changes with `bun run kpdev smoke gateway`. Its health check is `/gateway-healthz`. Preview infrastructure changes with `railway config plan`. See the [deployment steps](apps/docs/content/docs/self-hosting.mdx#railway).

@@ -7,16 +7,16 @@ const sessions = [
   {
     terminal: "Terminal 1",
     note: "Keep open",
-    steps: [{ title: "Start the runner", commands: "bun run kipivo serve" }],
+    steps: [{ title: "Start the runner", commands: "bun run kpdev runner serve" }],
   },
   {
     terminal: "Terminal 2",
     note: "Same checkout",
     steps: [
-      { title: "Submit a check", commands: "id=$(bun run kipivo run check)" },
+      { title: "Submit a check", commands: "id=$(bun run kpdev runner run check)" },
       {
         title: "Read the result",
-        commands: 'bun run kipivo status "$id"\nbun run kipivo logs "$id"',
+        commands: 'bun run kpdev runner status "$id"\nbun run kpdev runner logs "$id"',
       },
     ],
   },

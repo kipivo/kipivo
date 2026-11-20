@@ -20,13 +20,13 @@ test("run history offers the next action as a runner goes from offline to connec
   );
   await openRuns(page, localWeb.origin);
   await expect(page.getByRole("heading", { name: "Connect your local runner" })).toBeVisible();
-  await expect(page.getByText("bun run kipivo serve", { exact: true })).toBeVisible();
+  await expect(page.getByText("bun run kpdev runner serve", { exact: true })).toBeVisible();
   await expect(page.getByRole("region", { name: "Run details" })).toBeHidden();
   connected = true;
   await page.clock.fastForward(1000);
   await expect(page.getByRole("heading", { name: "Run your first check" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Run checks" })).toBeEnabled();
-  await expect(page.getByText("bun run kipivo serve", { exact: true })).toBeHidden();
+  await expect(page.getByText("bun run kpdev runner serve", { exact: true })).toBeHidden();
 });
 
 test("CLI submission is visible in Web and survives restarting the runner", async ({
@@ -536,7 +536,10 @@ test("home visitors can inspect a sample, copy local commands and read the works
     .split(/\r?\n/)
     .map((line) => line.trim())
     .filter(Boolean);
-  expect(commands).toEqual(['bun run kipivo status "$id"', 'bun run kipivo logs "$id"']);
+  expect(commands).toEqual([
+    'bun run kpdev runner status "$id"',
+    'bun run kpdev runner logs "$id"',
+  ]);
   await footerNav.getByRole("link", { name: "Workspace guide" }).click();
   await expect(page).toHaveURL((url) => url.hash === "#workspace-guide");
   await page.getByText("What happens if I restart the runner?", { exact: true }).click();

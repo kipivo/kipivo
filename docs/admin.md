@@ -12,4 +12,4 @@ The existing `admin.accounts.list` procedure and `GET /api/v1/admin/accounts` ac
 
 ## Verification
 
-Run `bun run check`, then follow the [database and authentication test instructions](testing.md#database-and-authentication-tests). The auth suite covers both transports, filtered cursors, literal characters, denial for members, and clearing a search in the browser.
+Run `bun run kpdev check`, then follow the [database and authentication test instructions](testing.md#database-and-authentication-tests). The auth suite covers both transports, filtered cursors, literal characters, denial for members, and clearing a search in the browser.

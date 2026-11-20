@@ -1,4 +1,4 @@
-import { imageMatrix, jobs } from "./ci-plan.mjs";
+import { imageMatrix, jobs } from "./plan.mjs";
 
 export function validateResults(plan, needs) {
   for (const job of ["changes", "check"]) {

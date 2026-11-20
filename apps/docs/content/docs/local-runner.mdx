@@ -5,26 +5,26 @@ description: Use the Kipivo CLI to start the runner, inspect checks, and find lo
 
 The local runner executes the checkout's `bun run check` script. Follow the [Quickstart](/docs/quickstart) to submit a run.
 
-| Task                        | Command                          |
-| --------------------------- | -------------------------------- |
-| Show the available commands | `bun run kipivo --help`          |
-| Start the runner            | `bun run kipivo serve`           |
-| Submit a check              | `bun run kipivo run check`       |
-| Read the status             | `bun run kipivo status <run-id>` |
-| Read the logs               | `bun run kipivo logs <run-id>`   |
+| Task                        | Command                                |
+| --------------------------- | -------------------------------------- |
+| Show the available commands | `bun run kpdev runner --help`          |
+| Start the runner            | `bun run kpdev runner serve`           |
+| Submit a check              | `bun run kpdev runner run check`       |
+| Read the status             | `bun run kpdev runner status <run-id>` |
+| Read the logs               | `bun run kpdev runner logs <run-id>`   |
 
 `kpvo` is an alias for `kipivo`. Both commands accept `--version`. Run commands from the checkout where you started the runner.
 
 ## Inspect runs in a browser
 
-With the runner active, start `bun run --cwd apps/web dev` and open [Local runs](http://localhost:3000/runs). This page is available on the development server.
+With the runner active, start `bun run kpdev dev --filter=web` and open [Local runs](http://localhost:3000/runs). This page is available on the development server.
 
 ## Build the CLI
 
 Run these commands from the repository root to build the CLI and check the bundle.
 
 ```sh
-bun run build --filter=kipivo
+bun run kpdev turbo run build --filter=kipivo
 bun apps/cli/dist/kipivo.js --help
 ```
 

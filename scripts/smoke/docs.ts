@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 
-export async function verifyDocs(origin) {
-  async function request(path, status = 200) {
+export async function verifyDocs(origin: URL | string) {
+  async function request(path: string, status = 200) {
     const response = await fetch(new URL(path, origin), {
       redirect: "manual",
       signal: AbortSignal.timeout(5000),
@@ -21,8 +21,9 @@ export async function verifyDocs(origin) {
 
   const quickstart = await (await request("/docs/quickstart")).text();
   assert.match(quickstart, /<h1\b[^>]*>Quickstart<\/h1>/);
-  const searchIndex = await request("/docs/search.json");
-  assert.equal((await searchIndex.json()).type, "advanced");
+  const searchIndex = await (await request("/docs/search.json")).json();
+  assert.ok(searchIndex && typeof searchIndex === "object" && "type" in searchIndex);
+  assert.equal(searchIndex.type, "advanced");
   await request("/docs/missing-guide", 404);
 }
 

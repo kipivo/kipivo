@@ -99,7 +99,7 @@ export function RunExample() {
           </p>
           <div className="mt-4 overflow-hidden rounded-lg border border-plate-border bg-plate text-on-plate">
             <div className="border-b border-plate-border bg-white/4 px-4 py-2.5">
-              <CommandLine line="bun run check" />
+              <CommandLine line="bun run kpdev check" />
             </div>
             <ol
               aria-label="Sample log lines"

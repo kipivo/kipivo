@@ -1,5 +1,6 @@
 import {
   appendFileSync,
+  existsSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
@@ -19,7 +20,7 @@ export const ciTasks = {
   e2e: "@kipivo/e2e#ci:integration",
   "web-e2e": "@kipivo/e2e#ci:web-e2e",
 };
-const imageDefinitions = {
+export const imageDefinitions = {
   "web-image": { app: "web", dockerfile: "apps/web/Dockerfile" },
   "api-image": { app: "api", dockerfile: "apps/api/Dockerfile" },
   "gateway-image": { app: "gateway", dockerfile: ".railway/gateway/Dockerfile" },
@@ -31,40 +32,47 @@ const imageInputs = new Map([
   ["apps/web/Dockerfile", ["web-image"]],
   ["apps/api/Dockerfile", ["api-image"]],
   ["apps/docs/Dockerfile", ["docs-image"]],
-  ["scripts/smoke-web-image.sh", ["web-image"]],
-  ["scripts/smoke-web.mjs", ["web-image"]],
-  ["scripts/smoke-api-image.sh", ["api-image"]],
-  ["scripts/smoke-gateway-image.sh", ["gateway-image"]],
-  ["scripts/smoke-docs-image.sh", ["docs-image"]],
-  ["scripts/smoke-docs.mjs", ["web-image", "docs-image"]],
-  ["scripts/check-image.sh", imageJobs],
+  ["scripts/smoke/http-image.ts", ["web-image", "docs-image"]],
+  ["scripts/smoke/web.ts", ["web-image"]],
+  ["scripts/smoke/api-image.sh", ["api-image"]],
+  ["scripts/smoke/gateway-image.sh", ["gateway-image"]],
+  ["scripts/smoke/docs.ts", ["web-image", "docs-image"]],
+  ["scripts/smoke/image-files.sh", imageJobs],
   [".dockerignore", imageJobs],
 ]);
 const knownRootInputs = new Set([
   "assets/logo.svg",
-  "scripts/smoke-cli.sh",
-  "scripts/workspace-lint.mjs",
-  "scripts/workspace-lint.test.mjs",
+  "scripts/smoke/cli.sh",
+  "scripts/smoke/turbo.ts",
+  "scripts/check/workspace-lint.mjs",
+  "scripts/check/workspace-lint.test.mjs",
 ]);
-const rootTurbo = fileURLToPath(new URL("../node_modules/.bin/turbo", import.meta.url));
+const rootTurbo = fileURLToPath(new URL("../../node_modules/.bin/turbo", import.meta.url));
 
 export function imageMatrix(plan) {
-  return imageJobs.filter((job) => plan[job]).map((job) => imageDefinitions[job]);
+  return Object.entries(imageDefinitions)
+    .filter(([job]) => plan[job])
+    .map(([, image]) => image);
 }
 
+/** @param {Record<string, string[]>} reasons */
 function makePlan(reasons, base = "") {
   const selection = Object.fromEntries(jobs.map((job) => [job, Boolean(reasons[job]?.length)]));
+  /** @type {Record<string, string[]>} */
+  const details = { check: ["Every change runs the repository checks"], ...reasons };
   return {
     base,
     check: true,
+    topology: Boolean(reasons.topology?.length),
     ...selection,
     images: imageMatrix(selection),
-    reasons: { check: ["Every change runs the repository checks"], ...reasons },
+    reasons: details,
   };
 }
 
-export function fullPlan(reason, includeImages = true) {
-  const required = includeImages ? jobs : Object.keys(ciTasks);
+export function fullPlan(reason, includeImages = true, topology = includeImages) {
+  const required = includeImages ? [...jobs] : Object.keys(ciTasks);
+  if (topology) required.push("topology");
   return makePlan(Object.fromEntries(required.map((job) => [job, [reason]])));
 }
 
@@ -80,18 +88,21 @@ function run(command, args, options = {}) {
 }
 
 function changedPaths(base, head) {
-  return run("git", [
+  const tracked = run("git", [
     "diff",
     "--name-only",
     "--no-renames",
     "--no-relative",
     "-z",
     base,
-    head,
+    ...(head ? [head] : []),
     "--",
   ])
     .split("\0")
     .filter(Boolean);
+  if (head) return tracked;
+  const untracked = run("git", ["ls-files", "--others", "--exclude-standard", "-z"]);
+  return [...new Set([...tracked, ...untracked.split("\0").filter(Boolean)])];
 }
 
 function imageInputJobs(path) {
@@ -102,16 +113,29 @@ function isRootDocumentation(path) {
   return /^README\.md$/i.test(path) || /^docs\/.*\.md$/i.test(path);
 }
 
+function isTopologyInput(path) {
+  return (
+    path.startsWith(".railway/topology/") ||
+    path === "scripts/smoke/topology.sh" ||
+    path === ".github/workflows/topology-smoke.yml"
+  );
+}
+
 function fullRunReason(paths, head) {
   const workspaces = new Set();
   for (const path of paths) {
-    if (isRootDocumentation(path)) continue;
-    if (knownRootInputs.has(path) || imageInputJobs(path).length) continue;
+    if (isRootDocumentation(path) || isTopologyInput(path)) continue;
+    if (path.startsWith("scripts/cli/") || knownRootInputs.has(path) || imageInputJobs(path).length)
+      continue;
     const workspace = /^(?:apps|packages|tests)\/[^/]+(?=\/)/.exec(path)?.[0];
     if (!workspace) return `Repository input changed: ${path}`;
     workspaces.add(`${workspace}/package.json`);
   }
   if (!workspaces.size) return;
+  if (!head) {
+    const missing = [...workspaces].find((path) => !existsSync(path));
+    return missing && `Unmapped path in ${missing.replace(/\/package\.json$/, "")}`;
+  }
   const manifests = new Set(
     run("git", ["ls-tree", "-r", "--name-only", head, "--", ...workspaces])
       .trim()
@@ -119,6 +143,10 @@ function fullRunReason(paths, head) {
   );
   const missing = [...workspaces].find((path) => !manifests.has(path));
   if (missing) return `Unmapped path in ${missing.replace(/\/package\.json$/, "")}`;
+}
+
+function commitRef(ref) {
+  return run("git", ["rev-parse", "--verify", "--end-of-options", `${ref}^{commit}`]).trim();
 }
 
 function turboVersion(directory) {
@@ -180,67 +208,99 @@ function affectedTasks(directory, turbo, version, base, head, tasks) {
   );
 }
 
-export function planFromArgs(args, { useRailwayBuilds = false } = {}) {
-  if (args.length === 1 && args[0] === "--full") return fullPlan("Full run requested");
-  if (args.length !== 4 || args[0] !== "--base" || args[2] !== "--head") {
-    throw new Error("Usage: bun run ci:plan --base <sha> --head <sha> | --next | --full");
-  }
-  try {
-    const head = run("git", [
-      "rev-parse",
-      "--verify",
-      "--end-of-options",
-      `${args[3]}^{commit}`,
-    ]).trim();
-    const base = run("git", ["merge-base", "--", args[1], head]).trim();
-    const paths = changedPaths(base, head);
-    const includeImages =
-      !useRailwayBuilds ||
-      paths.some((path) => path.startsWith(".railway/") || imageInputJobs(path).length);
-    const full = fullRunReason(paths, head);
-    if (full) return fullPlan(full, includeImages);
+function selectPlan(base, head, useRailwayBuilds, inspectTasks) {
+  const paths = changedPaths(base, head);
+  const topologyInputs = paths.filter(isTopologyInput);
+  const includeImages =
+    !useRailwayBuilds ||
+    paths.some(
+      (path) =>
+        !isTopologyInput(path) && (path.startsWith(".railway/") || imageInputJobs(path).length),
+    );
+  const full = fullRunReason(paths, head);
+  if (full) return fullPlan(full, includeImages, includeImages || topologyInputs.length > 0);
 
-    const reasons = {};
-    if (includeImages) {
-      for (const path of paths) {
-        for (const job of imageInputJobs(path)) (reasons[job] ??= []).push(path);
-        if (path.startsWith("tests/e2e/") && !/^tests\/e2e\/readme\.md$/i.test(path)) {
-          (reasons["api-image"] ??= []).push(path);
-        }
+  const reasons = { topology: topologyInputs };
+  if (includeImages) {
+    for (const path of paths) {
+      for (const job of imageInputJobs(path)) (reasons[job] ??= []).push(path);
+      if (path.startsWith("tests/e2e/") && !/^tests\/e2e\/readme\.md$/i.test(path)) {
+        (reasons["api-image"] ??= []).push(path);
       }
     }
-    if (
-      !paths.some(
-        (path) =>
-          path === "apps/api/Dockerfile" ||
-          (!isRootDocumentation(path) && !imageInputJobs(path).length),
-      )
-    ) {
-      return makePlan(reasons, base);
-    }
-
-    return withCheckout(head, (directory, turbo, version) => {
-      const runAffected = (tasks) => affectedTasks(directory, turbo, version, base, head, tasks);
+  }
+  if (
+    paths.some(
+      (path) =>
+        path === "apps/api/Dockerfile" ||
+        (!isRootDocumentation(path) && !isTopologyInput(path) && !imageInputJobs(path).length),
+    )
+  ) {
+    inspectTasks((runAffected) => {
       const selected = runAffected(Object.values(ciTasks));
       for (const [job, task] of Object.entries(ciTasks)) {
         if (selected.has(task)) reasons[job] = [task];
       }
       if (includeImages) {
         const builds = runAffected(["build"]);
-        if (builds.has("web#build")) (reasons["web-image"] ??= []).push("web#build");
-        if (builds.has("api#build")) (reasons["api-image"] ??= []).push("api#build");
-        // Web includes Docs as a build dependency even when only Web changed.
-        if (builds.has("docs#build") && runAffected(["docs#build"]).has("docs#build")) {
-          (reasons["docs-image"] ??= []).push("docs#build");
+        for (const [job, { app }] of Object.entries(imageDefinitions)) {
+          const task = `${app}#build`;
+          if (!builds.has(task)) continue;
+          // Web includes Docs as a prerequisite even when only Web changed.
+          if (app === "docs" && !runAffected([task]).has(task)) continue;
+          (reasons[job] ??= []).push(task);
         }
       }
-      return makePlan(reasons, base);
     });
+  }
+  if (useRailwayBuilds && imageJobs.some((job) => reasons[job]?.length)) {
+    topologyInputs.push("Image checks selected");
+  }
+  return makePlan(reasons, base);
+}
+
+export function planFromArgs(args, { useRailwayBuilds = false } = {}) {
+  if (args.length === 1 && args[0] === "--full") return fullPlan("Full run requested");
+  if (args.length !== 4 || args[0] !== "--base" || args[2] !== "--head") {
+    throw new Error("Usage: bun run ci:plan --base <sha> --head <sha> | --next | --full");
+  }
+  try {
+    const head = commitRef(args[3]);
+    const base = run("git", ["merge-base", "--", args[1], head]).trim();
+    return selectPlan(base, head, useRailwayBuilds, (inspect) =>
+      withCheckout(head, (directory, turbo, version) =>
+        inspect((tasks) => affectedTasks(directory, turbo, version, base, head, tasks)),
+      ),
+    );
   } catch (error) {
     return fullPlan(
       `Cannot reliably select jobs: ${error.message.replace(/\s+/g, " ").slice(0, 500)}`,
     );
   }
+}
+
+export function planWorkingTree(ref) {
+  const head = commitRef("HEAD");
+  if (ref === undefined) {
+    // Use refs already available locally. The planner never fetches or changes the index.
+    for (const candidate of ["origin/HEAD", "@{upstream}", "HEAD"]) {
+      try {
+        ref = commitRef(candidate);
+        break;
+      } catch {
+        // A fresh repository may have neither a remote default nor an upstream.
+      }
+    }
+  } else {
+    ref = commitRef(ref);
+  }
+  const base = run("git", ["merge-base", "--", ref, head]).trim();
+  const directory = process.cwd();
+  const plan = selectPlan(base, undefined, false, (inspect) => {
+    const version = turboVersion(directory);
+    inspect((tasks) => affectedTasks(directory, rootTurbo, version, base, head, tasks));
+  });
+  return { ...plan, base };
 }
 
 async function findNextBaseline(env) {
@@ -314,6 +374,7 @@ export function writePlan(plan) {
       `base=${plan.base}`,
       ...jobs.map((job) => `${job}=${plan[job]}`),
       `has-images=${plan.images.length > 0}`,
+      `run-topology=${plan.topology}`,
       `images=${JSON.stringify({ include: plan.images })}`,
       `plan=${JSON.stringify({ ...selection, images: plan.images })}`,
     ];
@@ -327,10 +388,11 @@ export function writePlan(plan) {
       `## CI plan\n\n${baseline}| Task | Selected | Reason |\n| --- | --- | --- |\n${[
         "check",
         ...jobs,
+        "topology",
       ]
         .map(
           (job) =>
-            `| ${job} | ${plan[job] ? "yes" : "no"} | ${(plan.reasons[job] ?? ["No affected consumer"]).join("; ").replaceAll("|", "\\|").replaceAll("\n", " ")} |`,
+            `| ${job} | ${plan[job] ? "yes" : "no"} | ${(plan.reasons[job]?.length ? plan.reasons[job] : ["No affected consumer"]).join("; ").replaceAll("|", "\\|").replaceAll("\n", " ")} |`,
         )
         .join("\n")}\n`,
     );

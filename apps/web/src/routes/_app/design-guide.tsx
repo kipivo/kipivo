@@ -127,7 +127,7 @@ function DesignGuide() {
           </div>
           <div className="mt-3.5">
             <span className={typeLabel}>Logs · monospace 13 / 21</span>
-            <code className="font-mono text-[13px]/[21px]">$ bun run check</code>
+            <code className="font-mono text-[13px]/[21px]">$ bun run kpdev check</code>
           </div>
         </section>
         <section className={workspacePanel} aria-labelledby="geometry-heading">

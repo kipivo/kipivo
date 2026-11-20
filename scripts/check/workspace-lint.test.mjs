@@ -1,11 +1,13 @@
 import { describe, expect, test } from "bun:test";
 import { copyFileSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const root = fileURLToPath(new URL("../", import.meta.url));
-const oxlint = fileURLToPath(new URL("bin/oxlint", import.meta.resolve("oxlint/package.json")));
+const root = fileURLToPath(new URL("../../", import.meta.url));
+const resolveFromRoot = createRequire(new URL("../../package.json", import.meta.url)).resolve;
+const oxlint = join(dirname(resolveFromRoot("oxlint/package.json")), "bin/oxlint");
 const connection = 'import "@kipivo/runtime/local/connection";';
 
 const cases = {
@@ -33,6 +35,7 @@ const cases = {
     },
     { filename: "apps/web/src/page.ts", code: 'import "@kipivo/contracts/runs";' },
     { filename: "packages/db/scripts/run.ts", code: 'import "../src/env";' },
+    { filename: "scripts/ci/result.mjs", code: 'import "./plan.mjs";' },
     { filename: "apps/cli/src/index.ts", code: connection },
     { filename: "packages/runtime/src/local/test.ts", code: 'import "./connection";' },
     { filename: "apps/web/src/page.ts", code: 'import "@kipivo/runtime/env";' },
@@ -42,6 +45,7 @@ const cases = {
     },
   ],
   invalid: [
+    { filename: "apps/web/src/page.ts", code: 'import "../../../scripts/ci/plan.mjs";', errors: 1 },
     { filename: "apps/web/src/account.tsx", code: 'import "@kipivo/orpc";', errors: 1 },
     { filename: "apps/web/src/api.server.ts", code: 'import "@kipivo/orpc";', errors: 1 },
     {
@@ -128,11 +132,11 @@ describe("workspace-imports", () => {
       try {
         const fixture = join(cwd, filename);
         mkdirSync(dirname(fixture), { recursive: true });
-        mkdirSync(join(cwd, "scripts"), { recursive: true });
+        mkdirSync(join(cwd, "scripts/check"), { recursive: true });
         copyFileSync(join(root, ".oxlintrc.json"), join(cwd, ".oxlintrc.json"));
         copyFileSync(
-          join(root, "scripts/workspace-lint.mjs"),
-          join(cwd, "scripts/workspace-lint.mjs"),
+          join(root, "scripts/check/workspace-lint.mjs"),
+          join(cwd, "scripts/check/workspace-lint.mjs"),
         );
         writeFileSync(fixture, code);
 

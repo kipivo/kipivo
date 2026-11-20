@@ -107,9 +107,9 @@ The Tooltip wrapper supplies a stable popup ID, `role="tooltip"`, and the trigge
 From the repository root:
 
 ```sh
-bun run ui:add select
+bun run kpdev ui add -- select
 ```
 
 The CLI runs in this package and uses `components.json` to select Base UI, Hugeicons, and the shared source paths. Web also has a matching configuration for adding app-owned blocks from its directory. When reviewing generated components, import the named icon components from [`@kipivo/icons`](../icons/AGENTS.md). Keep the Hugeicons dependencies in that package.
 
-Add examples and Storybook stories in `apps/storybook/src` for variants and disabled/loading/error states. See the [component stories guide](../../apps/storybook/README.md) for Controls, documentation, and browser checks. Verify with `bun run check`, `bun run build --filter=web`, `bun run build:storybook`, and `bun run test:ui`.
+Add examples and Storybook stories in `apps/storybook/src` for variants and disabled/loading/error states. See the [component stories guide](../../apps/storybook/README.md) for Controls, documentation, and browser checks. Verify with `bun run kpdev check`, `bun run kpdev turbo run build --filter=web`, `bun run kpdev turbo run build --filter=storybook`, and `bun run kpdev test ui`.

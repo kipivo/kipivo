@@ -50,10 +50,10 @@ export DATABASE_URL='postgresql://kipivo:kipivo_local@127.0.0.1:5432/kipivo'
 export DB_MIGRATE_ON_START=true
 export AUTH_URL='http://localhost:3000'
 export AUTH_SECRET="$(openssl rand -hex 32)"
-bun run dev:api
+bun run kpdev dev api
 ```
 
-In another terminal, run `bun run dev` and open [localhost:3000](http://localhost:3000). Keep the hostname consistent with `AUTH_URL`. The Web development proxy defaults to `http://127.0.0.1:3001`. Override `API_ORIGIN` when the API runs elsewhere. Keep the secret stable across restarts to preserve sessions.
+In another terminal, run `bun run kpdev dev` and open [localhost:3000](http://localhost:3000). Keep the hostname consistent with `AUTH_URL`. The Web development proxy defaults to `http://127.0.0.1:3001`. Override `API_ORIGIN` when the API runs elsewhere. Keep the secret stable across restarts to preserve sessions.
 
 The API expects `DATABASE_URL`, `AUTH_URL`, and `AUTH_SECRET` together. `AUTH_URL` is the public Web HTTP(S) origin. Use the ASCII Punycode form for internationalized hostnames, such as `https://xn--bcher-kva.example`. The scheme is case-insensitive. A port and a trailing slash are optional. The secret must have at least 32 characters. The API exposes `/healthz` for liveness and `/readyz` for database connectivity, the authentication tables, and the account role column. With authentication unconfigured, its auth endpoints and readiness check return `503`.
 
@@ -130,12 +130,12 @@ After setup closes, only a signed-in administrator can promote another account, 
 After changing `packages/db/src/schema.ts`, generate and review the SQL and snapshot files, then apply them to the intended database.
 
 ```sh
-bun run db:generate --name=describe_change
-bun run db:check
-bun run db:migrate
+bun run kpdev db generate --name=describe_change
+bun run kpdev db check
+bun run kpdev db migrate
 ```
 
-Commit the generated `packages/db/drizzle` directory with the schema change. `bun run db:migrate` runs migrations on demand using `DATABASE_URL`. Both the command and API startup take the same PostgreSQL advisory lock so concurrent migrators run one at a time. Drizzle records completed migrations and skips them on subsequent runs. A migration failure stops API startup.
+Commit the generated `packages/db/drizzle` directory with the schema change. `bun run kpdev db migrate` runs migrations on demand using `DATABASE_URL`. Both the command and API startup take the same PostgreSQL advisory lock so concurrent migrators run one at a time. Drizzle records completed migrations and skips them on subsequent runs. A migration failure stops API startup.
 
 ## Docker and Railway
 
@@ -171,4 +171,4 @@ For an existing deployment, set `AUTH_URL` and `AUTH_SECRET` to the current orig
 
 ## Integration tests
 
-Run `bun run test:auth` with a disposable PostgreSQL database. The [testing guide](testing.md#database-and-authentication-tests) lists the required database privileges, server ports, and scenarios.
+Run `bun run kpdev test auth` with a disposable PostgreSQL database. The [testing guide](testing.md#database-and-authentication-tests) lists the required database privileges, server ports, and scenarios.

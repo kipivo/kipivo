@@ -9,13 +9,14 @@
   "type": "module",
   "scripts": {
     "build": "tsdown",
-    "ci:cli": "bash ../../scripts/smoke-cli.sh",
+    "ci:cli": "bash ../../scripts/smoke/cli.sh",
     "typecheck": "tsc --noEmit",
     "test": "bun test"
   },
   "dependencies": {
     "@kipivo/contracts": "workspace:*",
-    "@kipivo/runtime": "workspace:*"
+    "@kipivo/runtime": "workspace:*",
+    "citty": "catalog:"
   },
   "devDependencies": {
     "@kipivo/tsconfig": "workspace:*",

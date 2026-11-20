@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "jsPlugins": ["./scripts/workspace-lint.mjs"],
+  "jsPlugins": ["./scripts/check/workspace-lint.mjs"],
   "rules": { "kipivo/workspace-imports": "error" },
   "ignorePatterns": ["**/.output/", "**/dist/", "**/routeTree.gen.ts"]
 }

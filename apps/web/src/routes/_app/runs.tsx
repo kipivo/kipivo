@@ -112,7 +112,7 @@ function RunsRoute() {
             )}
           </div>
           {connection === "offline" && (
-            <RunCommand title="Start the runner" commands="bun run kipivo serve" />
+            <RunCommand title="Start the runner" commands="bun run kpdev runner serve" />
           )}
         </section>
       )}
