@@ -1,0 +1,337 @@
+scripts/cli/commands/smoke.ts
+  s_346064cd25ca73::t_4650c3ae8a0052 1,3,5,14,19
+  s_346064cd25ca73::t_64a4ac302d6ea4 2,7-13,15-18,20-39
+  s_346064cd25ca73::t_fa8bcb185b27b0 4,6
+apps/storybook/README.md
+  s_346064cd25ca73::t_a53f82e2bcb3f1 15,18,36-38,45,47
+  s_346064cd25ca73::t_b0235ba5c78575 35
+scripts/smoke/cli.sh
+  s_346064cd25ca73::t_d3cb0795edfbda 1-10
+apps/storybook/package.json
+  s_ce71c276b12ffc::t_8482b071e2fbca 32-33
+apps/web/src/routes/_app/runs.tsx
+  s_346064cd25ca73::t_a53f82e2bcb3f1 115
+renovate.json
+  s_ce71c276b12ffc::t_057b2a153012bb 17-24
+  s_ce71c276b12ffc::t_d77b30351cda83 6
+  s_ce71c276b12ffc::t_f7e6db1a691015 1-5,7-12,26-28
+  s_ce71c276b12ffc::t_16af5e9f4c2609 13-14,16,25
+  s_ce71c276b12ffc::t_8482b071e2fbca 15
+tests/e2e/fixtures/resources.ts
+  s_242b86721d85a2::t_50f6d091b6e49e 29-33,35-37,39-46,92,94,140-141,147
+  s_242b86721d85a2::t_5bce9694c59dd2 50-55
+packages/cache/AGENTS.md
+  s_346064cd25ca73::t_a53f82e2bcb3f1 5
+packages/orpc/AGENTS.md
+  s_346064cd25ca73::t_a53f82e2bcb3f1 9
+apps/web/src/routes/_app/design-guide.tsx
+  s_346064cd25ca73::t_a53f82e2bcb3f1 130
+apps/docs/README.md
+  s_346064cd25ca73::t_a53f82e2bcb3f1 7
+  s_346064cd25ca73::t_b0235ba5c78575 8
+docs/admin.md
+  s_346064cd25ca73::t_a53f82e2bcb3f1 15
+packages/core/AGENTS.md
+  s_346064cd25ca73::t_a53f82e2bcb3f1 8
+knip.json
+  s_346064cd25ca73::t_2c90acfacd8aa3 22
+  s_346064cd25ca73::t_fb4ba035e4dbfa 23
+  s_346064cd25ca73::t_355b2d100a3a68 12
+  s_346064cd25ca73::t_abcabbff2120d7 6
+  s_346064cd25ca73::t_f4c812e95b020a 21
+  s_346064cd25ca73::t_231990525e92db 11
+  s_346064cd25ca73::t_f8401cf453113e 24
+scripts/ci/result.mjs
+  s_346064cd25ca73::t_b5f2b893af1113 1-26
+scripts/package.json
+  s_346064cd25ca73::t_fb4ba035e4dbfa 8-10,14-18
+  s_346064cd25ca73::t_8cefdf690d28c5 7
+  s_346064cd25ca73::t_ee1da1e30d1a7f 5
+  s_346064cd25ca73::t_c3617954bc3c24 13
+  s_346064cd25ca73::t_f4c812e95b020a 1-4,6,11-12,19-20
+apps/docs/content/docs/local-runner.mdx
+  s_346064cd25ca73::t_b0235ba5c78575 27
+  s_346064cd25ca73::t_4859dafcbfbdcc 8-9
+  s_346064cd25ca73::t_a53f82e2bcb3f1 10-14,20
+.railway/topology/compose.yml
+  s_346064cd25ca73::t_2c90acfacd8aa3 101,104-105
+scripts/smoke/changed.ts
+  s_346064cd25ca73::t_bddadc687ab613 7-15,37,51,55,80,92-97,106
+  s_346064cd25ca73::t_22e8accedde19d 45-48,57-59,62-66,68-69
+  s_346064cd25ca73::t_2ef6e33423e987 1-6,16-36,38-44,49-50,52-54,56,60-61,67,70-79,81-91,98-105,107-110
+packages/auth/AGENTS.md
+  s_346064cd25ca73::t_a53f82e2bcb3f1 7
+apps/mobile/AGENTS.md
+  s_346064cd25ca73::t_b0235ba5c78575 5
+apps/web/AGENTS.md
+  s_346064cd25ca73::t_a53f82e2bcb3f1 13
+apps/cli/turbo.json
+  s_346064cd25ca73::t_cd891b04e404a9 7
+apps/web/src/features/home/run-example.tsx
+  s_346064cd25ca73::t_a53f82e2bcb3f1 102
+packages/rbac/AGENTS.md
+  s_346064cd25ca73::t_a53f82e2bcb3f1 5
+packages/logger/AGENTS.md
+  s_346064cd25ca73::t_a53f82e2bcb3f1 5
+scripts/ci/plan.test.mjs
+  s_346064cd25ca73::t_0e8d8e32092437 582-584
+  s_346064cd25ca73::t_22e8accedde19d 15-22
+  s_346064cd25ca73::t_32af8295b30929 210,219,222-224
+  s_346064cd25ca73::t_c685261bea80a4 213
+  s_346064cd25ca73::t_cd891b04e404a9 254
+  s_346064cd25ca73::t_96f6637d3920f4 585,588-589
+  s_346064cd25ca73::t_de2cd11099053a 211-212,215-218
+  s_346064cd25ca73::t_fbb29f6e568135 443
+  s_346064cd25ca73::t_ee1da1e30d1a7f 214
+  s_346064cd25ca73::t_b5f2b893af1113 23,76,85,88,95,220-221,576
+  s_346064cd25ca73::t_f42e08c91fec73 239,253,258-259,268-270,347,447
+  s_346064cd25ca73::t_2c90acfacd8aa3 252,267
+  s_346064cd25ca73::t_482596f2ec7608 271-296,508-514
+scripts/smoke/docs.ts
+  s_346064cd25ca73::t_fb4ba035e4dbfa 1-23,27-34
+  s_346064cd25ca73::t_56db51d23ba0c3 24-26
+scripts/check/workspace-lint.mjs
+  s_346064cd25ca73::t_b5f2b893af1113 4,85
+apps/mobile/README.md
+  s_346064cd25ca73::t_a53f82e2bcb3f1 18,25,35
+  s_346064cd25ca73::t_b0235ba5c78575 33
+.github/dependabot.yml
+  s_ce71c276b12ffc::t_8482b071e2fbca 8
+  s_ce71c276b12ffc::t_e8e3e9eb1cabc2 1-7,9-13
+  s_ce71c276b12ffc::t_16af5e9f4c2609 14-21
+scripts/cli/tasks.ts
+  s_346064cd25ca73::t_c82b5aa6ca42c0 1,19
+  s_346064cd25ca73::t_84d13315c9c521 3,5-9,20-36,38-62,64
+  s_346064cd25ca73::t_2d1cb9f325b704 2,10-18,37
+  s_346064cd25ca73::t_4650c3ae8a0052 4,63
+scripts/cli/index.ts
+  s_346064cd25ca73::t_2c90acfacd8aa3 2,5,8,10-11
+  s_346064cd25ca73::t_fb4ba035e4dbfa 9
+  s_346064cd25ca73::t_b56a5c3d6827ce 1,4
+  s_346064cd25ca73::t_56db51d23ba0c3 3
+  s_346064cd25ca73::t_2d1cb9f325b704 6-7
+packages/account/AGENTS.md
+  s_346064cd25ca73::t_a53f82e2bcb3f1 5
+scripts/cli/commands/runner.ts
+  s_346064cd25ca73::t_c82b5aa6ca42c0 1-9
+packages/db/AGENTS.md
+  s_346064cd25ca73::t_a53f82e2bcb3f1 4-5
+packages/env/AGENTS.md
+  s_346064cd25ca73::t_a53f82e2bcb3f1 5
+CONTRIBUTING.md
+  s_346064cd25ca73::t_a53f82e2bcb3f1 23-24
+  s_346064cd25ca73::t_f42e08c91fec73 18
+scripts/smoke/api-image.sh
+  s_346064cd25ca73::t_d3cb0795edfbda 1-214
+apps/web/src/features/home/quickstart.tsx
+  s_346064cd25ca73::t_a53f82e2bcb3f1 10,16,19
+scripts/ci/plan.mjs
+  s_346064cd25ca73::t_d3cb0795edfbda 128-129
+  s_346064cd25ca73::t_b5f2b893af1113 50
+  s_346064cd25ca73::t_6f6cc4ab8bdc78 61-62,69
+  s_346064cd25ca73::t_482596f2ec7608 256-258,377
+  s_346064cd25ca73::t_2c90acfacd8aa3 35-36,39
+  s_346064cd25ca73::t_bddadc687ab613 58,246-251,299,303
+  s_346064cd25ca73::t_2ef6e33423e987 23,53-55
+  s_346064cd25ca73::t_f42e08c91fec73 37-38,40,45,47-48,296,304-305
+  s_346064cd25ca73::t_cd891b04e404a9 46
+  s_346064cd25ca73::t_22e8accedde19d 216-219
+  s_346064cd25ca73::t_c855d67c55091b 3,66,73-75,91,98,103-105,116-123,127,135-138,148-151,211-215,220-221,223-228,231-239,255,259-274,282-295,297-298,300-302,391,395
+scripts/cli/commands/turbo.ts
+  s_346064cd25ca73::t_c82b5aa6ca42c0 1-12
+scripts/check/run.sh
+  s_346064cd25ca73::t_d3cb0795edfbda 4
+  s_346064cd25ca73::t_f42e08c91fec73 10
+  s_346064cd25ca73::t_2c90acfacd8aa3 12
+tests/e2e/run-all.sh
+  s_242b86721d85a2::t_a07e49d275efad 1-46
+scripts/cli/commands.ts
+  s_346064cd25ca73::t_84d13315c9c521 48
+  s_346064cd25ca73::t_2d1cb9f325b704 6
+  s_346064cd25ca73::t_64a4ac302d6ea4 21,33,50-54,56
+  s_346064cd25ca73::t_e1531c83a4b001 37-38
+  s_346064cd25ca73::t_fb4ba035e4dbfa 3-5,7-8,58
+  s_346064cd25ca73::t_4650c3ae8a0052 27-28,44,47
+  s_346064cd25ca73::t_c82b5aa6ca42c0 1-2,9-20,22-24,29-32,34-35,39-43,45-46,49,55,57
+  s_346064cd25ca73::t_57c455de62dc7e 25-26,36
+packages/admin/AGENTS.md
+  s_346064cd25ca73::t_a53f82e2bcb3f1 5
+AGENTS.md
+  s_346064cd25ca73::t_a53f82e2bcb3f1 54,58,62-63,65-66
+  s_346064cd25ca73::t_5936ddf230c9dd 74
+  s_346064cd25ca73::t_b5f2b893af1113 41
+  s_346064cd25ca73::t_4859dafcbfbdcc 60-61,64,67
+  s_346064cd25ca73::t_b0235ba5c78575 36
+  s_346064cd25ca73::t_f42e08c91fec73 43
+packages/storage/AGENTS.md
+  s_346064cd25ca73::t_a53f82e2bcb3f1 5
+.github/workflows/topology-smoke.yml
+  s_346064cd25ca73::t_f42e08c91fec73 37
+apps/storybook/AGENTS.md
+  s_346064cd25ca73::t_a53f82e2bcb3f1 5
+apps/api/AGENTS.md
+  s_346064cd25ca73::t_a53f82e2bcb3f1 6
+scripts/tsconfig.json
+  s_346064cd25ca73::t_fb4ba035e4dbfa 1-3,5-9
+  s_346064cd25ca73::t_2ef6e33423e987 4
+tests/e2e/specs/local-runs.spec.ts
+  s_346064cd25ca73::t_a53f82e2bcb3f1 23,29
+  s_346064cd25ca73::t_4859dafcbfbdcc 539-542
+.github/workflows/ci.yml
+  s_346064cd25ca73::t_f42e08c91fec73 48,271
+  s_346064cd25ca73::t_cb974a8217a6f9 34,129-130,144,148,153,157,161,167
+  s_346064cd25ca73::t_cd891b04e404a9 107
+  s_346064cd25ca73::t_697bde3101d980 149-152
+scripts/smoke/web.ts
+  s_346064cd25ca73::t_56db51d23ba0c3 2,6
+  s_346064cd25ca73::t_2c90acfacd8aa3 1,3-5,7-75
+apps/cli/tsdown.config.ts
+  s_346064cd25ca73::t_3c1e474c9c7055 10
+  s_346064cd25ca73::t_49dda96cee9884 8
+scripts/smoke/turbo.ts
+  s_346064cd25ca73::t_56db51d23ba0c3 1-2,4
+  s_346064cd25ca73::t_fb4ba035e4dbfa 3,5-29
+packages/ui/AGENTS.md
+  s_346064cd25ca73::t_a53f82e2bcb3f1 5-6
+docs/auth.md
+  s_346064cd25ca73::t_a53f82e2bcb3f1 53,56,133-135,138,174
+apps/cli/package.json
+  s_346064cd25ca73::t_cd891b04e404a9 12
+  s_346064cd25ca73::t_c3617954bc3c24 18-19
+apps/docs/content/docs/quickstart.mdx
+  s_346064cd25ca73::t_a53f82e2bcb3f1 15,23-25
+packages/tsconfig/AGENTS.md
+  s_346064cd25ca73::t_5936ddf230c9dd 5
+package.json
+  s_346064cd25ca73::t_2ef6e33423e987 45,49
+  s_346064cd25ca73::t_f42e08c91fec73 48,50,57-58,61-63
+  s_346064cd25ca73::t_9fe4e854b4da48 37
+  s_346064cd25ca73::t_f4c812e95b020a 8-9,66
+  s_346064cd25ca73::t_2c90acfacd8aa3 46
+  s_346064cd25ca73::t_cd891b04e404a9 44
+  s_346064cd25ca73::t_c3617954bc3c24 14
+  s_346064cd25ca73::t_e099d28ebccc0a 47,51
+  s_242b86721d85a2::t_a07e49d275efad 40
+  s_ce71c276b12ffc::t_8482b071e2fbca 12-13
+apps/cli/src/index.ts
+  s_346064cd25ca73::t_c3617954bc3c24 4,8,23-28,30-31,35,47-53,62-94,99-105,113-116,119
+  s_346064cd25ca73::t_90f4ae9c6cecb9 95-98,108-112
+docs/design/README.md
+  s_346064cd25ca73::t_a53f82e2bcb3f1 5
+README.md
+  s_346064cd25ca73::t_b6519f6a18eab1 14,17,22-24
+  s_242b86721d85a2::t_a4478a8eebd7cd 18
+  s_346064cd25ca73::t_c3617954bc3c24 25
+  s_346064cd25ca73::t_57c455de62dc7e 32
+  s_346064cd25ca73::t_5936ddf230c9dd 19
+  s_242b86721d85a2::t_4d7205cdc72b45 20-21,26-27
+  s_1ac8d0e9e33f7d::t_03a9452fc02258 30-31
+  s_346064cd25ca73::t_df221c885c0c35 28-29
+scripts/cli/kpdev.mjs
+  s_346064cd25ca73::t_894b0f595094ab 2-11
+  s_346064cd25ca73::t_ee1da1e30d1a7f 1
+scripts/check/workspace-lint.test.mjs
+  s_346064cd25ca73::t_f42e08c91fec73 3,10,48,138-139
+  s_346064cd25ca73::t_b5f2b893af1113 8-9,38,135
+packages/contract/AGENTS.md
+  s_346064cd25ca73::t_a53f82e2bcb3f1 6
+scripts/smoke/topology.sh
+  s_346064cd25ca73::t_d3cb0795edfbda 4-11,14-20,26-27
+scripts/cli/index.test.ts
+  s_346064cd25ca73::t_40a9861921cbd6 50
+  s_346064cd25ca73::t_5936ddf230c9dd 99
+  s_346064cd25ca73::t_894b0f595094ab 39-42,123-124,142-145
+  s_346064cd25ca73::t_df221c885c0c35 125-128,130-141
+  s_1ac8d0e9e33f7d::t_03a9452fc02258 183-186
+  s_346064cd25ca73::t_c82b5aa6ca42c0 26-34
+  s_346064cd25ca73::t_d389c251fd724f 164-167
+  s_346064cd25ca73::t_4650c3ae8a0052 191-194,197,200,202-203,208
+  s_346064cd25ca73::t_4dc2fbdba74aa6 20,51-52,157-158,160-162,170-172,175,177
+  s_346064cd25ca73::t_9c0c6db84e544b 72,163,168-169
+  s_346064cd25ca73::t_57c455de62dc7e 180,182
+  s_346064cd25ca73::t_b0235ba5c78575 70-71,73-76
+  s_346064cd25ca73::t_fb4ba035e4dbfa 15,83,92
+  s_346064cd25ca73::t_ab118922b31aaf 173-174
+  s_346064cd25ca73::t_2c90acfacd8aa3 1-14,16-18,21-25,35-38,44-49,53-54,57-69,77-82,84-91,94-98,100-109,114-122,146-156,178-179,181,187-190,212-219,226
+  s_346064cd25ca73::t_b2086d6ee03b94 221-224
+  s_346064cd25ca73::t_e1531c83a4b001 110-113,159,176,205,220,225
+  s_346064cd25ca73::t_64a4ac302d6ea4 129,198
+  s_346064cd25ca73::t_ee1da1e30d1a7f 43,93
+  s_346064cd25ca73::t_fa8bcb185b27b0 19,55-56,195-196,199,201,204,206-207,209-211
+apps/cli/AGENTS.md
+  s_346064cd25ca73::t_a53f82e2bcb3f1 5
+scripts/ci/install-turbo.sh
+  s_346064cd25ca73::t_d3cb0795edfbda 1-11
+scripts/smoke/http-image.ts
+  s_346064cd25ca73::t_b18fa1dd262492 47
+  s_346064cd25ca73::t_00006147528038 7-11,13,23-33,35-38,50,55,89-90,100-101,105-106
+  s_346064cd25ca73::t_2c90acfacd8aa3 1-6,12,14-22,34,39-46,48-49,51-54,56-88,91-99,102-104
+packages/contracts/AGENTS.md
+  s_346064cd25ca73::t_a53f82e2bcb3f1 5
+packages/ui/README.md
+  s_346064cd25ca73::t_b0235ba5c78575 115
+  s_346064cd25ca73::t_a53f82e2bcb3f1 110
+scripts/smoke/gateway-image.sh
+  s_346064cd25ca73::t_d3cb0795edfbda 5,8-16,19-25,31-32
+packages/runtime/AGENTS.md
+  s_346064cd25ca73::t_a53f82e2bcb3f1 5
+docs/resources.md
+  s_346064cd25ca73::t_a53f82e2bcb3f1 35
+.oxlintrc.json
+  s_346064cd25ca73::t_f42e08c91fec73 3
+docs/i18n.md
+  s_346064cd25ca73::t_a53f82e2bcb3f1 39
+docs/testing.md
+  s_242b86721d85a2::t_c49842ae9cbbaf 78,86,105
+  s_346064cd25ca73::t_b0235ba5c78575 74,155
+  s_346064cd25ca73::t_a53f82e2bcb3f1 3,49-51,54,72,81,89-90,102,109
+  s_346064cd25ca73::t_cb974a8217a6f9 111-120,170,176
+  s_346064cd25ca73::t_d3cb0795edfbda 163,177
+  s_1ac8d0e9e33f7d::t_03a9452fc02258 128,130
+  s_346064cd25ca73::t_697bde3101d980 139
+  s_242b86721d85a2::t_d80caf6062c217 79-80,82-85,87
+  s_346064cd25ca73::t_2c90acfacd8aa3 149
+  s_346064cd25ca73::t_8721c05a176521 110
+bun.lock
+  s_346064cd25ca73::t_c1ead4af04bc59 8,53,124-125,401-415,431-433,844-845,1570-1571,1612-1613
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "ee4a46fce4e04b3258bf2b4f0a90cc1a99f5e737",
+  "prompts": {},
+  "sessions": {
+    "s_1ac8d0e9e33f7d": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1f31a-cf85-79b1-803c-150c8af38d7a",
+        "model": "gpt-6.2-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_242b86721d85a2": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1f717-b456-78c3-a391-37b974e8978c",
+        "model": "gpt-6.2-astra"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_346064cd25ca73": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1f7d7-98e3-7103-a35b-3a1cea5f384f",
+        "model": "gpt-6.2-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    },
+    "s_ce71c276b12ffc": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1f7ce-dc75-7de2-b055-b570e9bf1a97",
+        "model": "gpt-6.2-sol"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
