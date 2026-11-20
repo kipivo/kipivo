@@ -32,7 +32,7 @@ Use the directory guide for Kipivo conventions and the linked skill for framewor
 ## Toolchain
 
 - Use the Bun and Node.js versions pinned in root `mise.toml`. Keep the Bun pin aligned with `packageManager` in `package.json` and the Web and API Docker base images. Run `mise install --locked` and `mise exec -- bun install --frozen-lockfile` from the repository root.
-- Declare dependencies in the workspace that imports them. Use `workspace:*` for local packages and `catalog:` for Zod, Vite, and Vitest. Edit their versions in the root manifest and update `bun.lock` when dependencies change.
+- Declare dependencies in the workspace that imports them. Use `workspace:*` for local packages and `catalog:` for Hono, Zod, Vite, and Vitest. Edit catalog versions in the root manifest and update `bun.lock` when dependencies change.
 - Use the root scripts and Turbo filters, such as `bun run build --filter=api`. Use `bun x oxfmt <paths>` to format changed files with the root Oxfmt configuration, including SVGs under `assets/`.
 
 ## Workspace boundaries

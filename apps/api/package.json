@@ -10,7 +10,6 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@hono/tsyringe": "1.0.1",
     "@kipivo/api": "workspace:*",
     "@kipivo/auth": "workspace:*",
     "@kipivo/cache": "workspace:*",
@@ -23,9 +22,8 @@
     "@orpc/openapi": "2.0.0-beta.52",
     "@orpc/server": "2.0.0-beta.52",
     "@orpc/zod": "2.0.0-beta.52",
-    "hono": "4.13.19",
-    "reflect-metadata": "0.2.2",
-    "tsyringe": "4.10.0"
+    "awilix": "13.0.7",
+    "hono": "catalog:"
   },
   "devDependencies": {
     "@kipivo/tsconfig": "workspace:*",

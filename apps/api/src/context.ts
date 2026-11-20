@@ -1,6 +1,7 @@
-import "reflect-metadata/lite";
-import type { Context, ContextVariableMap } from "hono";
 import type { LoggerEnv } from "@kipivo/logger/hono";
+import { asValue, createContainer, InjectionMode, type AwilixContainer } from "awilix";
+import type { Context } from "hono";
+import { createMiddleware } from "hono/factory";
 import type { RequestAccess } from "./access";
 
 /** The operations available to HTTP handlers; resource lifecycle stays with the runtime. */
@@ -10,19 +11,25 @@ export interface AppServices {
   ready?(): Promise<boolean>;
 }
 
+type AppDependencies = { appServices: AppServices };
+
 export type AppEnv = {
-  Variables: LoggerEnv["Variables"] & Pick<ContextVariableMap, "resolve">;
+  Variables: LoggerEnv["Variables"] & { servicesScope: AwilixContainer<AppDependencies> };
 };
 
-// Nitro bundles the CommonJS polyfill separately; load the DI bridge only after it runs.
-const { tsyringe } = await import("@hono/tsyringe");
-const servicesToken = Symbol("AppServices");
-
 export function provideServices(services: AppServices) {
-  // Borrow the runtime instance in each request; never register resource owners globally.
-  return tsyringe((scope) => scope.registerInstance<AppServices>(servicesToken, services));
+  const container = createContainer<AppDependencies>({
+    injectionMode: InjectionMode.PROXY,
+    strict: true,
+  });
+  container.register({ appServices: asValue(services) });
+
+  return createMiddleware<AppEnv>((context, next) => {
+    context.set("servicesScope", container.createScope());
+    return next();
+  });
 }
 
 export function requestServices(context: Context<AppEnv>) {
-  return context.var.resolve<AppServices>(servicesToken);
+  return context.var.servicesScope.cradle.appServices;
 }

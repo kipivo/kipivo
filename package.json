@@ -8,6 +8,7 @@
       "tests/*"
     ],
     "catalog": {
+      "hono": "5.0.0-rc.1",
       "vite": "8.3.8",
       "vitest": "5.1.0",
       "zod": "4.6.7"
