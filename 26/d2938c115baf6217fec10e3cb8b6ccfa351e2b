@@ -1,0 +1,26 @@
+scripts/workspace-lint.mjs
+  s_242b86721d85a2::t_5ab968c2a279f2 27,30,42
+  s_242b86721d85a2::t_7a940dcf63694b 6-21,33,43-71,74-79,94,101
+scripts/workspace-lint.test.mjs
+  s_242b86721d85a2::t_05af49853820c3 89
+  s_242b86721d85a2::t_556ee06c6139bf 13-33,45-47,53-80,86-88,90-91
+  s_242b86721d85a2::t_b694c5cb1d4653 48-52,81-85
+AGENTS.md
+  s_242b86721d85a2::t_f0c4bf10c69a46 42
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "26d2938c115baf6217fec10e3cb8b6ccfa351e2b",
+  "prompts": {},
+  "sessions": {
+    "s_242b86721d85a2": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1f717-b456-78c3-a391-37b974e8978c",
+        "model": "gpt-6.2-astra"
+      },
+      "human_author": "Zack <heyloyep@gmail.com>"
+    }
+  }
+}
