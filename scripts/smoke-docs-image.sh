@@ -20,5 +20,5 @@ trap 'exit 143' TERM
 docker start "$container" >/dev/null
 origin="http://$(docker port "$container" 4321/tcp)"
 curl --fail --silent --show-error --retry 20 --retry-all-errors --retry-delay 1 --max-time 2 \
-  --output /dev/null "$origin/docs/"
+  --output /dev/null "$origin/docs"
 bun scripts/smoke-docs.mjs "$origin"

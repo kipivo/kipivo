@@ -125,7 +125,7 @@ export default defineRailway(() => {
       ],
     },
     env: { HOST: "::", PORT: "4321" },
-    healthcheck: "/docs/",
+    healthcheck: "/docs",
     replicas: 1,
   });
 

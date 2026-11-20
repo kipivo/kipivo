@@ -62,7 +62,13 @@ services:
       dockerfile: apps/docs/Dockerfile
     pull_policy: never
     healthcheck:
-      test: [CMD, bun, -e, 'if (!(await fetch("http://127.0.0.1:4321/docs/")).ok) process.exit(1)']
+      test:
+        [
+          CMD,
+          bun,
+          -e,
+          'if (!(await fetch("http://127.0.0.1:4321/docs", { redirect: "manual" })).ok) process.exit(1)',
+        ]
       interval: 1s
       timeout: 2s
       retries: 60

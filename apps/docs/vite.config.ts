@@ -14,16 +14,19 @@ export default defineConfig({
     fumadocsMdx({ index: false }),
     tailwindcss(),
     tanstackStart({
-      router: { basepath: docsBase },
-      prerender: {
-        enabled: true,
-        autoStaticPathsDiscovery: false,
-        failOnError: true,
-        filter: ({ path }) => path === docsBase || path.startsWith(`${docsBase}/`),
-      },
-      pages: [{ path: `${docsBase}/` }, { path: `${docsBase}/search.json` }],
+      // The router rewrite owns the public mount path and its slashless home URL.
+      router: { basepath: "/" },
     }),
-    nitro({ preset: "bun" }),
+    nitro({
+      preset: "bun",
+      prerender: {
+        routes: [docsBase, `${docsBase}/search.json`],
+        crawlLinks: true,
+        failOnError: true,
+        // These links belong to the main site. The Docs home is seeded above.
+        ignore: [/^\/$/, "/api/"],
+      },
+    }),
     react(),
   ],
 });

@@ -10,8 +10,11 @@ export async function verifyDocs(origin) {
     return response;
   }
 
-  const home = await (await request("/docs/")).text();
+  const home = await (await request("/docs")).text();
   assert.match(home, /<h1\b[^>]*>Kipivo documentation<\/h1>/);
+  assert.match(home, /href="\/docs"/);
+  assert.doesNotMatch(home, /href="\/docs\/"/);
+
   const stylesheet = home.match(/href="(\/docs\/assets\/[^"\s]+\.css)"/)?.[1];
   assert.ok(stylesheet, "The docs home references its stylesheet under /docs");
   assert.match((await request(stylesheet)).headers.get("content-type") ?? "", /^text\/css\b/);

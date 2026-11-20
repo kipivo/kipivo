@@ -24,17 +24,12 @@
   --color-fd-ring: var(--ring);
 }
 
-#nd-notebook-layout {
-  --docs-gutter: clamp(1.5rem, 8vw, 6rem);
-}
-
 #nd-notebook-layout:has(> #nd-subnav) {
   --fd-header-height: 4rem;
 }
 
 #nd-subnav [data-header-body] {
   height: var(--fd-header-height);
-  padding-inline: var(--docs-gutter);
 }
 
 /* TanStack marks the current mounted Docs link with aria-current. */
@@ -43,7 +38,16 @@ a[data-active][aria-current="page"] {
 }
 
 @media (width < 48rem) {
+  #nd-notebook-layout {
+    --docs-gutter: clamp(1.5rem, 8vw, 6rem);
+  }
+
+  #nd-subnav [data-header-body],
   #nd-page {
     padding-inline: var(--docs-gutter);
+  }
+
+  #nd-subnav [data-slot="wordmark-name"] {
+    white-space: nowrap;
   }
 }
