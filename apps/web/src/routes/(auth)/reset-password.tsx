@@ -1,4 +1,6 @@
+import { useLocale } from "@/features/i18n/locale";
 import { PageTitle } from "@kipivo/ui/blocks/page";
+import { m } from "@kipivo/i18n/messages";
 import { Button } from "@kipivo/ui/components/button";
 import { Input } from "@kipivo/ui/components/input";
 import {
@@ -17,17 +19,26 @@ import { useAccountSession } from "@/features/account/session";
 
 export const Route = createFileRoute("/(auth)/reset-password")({
   beforeLoad: requireInstallation,
+  staticData: { languageSwitch: true },
   head: () => ({
-    meta: [{ title: "Reset password | Kipivo" }, { name: "referrer", content: "no-referrer" }],
+    meta: [{ title: m.resetPasswordDocumentTitle() }, { name: "referrer", content: "no-referrer" }],
   }),
   headers: () => ({ "Cache-Control": "no-store" }),
   component: ResetPassword,
 });
+
+const errorMessages = {
+  mismatch: m.resetPasswordMismatch,
+  rateLimited: m.resetPasswordRateLimited,
+  failed: m.resetPasswordFailed,
+};
+
 function ResetPassword() {
+  useLocale();
   const [token, setToken] = useState<string | null>(null);
   const [done, setDone] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<keyof typeof errorMessages>();
   const { refresh } = useAccountSession();
   useEffect(() => {
     const value = window.location.hash.slice(1);
@@ -40,44 +51,40 @@ function ResetPassword() {
     const form = new FormData(event.currentTarget);
     const password = String(form.get("password"));
     if (password !== form.get("confirm")) {
-      setError("The passwords do not match.");
+      setError("mismatch");
       return;
     }
     setBusy(true);
-    setError("");
+    setError(undefined);
     try {
       await authRequest("/reset-password", { body: { token, newPassword: password } });
       setToken("");
       setDone(true);
       await refresh();
     } catch (cause) {
-      setError(
-        authErrorStatus(cause) === 429
-          ? "Too many attempts. Try again later."
-          : "Could not reset your password. Try again or request a new link.",
-      );
+      setError(authErrorStatus(cause) === 429 ? "rateLimited" : "failed");
     } finally {
       setBusy(false);
     }
   }
   return (
     <>
-      <PageTitle>{done ? "Password updated" : "Choose a new password"}</PageTitle>
+      <PageTitle>{done ? m.resetPasswordDoneHeading() : m.resetPasswordHeading()}</PageTitle>
       {done ? (
         <p role="status" className="mt-3">
-          Sign in with your new password.
+          {m.resetPasswordDoneMessage()}
         </p>
       ) : token === null ? (
-        <p role="status">Checking the reset link…</p>
+        <p role="status">{m.resetPasswordCheckingLink()}</p>
       ) : !token ? (
         <p role="alert" className="mt-3">
-          Open the reset link from your email, or request a new one.
+          {m.resetPasswordMissingLink()}
         </p>
       ) : (
         <form method="post" className="mt-6 grid gap-4" onSubmit={submit}>
           <FieldGroup>
             <Field>
-              <FieldLabel htmlFor="new-password">New password</FieldLabel>
+              <FieldLabel htmlFor="new-password">{m.resetPasswordNewPassword()}</FieldLabel>
               <Input
                 id="new-password"
                 type="password"
@@ -87,10 +94,10 @@ function ResetPassword() {
                 required
                 aria-describedby="length"
               />
-              <FieldDescription id="length">Use at least 12 characters.</FieldDescription>
+              <FieldDescription id="length">{m.credentialPasswordRequirement()}</FieldDescription>
             </Field>
             <Field>
-              <FieldLabel htmlFor="confirm-password">Confirm new password</FieldLabel>
+              <FieldLabel htmlFor="confirm-password">{m.resetPasswordConfirmPassword()}</FieldLabel>
               <Input
                 id="confirm-password"
                 type="password"
@@ -101,18 +108,18 @@ function ResetPassword() {
               />
             </Field>
           </FieldGroup>
-          <FieldError>{error}</FieldError>
+          <FieldError>{error ? errorMessages[error]() : null}</FieldError>
           <Button type="submit" disabled={busy}>
-            {busy ? "Updating…" : "Update password"}
+            {busy ? m.resetPasswordBusy() : m.resetPasswordSubmit()}
           </Button>
         </form>
       )}
       {!done && (
         <Link to="/forgot-password" className="mt-4 block text-sm underline">
-          Request a new reset link
+          {m.resetPasswordRequestNewLink()}
         </Link>
       )}
-      <SignInLink />
+      <SignInLink label={m.authBackToSignIn()} />
     </>
   );
 }

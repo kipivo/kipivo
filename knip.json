@@ -16,7 +16,7 @@
       "entry": ["src/server.ts", "src/plugins/*.ts"]
     },
     "apps/docs": {
-      "entry": ["src/routes/**/*.{ts,tsx}"]
+      "entry": ["src/routes/**/*.{ts,tsx}", "scripts/search.test.ts"]
     },
     "apps/web": {
       "entry": ["src/routes/**/*.{ts,tsx}", "src/features/brand/motion/src/scene.js"]

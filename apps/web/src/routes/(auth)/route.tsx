@@ -1,9 +1,9 @@
 import { createFileRoute, Outlet, useMatches } from "@tanstack/react-router";
+import type { ReactNode } from "react";
 import { Assembly } from "@/features/brand/assembly";
 import { ThemeSwitch } from "@/features/i18n/theme-switch";
 import { HomeLink } from "@/layout/home-link";
 import { m } from "@kipivo/i18n/messages";
-import type { ReactNode } from "react";
 import { LanguageSelect } from "@/features/i18n/language-select";
 
 export const Route = createFileRoute("/(auth)")({ component: AuthLayout });
@@ -15,26 +15,21 @@ function AuthLayout() {
   const languageSwitch = useMatches({
     select: (matches) => matches.at(-1)?.staticData.languageSwitch,
   });
+  const actions = languageSwitch ? (
+    <div className="flex items-center gap-2">
+      <LanguageSelect />
+      <ThemeSwitch />
+    </div>
+  ) : (
+    <ThemeSwitch />
+  );
 
-  if (brandPanel) {
-    return (
-      <BrandedAuthLayout
-        actions={
-          languageSwitch ? (
-            <div className="flex items-center gap-2">
-              <LanguageSelect />
-              <ThemeSwitch />
-            </div>
-          ) : undefined
-        }
-      />
-    );
-  }
+  if (brandPanel) return <BrandedAuthLayout actions={actions} />;
 
   return (
     <main className="relative flex min-h-svh flex-col">
       <div className="absolute top-[max(1rem,env(safe-area-inset-top))] right-[max(1rem,env(safe-area-inset-right))] z-10 sm:top-[max(1.5rem,env(safe-area-inset-top))] sm:right-[max(1.5rem,env(safe-area-inset-right))]">
-        <ThemeSwitch />
+        {actions}
       </div>
       <div className="page-gutter my-auto pt-[calc(5rem+env(safe-area-inset-top))] pb-20 [--page-max-width:76rem]">
         <div className="mx-auto max-w-[26rem]">
@@ -45,12 +40,12 @@ function AuthLayout() {
   );
 }
 
-function BrandedAuthLayout({ actions }: { actions?: ReactNode }) {
+function BrandedAuthLayout({ actions }: { actions: ReactNode }) {
   return (
     <main className="flex min-h-svh flex-col bg-[radial-gradient(ellipse_at_65%_0%,color-mix(in_oklab,var(--color-brand-coral)_8%,transparent),transparent_60%)]">
       <div className="flex items-center justify-between gap-3 px-5 pt-[max(1rem,env(safe-area-inset-top))] sm:px-6 sm:pt-[max(1.5rem,env(safe-area-inset-top))]">
         <HomeLink />
-        {actions ?? <ThemeSwitch />}
+        {actions}
       </div>
       <div className="mx-auto flex w-full max-w-[71rem] flex-1 items-center px-6 pt-8 pb-[max(3rem,env(safe-area-inset-bottom))] sm:px-8 md:pt-10 md:pb-16 lg:px-10">
         <div className="mx-auto grid w-full max-w-[25rem] md:max-w-none md:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] md:rounded-[1.5rem] md:border md:bg-card md:p-2.5 md:shadow-xl md:shadow-black/5 dark:md:shadow-black/20">

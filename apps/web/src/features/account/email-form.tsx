@@ -1,3 +1,5 @@
+import { renderMarkup } from "@kipivo/i18n";
+import { m } from "@kipivo/i18n/messages";
 import { Button } from "@kipivo/ui/components/button";
 import { Input } from "@kipivo/ui/components/input";
 import { Field, FieldError, FieldLabel } from "@kipivo/ui/components/field";
@@ -8,22 +10,35 @@ import { authErrorStatus, authRequest } from "./auth-client";
 import { useAccountSession } from "./session";
 
 type Method = "link" | "code" | "reset";
-const labels = { link: "Send sign-in link", code: "Send sign-in code", reset: "Send reset link" };
+const errorMessages = {
+  rateLimited: m.credentialRateLimited,
+  session: m.credentialSession,
+  sendFailed: m.emailSendFailed,
+  invalidCode: () => "Could not sign in. Check the code or request a new one.",
+};
+
 export function EmailForm({ method, ...search }: { method: Method } & AuthSearch) {
   const router = useRouter();
   const enabled = useEmailMethods();
   const { session, refresh } = useAccountSession();
   const [sentTo, setSentTo] = useState("");
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<keyof typeof errorMessages>();
+  // Magic-link and email-code screens still ship in English.
+  const locale = method === "reset" ? undefined : "en";
+  const labels = {
+    link: "Send sign-in link",
+    code: "Send sign-in code",
+    reset: m.forgotPasswordSubmit(),
+  };
   if (session.status === "signed-in" && method !== "reset")
     return <Navigate {...afterSignIn(search)} replace />;
   if (!enabled)
     return (
       <p role="status" className="mt-4 text-muted-foreground">
         {enabled === null
-          ? "Checking available sign-in methods…"
-          : "Email delivery is unavailable. Use password sign-in or contact your administrator."}
+          ? m.emailMethodsChecking({}, { locale })
+          : m.emailMethodsUnavailable({}, { locale })}
       </p>
     );
   const checkingCode = Boolean(sentTo) && method === "code";
@@ -32,15 +47,14 @@ export function EmailForm({ method, ...search }: { method: Method } & AuthSearch
     if (busy) return;
     const data = new FormData(event.currentTarget);
     const email = String(data.get("email") ?? "").trim();
-    setError("");
+    setError(undefined);
     setBusy(true);
     try {
       if (checkingCode) {
         await authRequest("/sign-in/email-otp", {
           body: { email: sentTo, otp: String(data.get("code")) },
         });
-        if ((await refresh())?.status !== "signed-in")
-          setError("Could not load your session. Try signing in again.");
+        if ((await refresh())?.status !== "signed-in") setError("session");
       } else {
         if (method === "link")
           await authRequest("/sign-in/magic-link", {
@@ -61,10 +75,10 @@ export function EmailForm({ method, ...search }: { method: Method } & AuthSearch
     } catch (cause) {
       setError(
         authErrorStatus(cause) === 429
-          ? "Too many attempts. Wait a moment and try again."
+          ? "rateLimited"
           : checkingCode
-            ? "Could not sign in. Check the code or request a new one."
-            : "Could not send your request. Try again.",
+            ? "invalidCode"
+            : "sendFailed",
       );
     } finally {
       setBusy(false);
@@ -74,8 +88,16 @@ export function EmailForm({ method, ...search }: { method: Method } & AuthSearch
     <div className="mt-6 grid gap-4">
       {sentTo && (
         <p role="status" className="text-sm">
-          If an account exists for <strong className="break-all">{sentTo}</strong>, check your inbox
-          for {method === "code" ? "a six-digit code" : "a link"}.
+          {method === "code" ? (
+            <>
+              If an account exists for <strong className="break-all">{sentTo}</strong>, check your
+              inbox for a six-digit code.
+            </>
+          ) : (
+            renderMarkup(m.emailLinkSent({}, { locale }), {
+              email: () => <strong className="break-all">{sentTo}</strong>,
+            })
+          )}
         </p>
       )}
       {(!sentTo || checkingCode) && (
@@ -96,7 +118,7 @@ export function EmailForm({ method, ...search }: { method: Method } & AuthSearch
             </Field>
           ) : (
             <Field>
-              <FieldLabel htmlFor="delivery-email">Email</FieldLabel>
+              <FieldLabel htmlFor="delivery-email">{m.credentialEmail({}, { locale })}</FieldLabel>
               <Input
                 key="email"
                 id="delivery-email"
@@ -107,9 +129,13 @@ export function EmailForm({ method, ...search }: { method: Method } & AuthSearch
               />
             </Field>
           )}
-          <FieldError>{error}</FieldError>
+          <FieldError>{error ? errorMessages[error]({}, { locale }) : null}</FieldError>
           <Button disabled={busy} type="submit">
-            {busy ? "Please wait…" : checkingCode ? "Verify and sign in" : labels[method]}
+            {busy
+              ? m.emailBusy({}, { locale })
+              : checkingCode
+                ? "Verify and sign in"
+                : labels[method]}
           </Button>
         </form>
       )}
@@ -119,10 +145,10 @@ export function EmailForm({ method, ...search }: { method: Method } & AuthSearch
           disabled={busy}
           onClick={() => {
             setSentTo("");
-            setError("");
+            setError(undefined);
           }}
         >
-          Request another {method === "code" ? "code" : "link"}
+          {method === "code" ? "Request another code" : m.emailRequestAnotherLink({}, { locale })}
         </Button>
       )}
     </div>

@@ -12,7 +12,7 @@ import {
 import { useRouter } from "@tanstack/react-router";
 import { useSyncExternalStore } from "react";
 import { useLocale, useSetLocale } from "./locale";
-import { readLocalePreference, setAutoPreference } from "./preference";
+import { readLocalePreference, setAutoPreference } from "@kipivo/i18n/preference";
 
 const noSubscription = () => () => {};
 

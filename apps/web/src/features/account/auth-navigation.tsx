@@ -1,5 +1,6 @@
 import { authRequest } from "./auth-client";
 import { nativeAuthorization, type NativeAuthorization } from "@kipivo/auth/native";
+import { m } from "@kipivo/i18n/messages";
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
@@ -62,14 +63,17 @@ export function useEmailMethods() {
   return enabled;
 }
 
-export function SignInLink(search: AuthSearch) {
+export function SignInLink({
+  label = m.authBackToSignIn({}, { locale: "en" }),
+  ...search
+}: AuthSearch & { label?: string }) {
   return (
     <Link
       to="/sign-in"
       search={search}
       className="mt-5 inline-block text-sm underline underline-offset-4"
     >
-      Back to sign in
+      {label}
     </Link>
   );
 }

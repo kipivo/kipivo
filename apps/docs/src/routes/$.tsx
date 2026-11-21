@@ -1,3 +1,4 @@
+import { setLocalePreference } from "@kipivo/i18n/preference";
 import { languageNames } from "@kipivo/i18n/languages";
 import { m } from "@kipivo/i18n/messages";
 import { locales, type Locale } from "@kipivo/i18n/runtime";
@@ -49,8 +50,9 @@ function DocsPreferences() {
       <Select<Locale>
         value={language}
         onValueChange={(next) => {
-          if (next && next !== language)
-            window.location.assign(guideUrl(slugs, next) + window.location.search);
+          if (!next || next === language) return;
+          setLocalePreference(next);
+          window.location.assign(guideUrl(slugs, next) + window.location.search);
         }}
       >
         <SelectTrigger aria-label={m.languageLabel({}, { locale: language })}>

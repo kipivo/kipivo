@@ -986,13 +986,39 @@ test("email code, sign-in link, and password recovery work through their Web pag
     .join("; ");
   await page.goto(`${origin}/forgot-password`);
   await page.getByLabel("Email").fill(email);
-  await page.getByRole("button", { name: "Send reset link" }).click();
+  await page.getByRole("combobox", { name: "Language" }).click();
+  await page.getByRole("option", { name: "简体中文", exact: true }).click();
+  await expect(page).toHaveTitle("忘记密码？ | Kipivo");
+  await expect(page.getByLabel("邮箱", { exact: true })).toHaveValue(email);
+  await page.getByRole("button", { name: "发送重设链接" }).click();
+  const sent = page.getByRole("status");
+  await expect(sent).toHaveText(`如果 ${email} 已关联账号，请在收件箱中查收链接。`);
+  await page.getByRole("combobox", { name: "语言" }).click();
+  await page.getByRole("option", { name: "English", exact: true }).click();
+  await expect(sent).toHaveText(`If an account exists for ${email}, check your inbox for a link.`);
+  await expect(page.getByRole("button", { name: "Request another link" })).toBeVisible();
   const reset = (await readMessage("Reset your Kipivo password")).split("\n")[1]!;
   const newPassword = randomUUID();
   await page.goto(reset);
   await page.getByLabel("New password", { exact: true }).fill(newPassword);
-  await page.getByLabel("Confirm new password").fill(newPassword);
+  const mismatch = randomUUID();
+  await page.getByLabel("Confirm new password").fill(mismatch);
   await page.getByRole("button", { name: "Update password" }).click();
+  await expect(page.getByRole("alert")).toHaveText("The passwords do not match.");
+  await page.getByRole("combobox", { name: "Language" }).click();
+  await page.getByRole("option", { name: "简体中文", exact: true }).click();
+  await expect(page).toHaveTitle("重设密码 | Kipivo");
+  await expect(page.getByRole("alert")).toHaveText("两次输入的密码不一致。");
+  await expect(page.getByLabel("新密码", { exact: true })).toHaveValue(newPassword);
+  const confirm = page.getByLabel("确认新密码", { exact: true });
+  await expect(confirm).toHaveValue(mismatch);
+  await expect(page).toHaveURL(`${origin}/reset-password`);
+  await confirm.fill(newPassword);
+  await page.getByRole("button", { name: "更新密码" }).click();
+  await expect(page.getByRole("heading", { name: "密码已更新" })).toBeVisible();
+  await expect(page.getByRole("status")).toHaveText("请使用新密码登录。");
+  await page.getByRole("combobox", { name: "语言" }).click();
+  await page.getByRole("option", { name: "English", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Password updated" })).toBeVisible();
   expect(
     (
@@ -1104,7 +1130,7 @@ for (const [provider, name, authorizeURL, authPage] of [
     });
   });
 }
-test.describe("password sign-in language", () => {
+test.describe("password authentication language", () => {
   test.use({ locale: "zh-CN" });
 
   for (const width of [390, 1280]) {
@@ -1155,7 +1181,7 @@ test.describe("password sign-in language", () => {
     }
   });
 
-  test("changes language in place and leaves registration in English", async ({
+  test("changes sign-in language in place and shares the preference with registration", async ({
     page,
     context,
   }) => {
@@ -1189,13 +1215,70 @@ test.describe("password sign-in language", () => {
     expect(automatic.find((c) => c.name === "locale")).toBeUndefined();
     expect(automatic.find((c) => c.name === "locale-auto")?.value).toBe("1");
     await page.getByRole("link", { name: "创建账号" }).click();
-    // Registration copy is English-only, but the page keeps the saved locale.
     await expect(page.locator("html")).toHaveAttribute("lang", "zh-CN");
-    await expect(page.getByRole("heading", { name: "Create your account" })).toBeVisible();
-    await expect(page.getByRole("combobox")).toHaveCount(0);
+    await expect(page).toHaveTitle("创建账号 | Kipivo");
+    await expect(page.getByRole("heading", { name: "创建你的账号" })).toBeVisible();
+    await expect(page.getByRole("combobox", { name: "语言" })).toContainText("跟随浏览器");
     await page.goBack();
     await expect(page.locator("html")).toHaveAttribute("lang", "zh-CN");
     await expect(page).toHaveURL(url);
+  });
+
+  test("switches registration language while keeping input, visibility and errors", async ({
+    page,
+  }) => {
+    const email = "registration@example.com";
+    const password = randomUUID();
+    await page.goto(`${origin}/sign-up?next=/workbench`);
+    await page.getByLabel("姓名", { exact: true }).fill("   ");
+    await page.getByLabel("邮箱", { exact: true }).fill(email);
+    await page.getByLabel("密码", { exact: true }).fill(password);
+    await page.getByRole("button", { name: "显示密码" }).click();
+    await page.getByRole("button", { name: "创建账号", exact: true }).click();
+    await expect(page.getByRole("alert")).toHaveText("请输入姓名。");
+
+    await page.getByRole("combobox", { name: "语言" }).click();
+    await page.getByRole("option", { name: "English", exact: true }).click();
+    await expect(page).toHaveTitle("Create an account | Kipivo");
+    await expect(page.getByRole("alert")).toHaveText("Enter your name.");
+    await expect(page.getByLabel("Name", { exact: true })).toHaveValue("   ");
+    await expect(page.getByLabel("Email", { exact: true })).toHaveValue(email);
+    await expect(page.getByLabel("Password", { exact: true })).toHaveValue(password);
+    await expect(page.getByLabel("Password", { exact: true })).toHaveAttribute("type", "text");
+    await page.getByRole("link", { name: "Sign in", exact: true }).click();
+    await expect(page).toHaveURL(
+      (url) => url.pathname === "/sign-in" && url.searchParams.get("next") === "/workbench",
+    );
+    await expect(page).toHaveTitle("Sign in | Kipivo");
+  });
+
+  test("localizes a missing reset link and keeps a recovery error across languages", async ({
+    page,
+  }) => {
+    await page.route("**/api/auth/email-methods", (route) =>
+      route.fulfill({ json: { enabled: true } }),
+    );
+    await page.route("**/api/auth/request-password-reset", (route) =>
+      route.fulfill({ status: 429 }),
+    );
+    await page.goto(`${origin}/reset-password`);
+    await expect(page).toHaveTitle("重设密码 | Kipivo");
+    await expect(page.getByRole("alert")).toHaveText("请打开邮件中的密码重设链接，或申请新链接。");
+    await page.getByRole("link", { name: "申请新的重设链接" }).click();
+    await expect(page).toHaveTitle("忘记密码？ | Kipivo");
+    const email = "recovery@example.com";
+    await page.getByLabel("邮箱", { exact: true }).fill(email);
+    await page.getByRole("button", { name: "发送重设链接" }).click();
+    await expect(page.getByRole("alert")).toHaveText("尝试次数过多，请稍后再试。");
+
+    await page.getByRole("combobox", { name: "语言" }).click();
+    await page.getByRole("option", { name: "English", exact: true }).click();
+    await expect(page).toHaveTitle("Forgot your password? | Kipivo");
+    await expect(page.getByLabel("Email", { exact: true })).toHaveValue(email);
+    await expect(page.getByRole("alert")).toHaveText(
+      "Too many attempts. Wait a moment and try again.",
+    );
+    await expect(page.getByRole("link", { name: "Back to sign in" })).toBeVisible();
   });
 
   test("switches language in place without a server round-trip", async ({ page, context }) => {
@@ -1314,15 +1397,16 @@ for (const locale of ["en", "zh-CN"] as const) {
       );
       const registrationOffset = records.length;
       const registrationResponse = await page.goto(`${origin}/sign-up`);
-      await expect(page.getByRole("heading", { name: "Create your account" })).toBeVisible();
-      // Registration fields follow the saved locale, so the HTML must not be cached.
+      const registrationHeading = locale === "en" ? "创建你的账号" : "Create your account";
+      await expect(page.getByRole("heading", { name: registrationHeading })).toBeVisible();
+      // Registration follows the saved locale, so the HTML must not be cached.
       expect(registrationResponse?.headers()["cache-control"]).toContain("no-store");
       await settle();
       expect(
         records.slice(registrationOffset).filter((record) => record.url.includes("/_serverFn/")),
       ).toEqual([]);
       const registration = records.filter((record) => record.type === "document").at(-1)!.body;
-      expect(registration).toContain("Create your account");
+      expect(registration).toContain(registrationHeading);
       expect(registration).not.toContain("登录 Kipivo");
       expect(registration).not.toContain("Enter your account email and password to continue.");
       // The SDK's optional common catalogs are not part of either auth screen.
@@ -1384,4 +1468,26 @@ test("production setup ships only field messages without hydration refetch", asy
     await server.stop();
     await isolated.drop();
   }
+});
+
+test("shared Docs links preserve the Web preference and choosing a language updates it", async ({
+  page,
+  context,
+}) => {
+  await context.addCookies([{ name: "locale-auto", value: "1", url: origin }]);
+  await page.goto(`${origin}/docs/zh-CN/quickstart`);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("快速开始");
+  await page.getByRole("link", { name: "返回 Kipivo" }).click();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("From spark to done.");
+  expect((await context.cookies(origin)).find((c) => c.name === "locale-auto")?.value).toBe("1");
+
+  await page.goto(`${origin}/docs/quickstart`);
+  await page.getByRole("combobox", { name: "Language" }).click();
+  await page.getByRole("option", { name: "简体中文" }).click();
+  await expect(page).toHaveTitle("快速开始 | Kipivo Docs");
+  await page.getByRole("link", { name: "返回 Kipivo" }).click();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("从灵感到完成。");
+  const cookies = await context.cookies(origin);
+  expect(cookies.find((c) => c.name === "locale")?.value).toBe("zh-CN");
+  expect(cookies.find((c) => c.name === "locale-auto")).toBeUndefined();
 });

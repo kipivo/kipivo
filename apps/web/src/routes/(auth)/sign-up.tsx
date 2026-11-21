@@ -1,3 +1,4 @@
+import { useLocale } from "@/features/i18n/locale";
 import { PageTitle } from "@kipivo/ui/blocks/page";
 import { renderMarkup } from "@kipivo/i18n";
 import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
@@ -10,13 +11,14 @@ import { m } from "@kipivo/i18n/messages";
 
 export const Route = createFileRoute("/(auth)/sign-up")({
   beforeLoad: requireInstallation,
-  staticData: { brandPanel: true },
+  staticData: { brandPanel: true, languageSwitch: true },
   validateSearch: socialAuthSearch,
   head: () => ({ meta: [{ title: m.signUpDocumentTitle() }] }),
   component: SignUp,
 });
 
 function SignUp() {
+  useLocale();
   const { error, ...search } = Route.useSearch();
   const { session } = useAccountSession();
   if (session.status === "signed-in") return <Navigate {...afterSignIn(search)} replace />;

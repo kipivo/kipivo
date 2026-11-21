@@ -2,16 +2,8 @@ import { expect, it } from "vitest";
 import en from "../messages/en.json" with { type: "json" };
 import zh from "../messages/zh-CN.json" with { type: "json" };
 
-// Surfaces that ship in English only; Paraglide falls back to the base locale.
+// Setup-specific copy falls back to the base locale.
 const englishOnly = new Set([
-  "credentialCreate",
-  "credentialCreating",
-  "credentialInvalidName",
-  "credentialCannotCreate",
-  "credentialPasswordRequirement",
-  "signUpDocumentTitle",
-  "signUpHeading",
-  "signUpSignInPrompt",
   "setupDocumentTitle",
   "setupHeading",
   "setupIntro",
@@ -49,8 +41,8 @@ it("keeps English-only surfaces out of the Chinese catalog", () => {
   }
 });
 
-it("never ships an empty message", () => {
-  for (const [id, value] of Object.entries(en)) {
+it.each([en, zh])("never ships an empty message", (catalog) => {
+  for (const [id, value] of Object.entries(catalog)) {
     if (id !== "$schema") expect(value, id).toEqual(expect.any(String));
     if (typeof value === "string") expect(value.trim(), id).not.toBe("");
   }

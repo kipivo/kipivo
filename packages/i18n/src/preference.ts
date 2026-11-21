@@ -1,4 +1,4 @@
-import { cookieMaxAge, cookieName } from "@kipivo/i18n/runtime";
+import { cookieMaxAge, cookieName, setLocale, type Locale } from "@kipivo/i18n/runtime";
 
 /**
  * Marks "use the browser language". While it is set, a remembered locale cookie
@@ -50,8 +50,9 @@ export function setAutoPreference(): void {
   deleteCookie(cookieName);
 }
 
-export function clearAutoPreference(): void {
+export function setLocalePreference(locale: Locale): void {
   deleteCookie(AUTO_COOKIE);
+  setLocale(locale, { reload: false });
 }
 
 export function forgetResolvedLocale(): void {

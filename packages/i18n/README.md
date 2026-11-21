@@ -18,6 +18,7 @@ The package compiles once into `generated/` (ignored by Git) and exports:
 
 - `@kipivo/i18n/messages` — `{ m }` and every message function.
 - `@kipivo/i18n/runtime` — `getLocale`, `setLocale`, `locales`, `cookieName`.
+- `@kipivo/i18n/preference` — `setLocalePreference` remembers an explicit browser choice for Web and Docs.
 - `@kipivo/i18n/server` — `paraglideMiddleware` for server rendering.
 - `@kipivo/i18n/vite` — `paraglide()`, the Vite plugin with the project path and output directory already set.
 

@@ -2,7 +2,7 @@
 
 The TanStack Start app uses Fumadocs for the public guides in `content/docs/`. Add an MDX page with `title` and `description` frontmatter and put it in `content/docs/meta.json` to set its sidebar position.
 
-English guides live at `/docs`, and Simplified Chinese guides live at `/docs/zh-CN`. Pair each English MDX file with a `<slug>.zh-CN.mdx` translation. Keep internal links in the same language. The language selector opens the same guide, and search uses the language in the URL.
+English guides live at `/docs`, and Simplified Chinese guides live at `/docs/zh-CN`. Pair each English MDX file with a `<slug>.zh-CN.mdx` translation. Keep internal links in the same language. Selecting a language opens the same guide and saves the choice for the main site on the same origin. Opening a shared guide preserves the visitor’s saved preference. Search uses the language in the URL.
 
 Docs shares Kipivo's wordmark, Geist font, colors, and theme preference through `@kipivo/ui`. `src/styles.css` maps Fumadocs colors to the shared tokens.
 

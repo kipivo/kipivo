@@ -3,6 +3,7 @@ import { constants } from "node:os";
 import { ROOT } from "../internal/root";
 
 const CHECKS = [
+  ["test", "scripts/check/docs.test.ts"],
   ["run", "format:check"],
   ["run", "lint"],
   ["run", "kpdev", "ci", "test"],
@@ -12,6 +13,7 @@ const CHECKS = [
   ["run", "knip"],
   ["scripts/check/i18n-messages.ts"],
   ["test", "scripts/kpdev.test.ts", "scripts/check/i18n-usage.test.ts"],
+  ["test", "apps/docs/scripts/search.test.ts"],
   ["run", "test"],
 ];
 

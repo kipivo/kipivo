@@ -1,6 +1,6 @@
 import { cookieName } from "@kipivo/i18n/runtime";
 import { createMiddleware, createStart } from "@tanstack/react-start";
-import { AUTO_COOKIE, hasCookie, removeCookie } from "@/features/i18n/preference";
+import { AUTO_COOKIE, hasCookie, removeCookie } from "@kipivo/i18n/preference";
 import { paraglideMiddleware } from "@kipivo/i18n/server";
 
 /**

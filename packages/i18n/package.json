@@ -7,6 +7,7 @@
     ".": "./src/index.ts",
     "./languages": "./src/languages.ts",
     "./messages": "./generated/messages.js",
+    "./preference": "./src/preference.ts",
     "./runtime": "./generated/runtime.js",
     "./server": "./generated/server.js",
     "./vite": "./src/vite.ts"
