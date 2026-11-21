@@ -32,6 +32,7 @@ beforeAll(() => {
     "cmds/commit.ts",
     "cmds/commit/lint.ts",
     "cmds/i18n.ts",
+    "cmds/prepare.ts",
     "cmds/run.ts",
     "cmds/runner.ts",
     "cmds/smoke.ts",
@@ -125,7 +126,7 @@ test("discovers root scripts and offers scoped help without running a task", () 
   const rootHelp = run("--help");
   expect(rootHelp.code).toBe(0);
   expect(rootHelp.out).toBe(run().out);
-  expect(rootHelp.out).not.toContain("  prepare");
+  expect(rootHelp.out).toContain("Compile installed catalogs and set up local Git hooks");
 });
 
 test("runs from the repo root and preserves flags, positional arguments and exit status", () => {
@@ -163,6 +164,11 @@ test("shows i18n help for the command and its subcommands without running them",
 test("skips an unavailable i18n workspace only when requested", () => {
   expect(run("i18n", "compile", "--if-installed").code).toBe(0);
   expect(run("i18n", "compile").code).not.toBe(0);
+});
+
+test("prepare is available in a checkout without optional install tools", () => {
+  expect(run("prepare", "--help").out).toContain("kpdev prepare");
+  expect(run("prepare").code).toBe(0);
 });
 
 test("runs the built-in CI planner and shows its nested help", () => {
@@ -349,7 +355,6 @@ test("rejects unknown tasks, including typos below a known task", () => {
   expect(result.code).toBe(1);
   expect(result.err).toContain("Unknown command");
   expect(run("test", "missing", "--help").code).toBe(1);
-  expect(run("prepare").code).toBe(1);
   for (const command of ["help", "smoke:plan", "turbo:build"]) {
     expect(run(command)).toMatchObject({
       code: 1,

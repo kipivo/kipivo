@@ -46,7 +46,7 @@
     "db:check": "bun run --cwd packages/db schema:check",
     "db:migrate": "bun run --cwd apps/api scripts/db.ts db:migrate",
     "knip": "knip",
-    "prepare": "if [ -x node_modules/.bin/kpdev ]; then kpdev i18n compile --if-installed; fi && if [ -e .git ] && [ -z \"$CI\" ] && [ -x node_modules/.bin/husky ]; then husky; fi",
+    "prepare": "if [ -x node_modules/.bin/kpdev ]; then kpdev prepare; fi",
     "commitlint": "kpdev commit lint",
     "lint": "oxlint --deny-warnings . && bun run --cwd scripts lint:test",
     "format": "oxfmt .",
