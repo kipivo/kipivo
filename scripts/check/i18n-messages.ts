@@ -1,16 +1,18 @@
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { ROOT } from "../internal/root.ts";
+import { analyzeMessageUsage } from "./i18n-usage.ts";
 
 /**
  * Paraglide compiles a function per message, so a message nobody calls is dead
  * weight in the catalog and in review. TypeScript already rejects unknown ids at
- * call sites; this check covers the other direction.
+ * call sites; this check covers both directions, including ids that no source
+ * references and properties the catalog does not define.
  */
 const MESSAGES = join(ROOT, "packages/i18n/messages/en.json");
 const SCAN_ROOTS = [join(ROOT, "apps"), join(ROOT, "packages")];
-const SKIPPED = new Set(["node_modules", "dist", ".turbo", ".output", "paraglide"]);
-const MESSAGE_IMPORT = /from\s+["']@kipivo\/i18n\/messages["']/;
+const SKIPPED = new Set(["node_modules", "dist", ".turbo", ".output", "paraglide", "generated"]);
+const MESSAGES_ENTRY = "@kipivo/i18n/messages";
 
 async function* sourceFiles(directory: string): AsyncGenerator<string> {
   let entries;
@@ -38,28 +40,23 @@ async function callers(): Promise<string[]> {
   const sources = await Promise.all(
     files.map(async (file) => ({ file, text: await readFile(file, "utf8") })),
   );
-  return sources.filter(({ text }) => MESSAGE_IMPORT.test(text)).map(({ text }) => text);
+  return sources.filter(({ text }) => text.includes(MESSAGES_ENTRY)).map(({ text }) => text);
 }
 
 const messages = JSON.parse(await readFile(MESSAGES, "utf8")) as Record<string, unknown>;
 const ids = Object.keys(messages).filter((id) => id !== "$schema");
-const sources = await callers();
-const joined = sources.join("\n");
+const usage = analyzeMessageUsage(ids, await callers());
 
-// A message may be called (`m.x()`) or passed as a value (`{ invalid: m.x }`).
-const unused = ids.filter((id) => !new RegExp(String.raw`\bm\.${id}\b`).test(joined));
-const known = new Set(ids);
-const unknown = new Set<string>();
-for (const match of joined.matchAll(/\bm\.([A-Za-z_$][\w$]*)\b/g)) {
-  if (!known.has(match[1])) unknown.add(match[1]);
-}
-
-if (unused.length || unknown.size) {
-  if (unused.length)
-    console.error(`Unused messages in messages/en.json:\n  ${unused.join("\n  ")}`);
-  if (unknown.size)
-    console.error(`Messages missing from messages/en.json:\n  ${[...unknown].join("\n  ")}`);
+if (usage.unused.length || usage.unknown.length) {
+  if (usage.unused.length)
+    console.error(`Unused messages in messages/en.json:\n  ${usage.unused.join("\n  ")}`);
+  if (usage.unknown.length)
+    console.error(`Messages missing from messages/en.json:\n  ${usage.unknown.join("\n  ")}`);
   process.exit(1);
 }
 
-console.log(`i18n: ${ids.length} messages, all referenced.`);
+console.log(
+  usage.dynamic
+    ? `i18n: ${ids.length} messages; unused check skipped (dynamic usage).`
+    : `i18n: ${ids.length} messages, all referenced.`,
+);

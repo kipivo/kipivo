@@ -1,6 +1,5 @@
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { paraglide } from "@kipivo/i18n/vite";
 import type { StorybookConfig } from "@storybook/react-vite";
 import tailwindcss from "@tailwindcss/vite";
 import { mergeConfig } from "vite";
@@ -21,7 +20,7 @@ const config: StorybookConfig = {
   core: { disableTelemetry: true },
   async viteFinal(config) {
     return mergeConfig(config, {
-      plugins: [paraglide(), tailwindcss()],
+      plugins: [tailwindcss()],
       optimizeDeps: {
         include: ["@kipivo/ui > @base-ui/react/select", "@kipivo/ui > @base-ui/react/separator"],
         // Serve individual ESM glyphs directly so adding one doesn't reload running stories.

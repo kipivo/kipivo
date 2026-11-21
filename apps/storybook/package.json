@@ -3,17 +3,17 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "storybook dev --host 127.0.0.1 --port 6006 --exact-port --disable-telemetry",
-    "build": "storybook build --output-dir dist --disable-telemetry",
+    "compile": "bun run --cwd ../../packages/i18n compile",
+    "dev": "bun run compile && storybook dev --host 127.0.0.1 --port 6006 --exact-port --disable-telemetry",
+    "build": "bun run compile && storybook build --output-dir dist --disable-telemetry",
     "preview": "vite preview --host 127.0.0.1 --port 6006 --strictPort",
-    "test:stories": "vitest run",
+    "test:stories": "bun run compile && vitest run",
     "test:ui": "playwright test",
     "ci:ui": "bun run test:stories && bun run test:ui",
     "test:ui:install": "playwright install chromium --only-shell",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "bun run compile && tsc --noEmit"
   },
   "dependencies": {
-    "@kipivo/i18n": "workspace:*",
     "@kipivo/icons": "workspace:*",
     "@kipivo/ui": "workspace:*",
     "react": "19.3.1",

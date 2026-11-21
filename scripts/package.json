@@ -17,6 +17,7 @@
     "@kipivo/tsconfig": "workspace:*",
     "@types/bun": "1.4.4",
     "@types/node": "22.20.5",
-    "oxlint": "catalog:"
+    "oxlint": "catalog:",
+    "typescript-api": "npm:typescript@6.0.3"
   }
 }
