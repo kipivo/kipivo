@@ -1,0 +1,8 @@
+{
+  "extends": "@kipivo/tsconfig/react.json",
+  "compilerOptions": {
+    "types": ["node"],
+    "resolveJsonModule": true
+  },
+  "include": ["src", "messages", "project.inlang/paraglide.config.ts", "vitest.config.ts"]
+}

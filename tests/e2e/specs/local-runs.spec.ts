@@ -291,6 +291,8 @@ test("mobile account entry and password visibility preserve the sign-in destinat
   await expect(page.getByRole("heading", { name: "Create your account" })).toBeVisible();
   await page.goto(`${localWeb.origin}/sign-in?next=/settings`);
   await expect(page.getByText("Sign in to change your settings.")).toBeVisible();
+  // Let Vite finish dependency discovery so a re-optimization reload can't clear the form.
+  await page.waitForLoadState("networkidle");
   await expect(page.getByRole("complementary", { name: "About Kipivo" })).toBeHidden();
   const password = page.getByLabel("Password", { exact: true });
   await password.fill("visibility-test");

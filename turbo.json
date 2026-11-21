@@ -12,15 +12,15 @@
       "persistent": true
     },
     "build": {
-      "dependsOn": ["^build", "transit"],
+      "dependsOn": ["^build", "transit", "@kipivo/i18n#compile"],
       "inputs": ["$TURBO_DEFAULT$", "!README.md"],
       "outputs": [".output/**", "dist/**"]
     },
     "typecheck": {
-      "dependsOn": ["transit", "^typecheck"]
+      "dependsOn": ["transit", "^typecheck", "@kipivo/i18n#compile"]
     },
     "test": {
-      "dependsOn": ["transit"]
+      "dependsOn": ["transit", "@kipivo/i18n#compile"]
     }
   }
 }

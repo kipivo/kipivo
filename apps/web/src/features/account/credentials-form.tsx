@@ -10,30 +10,42 @@ import {
   FieldGroup,
 } from "@kipivo/ui/components/field";
 import { useState, type ReactNode, type SubmitEvent } from "react";
+import { m } from "@kipivo/i18n/messages";
 import { authErrorCode, authErrorStatus, authRequest } from "./auth-client";
 import { useAccountSession } from "./session";
 import { SetupRequired } from "./setup-required";
 
-function authErrorMessage(error: unknown, creating: boolean) {
-  if (creating && authErrorCode(error) === installationRequired) return <SetupRequired />;
+function authErrorKey(error: unknown, creating: boolean) {
+  if (creating && authErrorCode(error) === installationRequired) return "setup";
   switch (authErrorStatus(error)) {
     case 401:
-      return "The email or password is incorrect.";
+      return "invalid";
     case 403:
-      return "This request was blocked. Check the Kipivo web address and try again.";
+      return "blocked";
     case 429:
-      return "Too many attempts. Wait a moment and try again.";
+      return "rateLimited";
     case 400:
     case 409:
     case 422:
-      return creating
-        ? "Could not create this account. Check your details or sign in."
-        : "Check your email and password and try again.";
+      return creating ? "cannotCreate" : "checkDetails";
     default:
-      return "The account service is temporarily unavailable. Try again.";
+      return "unavailable";
   }
 }
 
+/** Message functions read the locale on call, so the map can live at module scope. */
+const errorMessages = {
+  invalid: m.credentialInvalid,
+  blocked: m.credentialBlocked,
+  rateLimited: m.credentialRateLimited,
+  cannotCreate: m.credentialCannotCreate,
+  checkDetails: m.credentialCheckDetails,
+  unavailable: m.credentialUnavailable,
+  session: m.credentialSession,
+  invalidName: m.credentialInvalidName,
+} as const;
+
+type CredentialError = keyof typeof errorMessages;
 type CredentialOptions = { creating: boolean; passwordAction?: ReactNode };
 
 export function CredentialFields({ creating, passwordAction }: CredentialOptions) {
@@ -41,7 +53,7 @@ export function CredentialFields({ creating, passwordAction }: CredentialOptions
     <FieldGroup>
       {creating && (
         <Field>
-          <FieldLabel htmlFor="account-name">Name</FieldLabel>
+          <FieldLabel htmlFor="account-name">{m.credentialName()}</FieldLabel>
           <Input
             id="account-name"
             name="name"
@@ -53,7 +65,7 @@ export function CredentialFields({ creating, passwordAction }: CredentialOptions
         </Field>
       )}
       <Field>
-        <FieldLabel htmlFor="account-email">Email</FieldLabel>
+        <FieldLabel htmlFor="account-email">{m.credentialEmail()}</FieldLabel>
         <Input
           id="account-email"
           name="email"
@@ -67,10 +79,11 @@ export function CredentialFields({ creating, passwordAction }: CredentialOptions
       </Field>
       <Field>
         <div className="flex items-baseline justify-between gap-2">
-          <FieldLabel htmlFor="account-password">Password</FieldLabel>
+          <FieldLabel htmlFor="account-password">{m.credentialPassword()}</FieldLabel>
           {passwordAction}
         </div>
         <PasswordInput
+          visibilityLabels={{ show: m.credentialShowPassword(), hide: m.credentialHidePassword() }}
           id="account-password"
           name="password"
           autoComplete={creating ? "new-password" : "current-password"}
@@ -80,7 +93,9 @@ export function CredentialFields({ creating, passwordAction }: CredentialOptions
           className="h-10"
         />
         {creating && (
-          <FieldDescription id="password-requirement">Use at least 12 characters.</FieldDescription>
+          <FieldDescription id="password-requirement">
+            {m.credentialPasswordRequirement()}
+          </FieldDescription>
         )}
       </Field>
     </FieldGroup>
@@ -90,7 +105,7 @@ export function CredentialFields({ creating, passwordAction }: CredentialOptions
 export function CredentialsForm({ creating, passwordAction }: CredentialOptions) {
   const { session, refresh } = useAccountSession();
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<ReactNode>();
+  const [error, setError] = useState<CredentialError | "setup">();
 
   async function submit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -98,7 +113,7 @@ export function CredentialsForm({ creating, passwordAction }: CredentialOptions)
     const form = new FormData(event.currentTarget);
     const name = String(form.get("name") ?? "").trim();
     if (creating && !name) {
-      setError("Enter your name.");
+      setError("invalidName");
       return;
     }
     const credentials = {
@@ -115,14 +130,22 @@ export function CredentialsForm({ creating, passwordAction }: CredentialOptions)
       }
       const current = await refresh();
       if (current && current.status !== "signed-in") {
-        setError("Could not load your session. Try signing in again.");
+        setError("session");
       }
     } catch (cause) {
-      setError(authErrorMessage(cause, creating));
+      setError(authErrorKey(cause, creating));
     } finally {
       setBusy(false);
     }
   }
+
+  const label = busy
+    ? creating
+      ? m.credentialCreating()
+      : m.credentialBusy()
+    : creating
+      ? m.credentialCreate()
+      : m.credentialSubmit();
 
   return (
     <form
@@ -133,19 +156,15 @@ export function CredentialsForm({ creating, passwordAction }: CredentialOptions)
       aria-busy={busy}
     >
       <CredentialFields creating={creating} passwordAction={passwordAction} />
-      <FieldError>{error}</FieldError>
+      <FieldError>
+        {error === "setup" ? SetupRequired() : error ? errorMessages[error]() : null}
+      </FieldError>
       <Button
         type="submit"
         className="mt-1 h-11 w-full"
         disabled={busy || session.status === "loading" || session.status === "signed-in"}
       >
-        {busy
-          ? creating
-            ? "Creating account…"
-            : "Signing in…"
-          : creating
-            ? "Create account"
-            : "Sign in"}
+        {label}
       </Button>
     </form>
   );

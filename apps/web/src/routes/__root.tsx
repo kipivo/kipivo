@@ -1,10 +1,12 @@
 import { defaultTheme, ThemeHead, ThemeProvider } from "@kipivo/ui/components/theme-provider";
 import { TooltipProvider } from "@kipivo/ui/components/tooltip";
 import { createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
-import type { ReactNode } from "react";
+import { useLayoutEffect, type ReactNode } from "react";
 import { CloudflareAnalytics } from "@/cloudflare-analytics";
 import { AccountProvider } from "@/features/account/session";
 import { NotFound } from "@/features/errors/not-found";
+import { LocaleProvider, useLocale } from "@/features/i18n/locale";
+import { getLocale } from "@kipivo/i18n/runtime";
 import "@/styles/globals.css";
 
 export const Route = createRootRoute({
@@ -23,10 +25,20 @@ export const Route = createRootRoute({
   notFoundComponent: NotFound,
 });
 
+/** Keep the document language in sync when the locale changes without a reload. */
+function DocumentLanguage() {
+  const locale = useLocale();
+  useLayoutEffect(() => {
+    document.documentElement.lang = locale;
+  }, [locale]);
+  return null;
+}
+
 function RootDocument({ children }: { children: ReactNode }) {
+  const locale = getLocale();
   return (
     <html
-      lang="en"
+      lang={locale}
       className={`${defaultTheme} bg-background font-sans text-foreground has-data-[public-frame]:scrollbar-gutter-stable`}
       suppressHydrationWarning
     >
@@ -37,7 +49,10 @@ function RootDocument({ children }: { children: ReactNode }) {
       <body className="min-h-svh">
         <ThemeProvider>
           <TooltipProvider>
-            <AccountProvider>{children}</AccountProvider>
+            <LocaleProvider initialLocale={locale}>
+              <DocumentLanguage />
+              <AccountProvider>{children}</AccountProvider>
+            </LocaleProvider>
           </TooltipProvider>
         </ThemeProvider>
         <CloudflareAnalytics />

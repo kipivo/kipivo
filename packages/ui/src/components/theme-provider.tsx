@@ -6,6 +6,7 @@ import {
   useRef,
   useState,
   type ReactNode,
+  type ComponentProps,
 } from "react";
 import { ThemeSelector, type ThemePreference } from "./theme-selector";
 
@@ -175,10 +176,11 @@ export function useThemeSelection() {
   return selection;
 }
 
-export function ThemeSwitch() {
+export function ThemeSwitch({ labels }: Pick<ComponentProps<typeof ThemeSelector>, "labels">) {
   const { theme, selectTheme } = useThemeSelection();
   return (
     <ThemeSelector
+      labels={labels}
       disabled={theme === undefined}
       theme={theme}
       onThemeChange={(value, event) => selectTheme(value, event.currentTarget, event.nativeEvent)}

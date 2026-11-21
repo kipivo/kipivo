@@ -5,9 +5,10 @@ import { Button } from "@kipivo/ui/components/button";
 import { accountClient } from "@/features/account/client";
 import { CredentialFields } from "@/features/account/credentials-form";
 import { readInstallStatus } from "@/features/account/install-status";
+import { m } from "@kipivo/i18n/messages";
 
 export const Route = createFileRoute("/(auth)/setup")({
-  head: () => ({ meta: [{ title: "Administrator setup | Kipivo" }] }),
+  head: () => ({ meta: [{ title: m.setupDocumentTitle() }] }),
   beforeLoad: async () => {
     const open = await readInstallStatus();
     if (open === false) throw redirect({ to: "/", replace: true });
@@ -20,13 +21,13 @@ function SetupRoute() {
   const { open } = Route.useRouteContext();
   const router = useRouter();
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState("");
+  const [failed, setFailed] = useState(false);
   async function submit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     if (busy) return;
     const data = new FormData(event.currentTarget);
     setBusy(true);
-    setMessage("");
+    setFailed(false);
     try {
       await (
         await accountClient()
@@ -38,7 +39,7 @@ function SetupRoute() {
     } catch {
       // A lost response can follow a committed installation. Never replay the write.
       if ((await readInstallStatus().catch(() => null)) !== false) {
-        setMessage("Could not confirm installation. Check your details and try again.");
+        setFailed(true);
         setBusy(false);
         return;
       }
@@ -47,28 +48,26 @@ function SetupRoute() {
   }
   return (
     <>
-      <PageTitle>Administrator setup</PageTitle>
+      <PageTitle>{m.setupHeading()}</PageTitle>
       {open ? (
         <>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Create the first administrator account. This page closes after installation.
-          </p>
+          <p className="mt-2 text-sm text-muted-foreground">{m.setupIntro()}</p>
           <form method="post" onSubmit={(event) => void submit(event)} className="mt-7 grid gap-4">
             <CredentialFields creating />
-            {message && (
+            {failed && (
               <p role="alert" className="text-sm text-destructive">
-                {message}
+                {m.setupFailed()}
               </p>
             )}
             <Button type="submit" disabled={busy}>
-              {busy ? "Installing…" : "Create administrator"}
+              {busy ? m.setupBusy() : m.setupSubmit()}
             </Button>
           </form>
         </>
       ) : (
         <>
-          <p role="status">Installation status is unavailable.</p>
-          <Button onClick={() => void router.invalidate()}>Check again</Button>
+          <p role="status">{m.setupUnavailable()}</p>
+          <Button onClick={() => void router.invalidate()}>{m.setupCheckAgain()}</Button>
         </>
       )}
     </>

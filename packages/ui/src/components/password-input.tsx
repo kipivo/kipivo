@@ -8,13 +8,18 @@ export function PasswordInput({
   id,
   disabled,
   className,
+  visibilityLabels,
   ...props
-}: Omit<ComponentProps<typeof Input>, "type">) {
+}: Omit<ComponentProps<typeof Input>, "type"> & {
+  visibilityLabels?: { show: string; hide: string };
+}) {
   const defaultId = useId();
   const inputId = id ?? defaultId;
   const [revealed, setRevealed] = useState(false);
   const VisibilityIcon = revealed ? EyeOffIcon : EyeIcon;
-  const actionLabel = revealed ? "Hide password" : "Show password";
+  const actionLabel = revealed
+    ? (visibilityLabels?.hide ?? "Hide password")
+    : (visibilityLabels?.show ?? "Show password");
 
   return (
     <div className="relative">

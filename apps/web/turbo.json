@@ -12,11 +12,23 @@
     },
     "build": {
       "env": ["VITE_CLOUDFLARE_ANALYTICS_TOKEN", "VITE_UMAMI_WEBSITE_ID"],
-      "inputs": ["$TURBO_EXTENDS$", ".env*", "!Dockerfile", "!src/routeTree.gen.ts"],
+      "inputs": [
+        "$TURBO_EXTENDS$",
+        "$TURBO_ROOT$/packages/i18n/messages/**",
+        "$TURBO_ROOT$/packages/i18n/project.inlang/**",
+        ".env*",
+        "!Dockerfile",
+        "!src/routeTree.gen.ts"
+      ],
       "outputs": [".output/**", "src/routeTree.gen.ts"]
     },
     "typecheck": {
-      "inputs": ["$TURBO_DEFAULT$", "!src/routeTree.gen.ts"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/packages/i18n/messages/**",
+        "$TURBO_ROOT$/packages/i18n/project.inlang/**",
+        "!src/routeTree.gen.ts"
+      ],
       "outputs": ["src/routeTree.gen.ts"]
     }
   }

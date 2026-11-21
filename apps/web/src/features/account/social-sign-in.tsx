@@ -3,19 +3,21 @@ import { GitHubIcon, GoogleIcon } from "@kipivo/icons";
 import { Button } from "@kipivo/ui/components/button";
 import { FieldError } from "@kipivo/ui/components/field";
 import { useRouter } from "@tanstack/react-router";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState } from "react";
+import { m } from "@kipivo/i18n/messages";
 import { afterSignIn, type AuthSearch, type socialAuthSearch } from "./auth-navigation";
 import { authErrorCode, authErrorStatus, authRequest } from "./auth-client";
 import { SetupRequired } from "./setup-required";
 
 const providerNames = { google: "Google", github: "GitHub" };
 type Provider = keyof typeof providerNames;
-const callbackErrors = {
-  access_denied: "Authorization was canceled. Try again or use your email.",
-  account_not_linked: "An account already uses this email. Sign in with your original method.",
-  email_not_found: "Your provider did not return an email address. Check your provider settings.",
-  social_sign_in_failed: "Could not complete sign-in. Try again or use your email.",
-};
+
+const callbackMessages = {
+  access_denied: m.socialAccessDenied,
+  account_not_linked: m.socialAccountNotLinked,
+  email_not_found: m.socialEmailNotFound,
+  social_sign_in_failed: m.socialSignInFailed,
+} as const;
 
 export function SocialSignIn({
   search,
@@ -29,7 +31,7 @@ export function SocialSignIn({
   const router = useRouter();
   const [providers, setProviders] = useState<Provider[]>([]);
   const [pending, setPending] = useState(false);
-  const [error, setError] = useState<ReactNode>();
+  const [error, setError] = useState<Provider | "setup" | "rateLimited" | null>();
 
   useEffect(() => {
     const abort = new AbortController();
@@ -43,12 +45,21 @@ export function SocialSignIn({
     return () => abort.abort();
   }, []);
 
-  const message = error ?? (callbackError && callbackErrors[callbackError]);
+  const message =
+    error === "setup" ? (
+      <SetupRequired />
+    ) : error === "rateLimited" ? (
+      m.credentialRateLimited()
+    ) : error ? (
+      m.socialOpenFailed({ provider: providerNames[error] })
+    ) : error === undefined && callbackError ? (
+      callbackMessages[callbackError]()
+    ) : null;
   if (!providers.length && !message) return null;
 
   async function start(provider: Provider) {
     if (pending) return;
-    setError("");
+    setError(null);
     setPending(true);
     try {
       const response = await authRequest("/sign-in/social", {
@@ -65,24 +76,25 @@ export function SocialSignIn({
       window.location.assign(url);
     } catch (cause) {
       if (authErrorCode(cause) === installationRequired) {
-        setError(<SetupRequired />);
+        setError("setup");
         return;
       }
-      setError(
-        authErrorStatus(cause) === 429
-          ? "Too many attempts. Wait a moment and try again."
-          : `Could not open ${providerNames[provider]} sign-in. Try again.`,
-      );
+      setError(authErrorStatus(cause) === 429 ? "rateLimited" : provider);
     } finally {
       setPending(false);
     }
   }
 
   return (
-    <div className="mt-6 grid gap-2.5" role="group" aria-label="Social sign-in" aria-busy={pending}>
+    <div
+      className="mt-6 grid gap-2.5"
+      role="group"
+      aria-label={m.socialLabel()}
+      aria-busy={pending}
+    >
       {providers.length > 0 && (
         <p className="flex items-center gap-3 text-xs font-medium text-muted-foreground before:h-px before:flex-1 before:bg-border after:h-px after:flex-1 after:bg-border">
-          Or
+          {m.socialOr()}
         </p>
       )}
       <FieldError>{message}</FieldError>
@@ -100,7 +112,7 @@ export function SocialSignIn({
           ) : (
             <GitHubIcon aria-hidden="true" className="size-[18px]" />
           )}
-          Continue with {providerNames[provider]}
+          {m.socialContinueWithProvider({ provider: providerNames[provider] })}
         </Button>
       ))}
     </div>

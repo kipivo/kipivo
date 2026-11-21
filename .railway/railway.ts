@@ -106,6 +106,7 @@ export default defineRailway(() => {
         "/packages/orpc/src/client/**",
         "/packages/rbac/**",
         "/packages/ui/**",
+        "/packages/i18n/**",
         "/packages/icons/**",
         "/packages/contracts/**",
         "/packages/runtime/**",

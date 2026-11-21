@@ -8,19 +8,40 @@
         ".railway/gateway/smoke/test.mjs",
         ".railway/topology/smoke.mjs"
       ],
-      "typescript": { "config": [".railway/tsconfig.json"] }
+      "typescript": {
+        "config": [".railway/tsconfig.json"]
+      }
     },
-    "apps/api": { "entry": ["src/server.ts", "src/plugins/*.ts"] },
-    "apps/docs": { "entry": ["src/routes/**/*.{ts,tsx}"] },
-    "apps/web": { "entry": ["src/routes/**/*.{ts,tsx}", "src/features/brand/motion/src/scene.js"] },
+    "apps/api": {
+      "entry": ["src/server.ts", "src/plugins/*.ts"]
+    },
+    "apps/docs": {
+      "entry": ["src/routes/**/*.{ts,tsx}"]
+    },
+    "apps/web": {
+      "entry": ["src/routes/**/*.{ts,tsx}", "src/features/brand/motion/src/scene.js"]
+    },
     "apps/mobile": {
-      "bun": { "entry": ["**/*.test.mjs"] },
+      "bun": {
+        "entry": ["**/*.test.mjs"]
+      },
       "ignoreDependencies": ["expo-updates"]
     },
-    "scripts": {
-      "entry": ["smoke/{api-image,changed,compose,http-image,turbo,web}.ts"],
-      "bun": { "entry": ["**/*.test.{mjs,ts}"] }
+    "packages/i18n": {
+      "entry": ["project.inlang/paraglide.config.ts"],
+      "ignoreDependencies": ["@inlang/plugin-message-format"]
     },
-    "tests/e2e": { "entry": ["fixtures/check.mjs", "fixtures/auth-preload.mjs"] }
+    "scripts": {
+      "entry": [
+        "check/i18n-messages.ts",
+        "smoke/{api-image,changed,compose,http-image,turbo,web}.ts"
+      ],
+      "bun": {
+        "entry": ["**/*.test.{mjs,ts}"]
+      }
+    },
+    "tests/e2e": {
+      "entry": ["fixtures/check.mjs", "fixtures/auth-preload.mjs"]
+    }
   }
 }

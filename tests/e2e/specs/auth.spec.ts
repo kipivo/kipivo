@@ -3,7 +3,7 @@ import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createApiClient } from "@kipivo/orpc/client";
-import { expect, test, type APIRequestContext } from "@playwright/test";
+import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
 import postgres from "postgres";
 import { createTestDatabase } from "../fixtures/database";
 import { healthy, launch, launchBuiltApi, repoRoot } from "../fixtures/process";
@@ -1104,3 +1104,231 @@ for (const [provider, name, authorizeURL, authPage] of [
     });
   });
 }
+test.describe("password sign-in language", () => {
+  test.use({ locale: "zh-CN" });
+
+  test("isolates concurrent SSR languages without JavaScript", async ({ browser }) => {
+    const [automatic, explicit] = await Promise.all(
+      [0, 1].map(() => browser.newContext({ locale: "zh-CN", javaScriptEnabled: false })),
+    );
+    try {
+      await explicit.addCookies([{ name: "locale", value: "en", url: origin }]);
+      await Promise.all(
+        (
+          [
+            [automatic, "zh-CN", "登录 Kipivo", "邮箱", "登录 | Kipivo"],
+            [explicit, "en", "Sign in to Kipivo", "Email", "Sign in | Kipivo"],
+          ] as const
+        ).map(async ([context, lang, heading, label, title]) => {
+          const page = await context.newPage();
+          const response = await page.goto(`${origin}/sign-in`);
+          expect(response?.headers()["cache-control"]).toContain("no-store");
+          await expect(page.locator("html")).toHaveAttribute("lang", lang);
+          await expect(page).toHaveTitle(title);
+          await expect(page.getByRole("heading", { name: heading })).toBeVisible();
+          await expect(page.getByLabel(label, { exact: true })).toBeVisible();
+        }),
+      );
+    } finally {
+      await Promise.all([automatic.close(), explicit.close()]);
+    }
+  });
+
+  test("changes language in place and leaves registration in English", async ({
+    page,
+    context,
+  }) => {
+    await page.setExtraHTTPHeaders({ "X-Forwarded-For": "198.51.100.216" });
+    const url = `${origin}/sign-in?next=/workbench`;
+    const email = `locale-${randomUUID()}@example.com`;
+    await page.goto(url);
+    await page.getByLabel("邮箱", { exact: true }).fill(email);
+    await page.getByLabel("密码", { exact: true }).fill("not-a-real-password");
+    await page.getByRole("button", { name: "显示密码" }).click();
+    await page.getByRole("button", { name: "登录", exact: true }).click();
+    await expect(page.getByText("邮箱或密码不正确。")).toBeVisible();
+    await page.getByRole("combobox", { name: "语言" }).selectOption("en");
+    await expect(page).toHaveTitle("Sign in | Kipivo");
+    await expect(page.locator("html")).toHaveAttribute("lang", "en");
+    await expect(page.getByText("The email or password is incorrect.")).toBeVisible();
+    await expect(page.getByLabel("Email", { exact: true })).toHaveValue(email);
+    const password = page.getByLabel("Password", { exact: true });
+    await expect(password).toHaveValue("not-a-real-password");
+    await expect(password).toHaveAttribute("type", "text");
+    await expect(page).toHaveURL(url);
+    await page.reload();
+    await expect(page.getByRole("combobox", { name: "Language" })).toHaveValue("en");
+    await page.getByRole("combobox", { name: "Language" }).selectOption("auto");
+    await expect(page).toHaveTitle("登录 | Kipivo");
+    // Paraglide remembers the browser-resolved locale the first time the client reads it.
+    const automatic = (await context.cookies(origin)).find((c) => c.name === "locale");
+    expect(automatic?.value).toBe("zh-CN");
+    await page.getByRole("link", { name: "创建账号" }).click();
+    // Registration copy is English-only, but the page keeps the saved locale.
+    await expect(page.locator("html")).toHaveAttribute("lang", "zh-CN");
+    await expect(page.getByRole("heading", { name: "Create your account" })).toBeVisible();
+    await expect(page.getByRole("combobox")).toHaveCount(0);
+    await page.goBack();
+    await expect(page.locator("html")).toHaveAttribute("lang", "zh-CN");
+    await expect(page).toHaveURL(url);
+  });
+
+  test("switches language in place without a server round-trip", async ({ page, context }) => {
+    await page.goto(`${origin}/sign-in`);
+    const input = page.getByLabel("邮箱", { exact: true });
+    await input.fill("reader@example.com");
+    const language = page.getByRole("combobox", { name: "语言" });
+    await language.selectOption("en");
+    await expect(page).toHaveTitle("Sign in | Kipivo");
+    await expect(page.locator("html")).toHaveAttribute("lang", "en");
+    await expect(page.getByLabel("Email", { exact: true })).toHaveValue("reader@example.com");
+    await expect(page).toHaveURL(`${origin}/sign-in`);
+    await expect(page.getByRole("combobox", { name: "Language" })).toHaveValue("en");
+    const cookie = (await context.cookies(origin)).find((value) => value.name === "locale");
+    expect(cookie?.value).toBe("en");
+  });
+
+  test("keeps the device authorization request on language changes", async ({ page }) => {
+    const flow = {
+      client_id: "expo",
+      state: randomUUID(),
+      code_challenge: nativeProof().challenge,
+      code_challenge_method: "S256",
+    };
+    await page.goto(`${origin}/authorize?${new URLSearchParams(flow)}`);
+    await expect(page.getByText("登录以继续授权你的设备。")).toBeVisible();
+    const url = page.url();
+    await page.getByRole("combobox", { name: "语言" }).selectOption("en");
+    await expect(page.getByText("Sign in to continue authorizing your device.")).toBeVisible();
+    await expect(page).toHaveURL(url);
+  });
+});
+
+function observeCatalogTraffic(page: Page) {
+  const responses: { url: string; type: string; method: string; body: string }[] = [];
+  const reads: Promise<void>[] = [];
+  page.on("response", (response) => {
+    const request = response.request();
+    const type = request.resourceType();
+    if (["document", "script", "fetch", "xhr"].includes(type)) {
+      reads.push(
+        response.text().then((body) => {
+          responses.push({ url: response.url(), type, method: request.method(), body });
+        }),
+      );
+    }
+  });
+  return {
+    records: responses,
+    async settle() {
+      await page.waitForLoadState("networkidle");
+      await Promise.all(reads);
+    },
+  };
+}
+
+for (const locale of ["en", "zh-CN"] as const) {
+  test(`production sign-in renders ${locale} without loading other screens`, async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({ locale });
+    const page = await context.newPage();
+    const { records, settle } = observeCatalogTraffic(page);
+    try {
+      await page.goto(`${origin}/sign-in`);
+      await expect(
+        page.getByRole("heading", { name: locale === "en" ? "Sign in to Kipivo" : "登录 Kipivo" }),
+      ).toBeVisible();
+      await settle();
+      const initial = records.slice();
+      const html = initial.find((record) => record.type === "document")!.body;
+      // The server resolves the request locale before React renders the document.
+      expect(html).toContain(locale === "en" ? "Sign in to Kipivo" : "登录 Kipivo");
+      expect(html).not.toContain(locale === "en" ? "登录 Kipivo" : "Sign in to Kipivo");
+      expect(initial.filter((record) => record.url.includes("/_serverFn/"))).toEqual([]);
+      const scripts = initial.filter((record) => record.type === "script");
+      expect(scripts.length).toBeGreaterThan(0);
+      // Compiled messages inline every locale and the route heads are eager, so assert
+      // page-body boundaries instead: sign-up and setup copy stay in their own chunks.
+      for (const record of scripts) {
+        expect(record.body, record.url).not.toContain("Create your account");
+        expect(record.body, record.url).not.toContain("Create the first administrator account.");
+      }
+      const offset = records.length;
+      await page.getByRole("combobox").selectOption(locale === "en" ? "zh-CN" : "en");
+      await expect(page.locator("html")).toHaveAttribute("lang", locale === "en" ? "zh-CN" : "en");
+      await settle();
+      expect(records.slice(offset).filter((record) => record.url.includes("/_serverFn/"))).toEqual(
+        [],
+      );
+      const registrationOffset = records.length;
+      await page.goto(`${origin}/sign-up`);
+      await expect(page.getByRole("heading", { name: "Create your account" })).toBeVisible();
+      await settle();
+      expect(
+        records.slice(registrationOffset).filter((record) => record.url.includes("/_serverFn/")),
+      ).toEqual([]);
+      const registration = records.filter((record) => record.type === "document").at(-1)!.body;
+      expect(registration).toContain("Create your account");
+      expect(registration).not.toContain("登录 Kipivo");
+      expect(registration).not.toContain("Enter your account email and password to continue.");
+      // The SDK's optional common catalogs are not part of either auth screen.
+      for (const { body, url } of records) {
+        expect(body, url).not.toContain("Search projects, sessions and pages…");
+        expect(body, url).not.toContain("搜索项目、会话和页面…");
+      }
+    } finally {
+      await context.close();
+    }
+  });
+}
+
+test("production setup ships only field messages without hydration refetch", async ({
+  browser,
+}) => {
+  const isolated = await createTestDatabase();
+  const setupOrigin = "http://127.0.0.1:4392";
+  const server = launchBuiltApi(4391, {
+    DATABASE_URL: isolated.url,
+    DB_MIGRATE_ON_START: "true",
+    AUTH_URL: setupOrigin,
+    AUTH_SECRET: authSecret,
+  });
+  let frontend: ReturnType<typeof launch> | undefined;
+  const context = await browser.newContext({ locale: "zh-CN" });
+  try {
+    await server.waitFor(
+      async () =>
+        (await fetch("http://127.0.0.1:4391/readyz", { signal: AbortSignal.timeout(2000) })).ok,
+    );
+    frontend = launch([".output/server/index.mjs"], join(repoRoot, "apps/web"), {
+      PORT: "4392",
+      HOST: "127.0.0.1",
+      API_ORIGIN: "http://127.0.0.1:4391",
+    });
+    await frontend.waitFor(() => healthy(setupOrigin));
+    const page = await context.newPage();
+    const { records, settle } = observeCatalogTraffic(page);
+    await page.goto(`${setupOrigin}/setup`);
+    await expect(page.getByRole("heading", { name: "Administrator setup" })).toBeVisible();
+    await expect(page.getByText("Create the first administrator account.")).toBeVisible();
+    await page.getByLabel("邮箱", { exact: true }).fill("installer@example.com");
+    await settle();
+    expect(records.filter((record) => record.url.includes("/_serverFn/"))).toEqual([]);
+    const html = records.find((record) => record.type === "document")!.body;
+    // Page copy is English-only; the shared credential fields follow the browser language.
+    expect(html).toContain("Administrator setup");
+    expect(html).toContain("邮箱");
+    for (const record of records) {
+      expect(record.body, record.url).not.toContain("登录 Kipivo");
+      expect(record.body, record.url).not.toContain(
+        "Enter your account email and password to continue.",
+      );
+    }
+  } finally {
+    await context.close();
+    await frontend?.stop();
+    await server.stop();
+    await isolated.drop();
+  }
+});

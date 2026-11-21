@@ -11,7 +11,7 @@ Start with the guide for the workspace you are changing. Commands in these guide
 - **Applications:** [Web](apps/web/AGENTS.md), [API server](apps/api/AGENTS.md), [CLI and local runner](apps/cli/AGENTS.md), [Mobile](apps/mobile/AGENTS.md), [Storybook](apps/storybook/AGENTS.md).
 - **Contracts and access:** [Public API contract](packages/contract/AGENTS.md), [oRPC client and server](packages/orpc/AGENTS.md), [Local run schemas](packages/contracts/AGENTS.md), [Account schemas](packages/account/AGENTS.md), [Admin directory](packages/admin/AGENTS.md), [RBAC rules](packages/rbac/AGENTS.md), [Access workflows](packages/core/AGENTS.md).
 - **Server resources:** [Authentication](packages/auth/AGENTS.md), [Database](packages/db/AGENTS.md), [Redis cache](packages/cache/AGENTS.md), [Object storage](packages/storage/AGENTS.md), [Local runner connection](packages/runtime/AGENTS.md).
-- **Shared foundations:** [Environment validation](packages/env/AGENTS.md), [Logging](packages/logger/AGENTS.md), [TypeScript presets](packages/tsconfig/AGENTS.md), [Web icons](packages/icons/AGENTS.md), [Web UI](packages/ui/AGENTS.md).
+- **Shared foundations:** [Environment validation](packages/env/AGENTS.md), [Logging](packages/logger/AGENTS.md), [TypeScript presets](packages/tsconfig/AGENTS.md), [Web icons](packages/icons/AGENTS.md), [Web UI](packages/ui/AGENTS.md), [Web i18n](packages/i18n/AGENTS.md).
 
 ## Task guides
 

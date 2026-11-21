@@ -13,9 +13,10 @@ interface ThemeSelectorProps {
   theme: ThemePreference | undefined;
   onThemeChange: (theme: ThemePreference, event: ChangeEvent<HTMLInputElement>) => void;
   disabled?: boolean;
+  labels?: Record<ThemePreference | "label", string>;
 }
 
-export function ThemeSelector({ theme, onThemeChange, disabled }: ThemeSelectorProps) {
+export function ThemeSelector({ theme, onThemeChange, disabled, labels }: ThemeSelectorProps) {
   const name = useId();
   const selectedIndex = themeOptions.findIndex(({ value }) => value === theme);
 
@@ -25,7 +26,7 @@ export function ThemeSelector({ theme, onThemeChange, disabled }: ThemeSelectorP
       className="inline-flex items-center rounded-full border border-border bg-muted/60 p-0.5 disabled:pointer-events-none disabled:opacity-50"
       disabled={disabled}
     >
-      <legend className="sr-only">Theme</legend>
+      <legend className="sr-only">{labels?.label ?? "Theme"}</legend>
       <div className="relative flex">
         {selectedIndex >= 0 && (
           <span
@@ -36,8 +37,8 @@ export function ThemeSelector({ theme, onThemeChange, disabled }: ThemeSelectorP
           />
         )}
         {themeOptions.map(({ value, label, icon: Icon }) => (
-          <label key={value} title={label} className="group relative">
-            <span className="sr-only">{label}</span>
+          <label key={value} title={labels?.[value] ?? label} className="group relative">
+            <span className="sr-only">{labels?.[value] ?? label}</span>
             <input
               type="radio"
               name={name}

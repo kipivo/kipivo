@@ -30,6 +30,10 @@ export const Route = createFileRoute("/$")({
   component: Guide,
 });
 
+function DocsThemeSwitch() {
+  return <ThemeSwitch />;
+}
+
 function Guide() {
   const { path, title, description } = Route.useLoaderData();
   const document = documents.getPage(path);
@@ -47,7 +51,7 @@ function Guide() {
       }}
       links={[{ text: "Back to Kipivo", url: "/", active: "none" }]}
       githubUrl="https://github.com/kipivo/kipivo"
-      slots={{ themeSwitch: ThemeSwitch }}
+      slots={{ themeSwitch: DocsThemeSwitch }}
     >
       <DocsPage toc={toc}>
         <DocsTitle className="font-heading text-3xl font-[650] tracking-tight sm:text-4xl">

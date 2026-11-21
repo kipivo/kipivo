@@ -1,0 +1,10 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "compile": {
+      "inputs": ["$TURBO_DEFAULT$", "messages/**", "project.inlang/**"],
+      "outputs": ["generated/**"]
+    }
+  }
+}

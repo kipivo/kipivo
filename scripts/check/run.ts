@@ -10,6 +10,7 @@ const CHECKS = [
   ["run", "typecheck"],
   ["run", "tsc", "-p", ".railway/tsconfig.json"],
   ["run", "knip"],
+  ["scripts/check/i18n-messages.ts"],
   ["test", "scripts/kpdev.test.ts"],
   ["run", "test"],
 ];

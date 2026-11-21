@@ -35,6 +35,7 @@ describe("CI selection", () => {
     ["packages/core", "@kipivo/core", []],
     ["packages/db", "@kipivo/db", []],
     ["packages/env", "@kipivo/env", []],
+    ["packages/i18n", "@kipivo/i18n", []],
     ["packages/cache", "@kipivo/cache", []],
     ["packages/storage", "@kipivo/storage", []],
     ["packages/runtime", "@kipivo/runtime", []],
@@ -45,6 +46,7 @@ describe("CI selection", () => {
       "web",
       [
         "@kipivo/ui",
+        "@kipivo/i18n",
         "@kipivo/admin",
         "@kipivo/auth",
         "@kipivo/contract",

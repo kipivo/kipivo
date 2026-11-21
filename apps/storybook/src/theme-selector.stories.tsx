@@ -34,3 +34,11 @@ export const Default: Story = {
 };
 
 export const Disabled: Story = { args: { disabled: true } };
+
+export const Localized: Story = {
+  args: { labels: { label: "主题", light: "浅色", dark: "深色", system: "跟随系统" } },
+  play: async ({ canvas }) => {
+    const group = within(canvas.getByRole("group", { name: "主题" }));
+    await expect(group.getByRole("radio", { name: "深色" })).toBeChecked();
+  },
+};
