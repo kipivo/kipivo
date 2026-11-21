@@ -46,7 +46,7 @@
     "db:check": "bun run --cwd packages/db schema:check",
     "db:migrate": "bun run --cwd apps/api scripts/db.ts db:migrate",
     "knip": "knip",
-    "prepare": "if [ -f packages/i18n/project.inlang/settings.json ]; then bun run --cwd packages/i18n compile; fi && if [ -e .git ] && [ -z \"$CI\" ] && [ -x node_modules/.bin/husky ]; then husky; fi",
+    "prepare": "if [ -f packages/i18n/project.inlang/settings.json ] && [ -x packages/i18n/node_modules/.bin/paraglide-js ]; then bun run --cwd packages/i18n compile; fi && if [ -e .git ] && [ -z \"$CI\" ] && [ -x node_modules/.bin/husky ]; then husky; fi",
     "commitlint": "kpdev commit lint",
     "lint": "oxlint --deny-warnings . && bun run --cwd scripts lint:test",
     "format": "oxfmt .",
