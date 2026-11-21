@@ -1,19 +1,8 @@
 import type { RunSummary } from "@kipivo/contracts/runs";
+import { useLocale } from "@/features/i18n/locale";
 import { sectionHeader, workspacePanel } from "@/layout/workspace-styles";
+import { formatRunTime } from "./format";
 import { RunStatus } from "./status";
-
-const dateTime = new Intl.DateTimeFormat("en-GB", {
-  day: "numeric",
-  month: "short",
-  hour: "2-digit",
-  minute: "2-digit",
-  timeZone: "UTC",
-});
-
-function formatRunTime(value: string) {
-  const timestamp = Date.parse(value);
-  return Number.isNaN(timestamp) ? "Unknown date" : `${dateTime.format(timestamp)} UTC`;
-}
 
 export function RunHistory({
   runs,
@@ -24,6 +13,7 @@ export function RunHistory({
   selectedId?: string;
   onSelect(id: string): void;
 }) {
+  const locale = useLocale();
   return (
     <section aria-label="Run history" className={workspacePanel}>
       <div className={sectionHeader}>
@@ -60,7 +50,7 @@ export function RunHistory({
                 title={run.createdAt}
                 className="col-span-2 justify-self-end text-end font-mono text-xs text-muted-foreground @md/history:col-span-1"
               >
-                {formatRunTime(run.createdAt)}
+                {formatRunTime(run.createdAt, locale)}
               </time>
             </button>
           </li>
