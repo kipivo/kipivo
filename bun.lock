@@ -105,13 +105,13 @@
     "apps/storybook": {
       "name": "storybook",
       "dependencies": {
+        "@kipivo/i18n": "workspace:*",
         "@kipivo/icons": "workspace:*",
         "@kipivo/ui": "workspace:*",
         "react": "19.3.1",
         "react-dom": "19.3.1",
       },
       "devDependencies": {
-        "@inlang/paraglide-js": "^3.2.2",
         "@kipivo/tsconfig": "workspace:*",
         "@playwright/test": "1.65.1",
         "@storybook/addon-docs": "11.0.0-beta.3",
@@ -151,7 +151,6 @@
         "zustand": "5.1.0",
       },
       "devDependencies": {
-        "@inlang/paraglide-js": "^3.2.2",
         "@kipivo/tsconfig": "workspace:*",
         "@tailwindcss/vite": "4.3.5",
         "@types/node": "22.20.5",
@@ -292,8 +291,10 @@
     },
     "packages/i18n": {
       "name": "@kipivo/i18n",
-      "devDependencies": {
+      "dependencies": {
         "@inlang/paraglide-js": "^3.2.2",
+      },
+      "devDependencies": {
         "@inlang/plugin-message-format": "^4.6.0",
         "@kipivo/tsconfig": "workspace:*",
         "@types/node": "22.20.5",

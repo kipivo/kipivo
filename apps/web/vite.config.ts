@@ -1,5 +1,5 @@
 import { fileURLToPath } from "node:url";
-import { paraglideVitePlugin } from "@inlang/paraglide-js";
+import { paraglide } from "@kipivo/i18n/vite";
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import react from "@vitejs/plugin-react";
@@ -19,10 +19,7 @@ export default defineConfig({
   // Bundle the lazy workspace's store with React before the first workspace route loads.
   optimizeDeps: { include: ["zustand", "zustand/middleware"] },
   plugins: [
-    paraglideVitePlugin({
-      project: fileURLToPath(new URL("../../packages/i18n/project.inlang", import.meta.url)),
-      outdir: fileURLToPath(new URL("../../packages/i18n/generated", import.meta.url)),
-    }),
+    paraglide(),
     tailwindcss(),
     tanstackStart({ server: { build: { inlineCss: true } } }),
     nitro({
