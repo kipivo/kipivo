@@ -3,6 +3,7 @@
   "ignoreFiles": [".agents/skills/shadcn/**"],
   "workspaces": {
     ".": {
+      "ignoreDependencies": ["husky"],
       "entry": [
         ".railway/gateway/smoke/upstreams.mjs",
         ".railway/gateway/smoke/test.mjs",
