@@ -6,4 +6,4 @@ This package owns the inlang project, the message files and the single compiled 
 
 Keep `renderMarkup` and `createLocale` framework-thin: they must not import app code or a generated catalog.
 
-Run `bun run kpdev check` for catalog parity, unused-message and markup tests. For changes affecting locale resolution, the cookie contract or request-scoped rendering, run the authentication suite described in the [Web internationalization guide](../../docs/i18n.md).
+Run `bun run kpdev i18n check` for a quick unused and missing message check, and `bun run kpdev check` for catalog parity, unused-message and markup tests. For changes affecting locale resolution, the cookie contract or request-scoped rendering, run the authentication suite described in the [Web internationalization guide](../../docs/i18n.md).

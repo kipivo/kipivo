@@ -9,6 +9,7 @@ async function main(argv: string[]) {
     check: () => import("./cmds/check").then((module) => module.default),
     ci: () => import("./cmds/ci").then((module) => module.default),
     commit: () => import("./cmds/commit").then((module) => module.default),
+    i18n: () => import("./cmds/i18n").then((module) => module.default),
     run: () => import("./cmds/run").then((module) => module.default(runnableScripts)),
     runner: () => import("./cmds/runner").then((module) => module.default),
     smoke: () => import("./cmds/smoke").then((module) => module.default),

@@ -21,7 +21,7 @@ The package compiles once into `generated/` (ignored by Git) and exports:
 - `@kipivo/i18n/server` — `paraglideMiddleware` for server rendering.
 - `@kipivo/i18n/vite` — `paraglide()`, the Vite plugin with the project path and output directory already set.
 
-Run `bun run compile` (or an app's `paraglide:compile`, which delegates here) before TypeScript, tests or builds; the CLI also emits the `.d.ts` files. The Vite plugin recompiles on message edits. Every app and shared package imports the same files, so the locale store is one runtime instance: `setLocale` updates app and package screens together. Apps wrap the tree with `createLocale({ getLocale, setLocale })` and run `paraglideMiddleware` per request. See the [Web guide](../../docs/i18n.md).
+Run `bun run kpdev i18n compile` (the package's `compile` script, which app scripts delegate to) before TypeScript, tests or builds, and `bun run kpdev i18n check` to find unused or missing message ids; the CLI also emits the `.d.ts` files. The Vite plugin recompiles on message edits. Every app and shared package imports the same files, so the locale store is one runtime instance: `setLocale` updates app and package screens together. Apps wrap the tree with `createLocale({ getLocale, setLocale })` and run `paraglideMiddleware` per request. See the [Web guide](../../docs/i18n.md).
 
 ## Adding a message
 

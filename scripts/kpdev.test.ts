@@ -31,6 +31,7 @@ beforeAll(() => {
     "cmds/ci.ts",
     "cmds/commit.ts",
     "cmds/commit/lint.ts",
+    "cmds/i18n.ts",
     "cmds/run.ts",
     "cmds/runner.ts",
     "cmds/smoke.ts",
@@ -144,6 +145,19 @@ test("shows built-in check help without running the check suite", () => {
   expect(help.code).toBe(0);
   expect(help.out).toContain("Run repository validation");
   expect(run("check", "-h").out).toBe(help.out);
+});
+
+test("shows i18n help for the command and its subcommands without running them", () => {
+  const help = run("i18n", "--help");
+  expect(help.code).toBe(0);
+  expect(help.out).toContain("compile");
+  expect(help.out).toContain("check");
+  expect(run("i18n").out).toBe(help.out);
+  for (const name of ["compile", "check"]) {
+    const sub = run("i18n", name, "--help");
+    expect(sub.code).toBe(0);
+    expect(sub.out).toContain(`kpdev i18n ${name}`);
+  }
 });
 
 test("runs the built-in CI planner and shows its nested help", () => {
