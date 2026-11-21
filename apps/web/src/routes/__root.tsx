@@ -5,8 +5,7 @@ import { useLayoutEffect, type ReactNode } from "react";
 import { CloudflareAnalytics } from "@/cloudflare-analytics";
 import { AccountProvider } from "@/features/account/session";
 import { NotFound } from "@/features/errors/not-found";
-import { LocaleProvider, useLocale } from "@/features/i18n/locale";
-import { getLocale } from "@kipivo/i18n/runtime";
+import { getLocale, LocaleProvider, useLocale } from "@/features/i18n/locale";
 import "@/styles/globals.css";
 
 export const Route = createRootRoute({

@@ -1160,9 +1160,11 @@ test.describe("password sign-in language", () => {
     await expect(page.getByRole("combobox", { name: "Language" })).toHaveValue("en");
     await page.getByRole("combobox", { name: "Language" }).selectOption("auto");
     await expect(page).toHaveTitle("登录 | Kipivo");
-    // Paraglide remembers the browser-resolved locale the first time the client reads it.
-    const automatic = (await context.cookies(origin)).find((c) => c.name === "locale");
-    expect(automatic?.value).toBe("zh-CN");
+    // Wait for hydration so the client can drop the resolved-locale write.
+    await expect(page.getByRole("combobox", { name: "语言" })).toHaveValue("auto");
+    const automatic = await context.cookies(origin);
+    expect(automatic.find((c) => c.name === "locale")).toBeUndefined();
+    expect(automatic.find((c) => c.name === "locale-auto")?.value).toBe("1");
     await page.getByRole("link", { name: "创建账号" }).click();
     // Registration copy is English-only, but the page keeps the saved locale.
     await expect(page.locator("html")).toHaveAttribute("lang", "zh-CN");
@@ -1184,8 +1186,29 @@ test.describe("password sign-in language", () => {
     await expect(page.getByLabel("Email", { exact: true })).toHaveValue("reader@example.com");
     await expect(page).toHaveURL(`${origin}/sign-in`);
     await expect(page.getByRole("combobox", { name: "Language" })).toHaveValue("en");
-    const cookie = (await context.cookies(origin)).find((value) => value.name === "locale");
-    expect(cookie?.value).toBe("en");
+    const cookies = await context.cookies(origin);
+    expect(cookies.find((value) => value.name === "locale")?.value).toBe("en");
+    expect(cookies.find((value) => value.name === "locale-auto")).toBeUndefined();
+  });
+
+  test("keeps following the browser while automatic mode is active", async ({ browser }) => {
+    const context = await browser.newContext({ locale: "zh-CN" });
+    try {
+      await context.addCookies([
+        { name: "locale", value: "en", url: origin },
+        { name: "locale-auto", value: "1", url: origin },
+      ]);
+      const page = await context.newPage();
+      await page.goto(`${origin}/sign-in`);
+      await expect(page).toHaveTitle("登录 | Kipivo");
+      await expect(page.locator("html")).toHaveAttribute("lang", "zh-CN");
+      await expect(page.getByRole("combobox", { name: "语言" })).toHaveValue("auto");
+      const cookies = await context.cookies(origin);
+      expect(cookies.find((c) => c.name === "locale")).toBeUndefined();
+      expect(cookies.find((c) => c.name === "locale-auto")?.value).toBe("1");
+    } finally {
+      await context.close();
+    }
   });
 
   test("keeps the device authorization request on language changes", async ({ page }) => {
