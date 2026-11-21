@@ -1262,8 +1262,10 @@ for (const locale of ["en", "zh-CN"] as const) {
         [],
       );
       const registrationOffset = records.length;
-      await page.goto(`${origin}/sign-up`);
+      const registrationResponse = await page.goto(`${origin}/sign-up`);
       await expect(page.getByRole("heading", { name: "Create your account" })).toBeVisible();
+      // Registration fields follow the saved locale, so the HTML must not be cached.
+      expect(registrationResponse?.headers()["cache-control"]).toContain("no-store");
       await settle();
       expect(
         records.slice(registrationOffset).filter((record) => record.url.includes("/_serverFn/")),

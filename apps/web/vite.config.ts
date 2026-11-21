@@ -26,9 +26,14 @@ export default defineConfig({
       preset: "bun",
       publicAssets: [{ baseURL: docsBase, dir: docsAssets }],
       routeRules: {
+        // Every auth screen embeds the resolved locale, so never cache the HTML.
         "/": { headers: { "cache-control": "no-store" } },
         "/setup": { headers: { "cache-control": "no-store" } },
         "/sign-in": { headers: { "cache-control": "no-store" } },
+        "/sign-up": { headers: { "cache-control": "no-store" } },
+        "/forgot-password": { headers: { "cache-control": "no-store" } },
+        "/magic-link": { headers: { "cache-control": "no-store" } },
+        "/email-code": { headers: { "cache-control": "no-store" } },
       },
     }),
     react(),
