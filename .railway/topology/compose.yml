@@ -98,11 +98,12 @@ services:
       - -ec
       - |
         bun /smoke/topology.mjs
-        bun /smoke/web.ts http://gateway:8080 --production
+        bun /repo/scripts/smoke/web.ts http://gateway:8080 --production
     volumes:
       - ./smoke.mjs:/smoke/topology.mjs:ro
-      - ../../scripts/smoke/web.ts:/smoke/web.ts:ro
-      - ../../scripts/smoke/docs.ts:/smoke/docs.ts:ro
+      - ../../scripts/smoke:/repo/scripts/smoke:ro
+      - ../../scripts/internal/root.ts:/repo/scripts/internal/root.ts:ro
+      - ../../apps/docs/content/docs:/repo/apps/docs/content/docs:ro
 networks:
   default:
     internal: true
