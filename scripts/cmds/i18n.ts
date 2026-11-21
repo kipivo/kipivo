@@ -1,3 +1,4 @@
+import { existsSync } from "node:fs";
 import { defineCommand, renderUsage } from "citty";
 import { execute } from "../internal/execute";
 
@@ -10,12 +11,25 @@ const compile = defineCommand({
     name: "kpdev i18n compile",
     description: "Compile the message catalogs into packages/i18n/generated",
   },
-  args: helpArg,
+  args: {
+    ...helpArg,
+    "if-installed": {
+      type: "boolean",
+      description: "Skip compilation when the i18n project or compiler is absent",
+    },
+  },
   async run({ cmd, args }) {
     if (args.help) {
       console.log(await renderUsage(cmd));
       return;
     }
+    if (
+      args["if-installed"] &&
+      (!existsSync("packages/i18n/project.inlang/settings.json") ||
+        !Bun.which("./packages/i18n/node_modules/.bin/paraglide-js"))
+    )
+      return;
+
     execute(process.execPath, ["run", "--cwd", "packages/i18n", "compile"]);
   },
 });

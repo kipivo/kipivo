@@ -160,6 +160,11 @@ test("shows i18n help for the command and its subcommands without running them",
   }
 });
 
+test("skips an unavailable i18n workspace only when requested", () => {
+  expect(run("i18n", "compile", "--if-installed").code).toBe(0);
+  expect(run("i18n", "compile").code).not.toBe(0);
+});
+
 test("runs the built-in CI planner and shows its nested help", () => {
   const help = run("ci", "plan", "--help");
   expect(help.code).toBe(0);
