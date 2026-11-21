@@ -2,6 +2,9 @@
   "$schema": "https://turborepo.dev/schema.json",
   "extends": ["//"],
   "tasks": {
+    "dev": {
+      "dependsOn": ["@kipivo/i18n#compile"]
+    },
     "transit": {
       "inputs": ["$TURBO_EXTENDS$", "$TURBO_ROOT$/assets/logo.svg"]
     }

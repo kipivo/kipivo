@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { AccountControl } from "@/features/account/control";
-import { ThemeSwitch } from "@kipivo/ui/components/theme-provider";
+import { ThemeSwitch } from "@/features/i18n/theme-switch";
 
 export function HeaderActions({ children = <ThemeSwitch /> }: { children?: ReactNode }) {
   return (

@@ -1,9 +1,11 @@
+import { locales } from "@kipivo/i18n/runtime";
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import react from "@vitejs/plugin-react";
 import { fumadocsMdx } from "fumadocs-mdx/vite";
 import { nitro } from "nitro/vite";
 import { defineConfig } from "vite";
+import { guideUrl } from "./src/language";
 import { docsBase, docsPort } from "./mount.ts";
 
 export default defineConfig({
@@ -20,7 +22,7 @@ export default defineConfig({
     nitro({
       preset: "bun",
       prerender: {
-        routes: [docsBase, `${docsBase}/search.json`],
+        routes: [...locales.map((locale) => guideUrl([], locale)), `${docsBase}/search.json`],
         crawlLinks: true,
         failOnError: true,
         // These links belong to the main site. The Docs home is seeded above.

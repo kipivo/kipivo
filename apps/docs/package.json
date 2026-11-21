@@ -12,6 +12,7 @@
     "typecheck": "bun scripts/generate-routes.mjs && tsc --noEmit"
   },
   "dependencies": {
+    "@kipivo/i18n": "workspace:*",
     "@kipivo/ui": "workspace:*",
     "@tanstack/react-router": "1.170.46",
     "@tanstack/react-start": "1.169.5",

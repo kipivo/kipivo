@@ -1,3 +1,5 @@
+import { m } from "@kipivo/i18n/messages";
+import type { Locale } from "@kipivo/i18n/runtime";
 import {
   createContext,
   useCallback,
@@ -6,7 +8,6 @@ import {
   useRef,
   useState,
   type ReactNode,
-  type ComponentProps,
 } from "react";
 import { ThemeSelector, type ThemePreference } from "./theme-selector";
 
@@ -176,11 +177,16 @@ export function useThemeSelection() {
   return selection;
 }
 
-export function ThemeSwitch({ labels }: Pick<ComponentProps<typeof ThemeSelector>, "labels">) {
+export function ThemeSwitch({ locale }: { locale: Locale }) {
   const { theme, selectTheme } = useThemeSelection();
   return (
     <ThemeSelector
-      labels={labels}
+      labels={{
+        label: m.themeLabel({}, { locale }),
+        light: m.themeLight({}, { locale }),
+        dark: m.themeDark({}, { locale }),
+        system: m.themeSystem({}, { locale }),
+      }}
       disabled={theme === undefined}
       theme={theme}
       onThemeChange={(value, event) => selectTheme(value, event.currentTarget, event.nativeEvent)}

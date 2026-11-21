@@ -1,0 +1,14 @@
+---
+title: 移动端
+description: 将 iOS 或 Android 上的 Kipivo 连接到 Web 工作区。
+---
+
+1. 在移动应用中打开 **Connection**。
+2. 选择 **Set workspace address**，输入 Kipivo Web 或网关的源地址，包括 `https://`。
+3. 执行连通性检查，然后打开工作区登录。
+
+源地址示例为 `https://kipivo.example.com`，包含协议、主机和可选端口。生产版本要求使用 HTTPS。
+
+连通性检查调用 `GET /api/v1/system/ping`，验证设备能否访问 API。随后在浏览器中登录。
+
+有关 Expo Go、模拟器和局域网地址的用法，参阅[移动端开发指南](https://github.com/kipivo/kipivo/blob/next/apps/mobile/README.md#run-in-expo-go)。

@@ -2,6 +2,8 @@
 
 The TanStack Start app uses Fumadocs for the public guides in `content/docs/`. Add an MDX page with `title` and `description` frontmatter and put it in `content/docs/meta.json` to set its sidebar position.
 
+English guides live at `/docs`, and Simplified Chinese guides live at `/docs/zh-CN`. Pair each English MDX file with a `<slug>.zh-CN.mdx` translation. Keep internal links in the same language. The language selector opens the same guide, and search uses the language in the URL.
+
 Docs shares Kipivo's wordmark, Geist font, colors, and theme preference through `@kipivo/ui`. `src/styles.css` maps Fumadocs colors to the shared tokens.
 
 - Run `bun run kpdev dev docs` from the repository root and open [127.0.0.1:4321/docs](http://127.0.0.1:4321/docs). The root `bun run kpdev dev` also serves the docs at [localhost:3000/docs](http://localhost:3000/docs).

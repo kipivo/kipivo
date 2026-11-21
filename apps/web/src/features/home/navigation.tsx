@@ -1,3 +1,5 @@
+import { baseLocale } from "@kipivo/i18n/runtime";
+import { m } from "@kipivo/i18n/messages";
 import { ArrowUpRightIcon, CloseIcon, GitHubIcon, MenuIcon } from "@kipivo/icons";
 import { Button, buttonVariants } from "@kipivo/ui/components/button";
 import {
@@ -8,19 +10,24 @@ import {
   DialogTrigger,
 } from "@kipivo/ui/components/dialog";
 import { cn } from "@kipivo/ui/lib/utils";
-import { ThemeSwitch } from "@kipivo/ui/components/theme-provider";
+import { ThemeSwitch } from "@/features/i18n/theme-switch";
 import { Link, useHydrated, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type MouseEvent } from "react";
+import { useLocale } from "@/features/i18n/locale";
+import { LanguageSelect } from "@/features/i18n/language-select";
 import { HeaderActions } from "@/layout/header-actions";
 import { HomeLink } from "@/layout/home-link";
 import { homeScrollBehavior } from "./scroll";
 
-const homeLinks = [
-  { href: "#example", label: "Example run" },
-  { href: "#quickstart", label: "Quickstart" },
-  { href: "#workspace-guide", label: "Workspace guide" },
-  { href: "/docs", label: "Docs" },
-];
+function useHomeLinks() {
+  const locale = useLocale();
+  return [
+    { href: "#example", label: m.homeExampleRun },
+    { href: "#quickstart", label: m.homeQuickstart },
+    { href: "#workspace-guide", label: m.homeGuide },
+    { href: locale === baseLocale ? "/docs" : `/docs/${locale}`, label: m.homeDocs },
+  ];
+}
 
 const repositoryUrl = "https://github.com/kipivo/kipivo";
 
@@ -28,8 +35,9 @@ const footerLink =
   "control-focus inline-flex min-h-8 items-center rounded-sm underline-offset-4 transition-colors hover:text-foreground hover:underline pointer-coarse:min-h-11";
 
 export function HomeNavigation() {
+  const homeLinks = useHomeLinks();
   return (
-    <nav aria-label="On this page" className="hidden lg:block">
+    <nav aria-label={m.homeNavigation()} className="hidden lg:block">
       <ul className="flex items-center justify-center gap-1 text-sm font-medium text-muted-foreground">
         {homeLinks.map(({ href, label }) => (
           <li key={href}>
@@ -37,7 +45,7 @@ export function HomeNavigation() {
               href={href}
               className="control-focus inline-flex min-h-8 items-center rounded-lg px-2 whitespace-nowrap transition-colors hover:bg-muted hover:text-foreground xl:px-3 pointer-coarse:min-h-11"
             >
-              {label}
+              {label()}
             </a>
           </li>
         ))}
@@ -61,6 +69,7 @@ export function HomeHeaderActions() {
         >
           <GitHubIcon strokeWidth={1.8} aria-hidden="true" />
         </a>
+        <LanguageSelect />
         <ThemeSwitch />
       </div>
     </HeaderActions>
@@ -68,6 +77,7 @@ export function HomeHeaderActions() {
 }
 
 export function HomeMenu() {
+  const homeLinks = useHomeLinks();
   const hydrated = useHydrated();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
@@ -118,7 +128,7 @@ export function HomeMenu() {
   return (
     <Dialog open={open} onOpenChange={setOpen} onOpenChangeComplete={followSection}>
       <DialogTrigger
-        aria-label="Open navigation"
+        aria-label={m.homeOpenNavigation()}
         render={
           <Button
             variant="outline"
@@ -137,15 +147,15 @@ export function HomeMenu() {
         className="gap-5 p-5 pt-[max(1.25rem,env(safe-area-inset-top))] pb-[max(1.25rem,env(safe-area-inset-bottom))]"
       >
         <div className="flex items-center justify-between gap-3 border-b border-border pb-3">
-          <DialogTitle>On this page</DialogTitle>
+          <DialogTitle>{m.homeNavigation()}</DialogTitle>
           <DialogClose
-            aria-label="Close navigation"
+            aria-label={m.homeCloseNavigation()}
             render={<Button variant="ghost" size="icon" className="rounded-full" />}
           >
             <CloseIcon strokeWidth={2} aria-hidden="true" />
           </DialogClose>
         </div>
-        <nav aria-label="On this page">
+        <nav aria-label={m.homeNavigation()}>
           <ul className="grid gap-1">
             {homeLinks.map(({ href, label }) => (
               <li key={href}>
@@ -154,14 +164,18 @@ export function HomeMenu() {
                   onClick={href.startsWith("#") ? selectSection : undefined}
                   className="control-focus flex min-h-11 items-center rounded-lg px-3 font-medium transition-colors hover:bg-muted"
                 >
-                  {label}
+                  {label()}
                 </a>
               </li>
             ))}
           </ul>
         </nav>
-        <div className="theme-switch-icons mt-auto flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
-          <span className="text-sm font-medium text-muted-foreground">Appearance</span>
+        <div className="mt-auto flex items-center justify-between gap-3 border-t border-border pt-4">
+          <span className="text-sm font-medium text-muted-foreground">{m.languageLabel()}</span>
+          <LanguageSelect />
+        </div>
+        <div className="theme-switch-icons flex flex-wrap items-center justify-between gap-3">
+          <span className="text-sm font-medium text-muted-foreground">{m.homeAppearance()}</span>
           <ThemeSwitch />
         </div>
       </DialogContent>
@@ -170,6 +184,7 @@ export function HomeMenu() {
 }
 
 export function HomeFooter() {
+  const homeLinks = useHomeLinks();
   return (
     <footer className="border-t border-border bg-muted/40">
       <div className="page-gutter grid items-center gap-4 pt-6 pb-[calc(4.5rem+env(safe-area-inset-bottom))] sm:gap-5 sm:py-8 lg:grid-cols-[1fr_auto_1fr] lg:gap-x-6">
@@ -184,17 +199,17 @@ export function HomeFooter() {
             <ArrowUpRightIcon strokeWidth={2} aria-hidden="true" className="size-3.5" />
           </a>
         </div>
-        <nav aria-label="Footer">
+        <nav aria-label={m.homeFooter()}>
           <ul className="grid grid-cols-2 gap-x-4 text-sm text-muted-foreground sm:flex sm:flex-wrap sm:items-center sm:gap-x-5">
             <li>
               <Link to="/workbench" className={footerLink}>
-                Workbench
+                {m.homeWorkbench()}
               </Link>
             </li>
             {homeLinks.map(({ href, label }) => (
               <li key={href}>
                 <a href={href} className={footerLink}>
-                  {label}
+                  {label()}
                 </a>
               </li>
             ))}

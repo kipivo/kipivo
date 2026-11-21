@@ -1,21 +1,10 @@
+import { m } from "@kipivo/i18n/messages";
 const questions = [
-  [
-    "Can I run a check on the hosted website?",
-    "No. Checks run against your checkout on your machine. The browser runs page is only available when you start the Web development server locally; the CLI works without that server.",
-  ],
-  [
-    "What happens if I restart the runner?",
-    "Completed runs and their logs stay in local SQLite history. If a check was interrupted, the runner marks it as failed on restart. Submit a new check when you’re ready to retry.",
-  ],
-  [
-    "Who can manage workspace accounts?",
-    "Members can manage their own account settings. Administrators can also open the account directory to find a teammate and change their role. Signing up does not grant administrator access.",
-  ],
-  [
-    "How do I connect from my phone?",
-    "In the Kipivo mobile app, set the workspace address to your Web or gateway address. You can test the connection, then open the workspace in your browser to sign in.",
-  ],
-];
+  ["hosted", m.homeHostedQuestion, m.homeHostedAnswer],
+  ["restart", m.homeRestartQuestion, m.homeRestartAnswer],
+  ["accounts", m.homeAccountsQuestion, m.homeAccountsAnswer],
+  ["phone", m.homePhoneQuestion, m.homePhoneAnswer],
+] as const;
 
 export function WorkspaceGuide() {
   return (
@@ -30,20 +19,20 @@ export function WorkspaceGuide() {
           id="guide-title"
           className="text-balance text-4xl font-semibold tracking-tight lg:text-5xl"
         >
-          Workspace guide
+          {m.homeGuide()}
         </h2>
         <p className="mt-4 max-w-[34ch] leading-relaxed text-muted-foreground">
-          Where your checks run, what gets saved, and how to share access.
+          {m.homeGuideIntro()}
         </p>
       </div>
       <div className="divide-y divide-border border-y border-border">
-        {questions.map(([question, answer]) => (
-          <details key={question}>
+        {questions.map(([id, question, answer]) => (
+          <details key={id}>
             <summary className="control-focus cursor-pointer rounded-sm py-4 font-semibold marker:text-primary">
-              <span className="pl-1">{question}</span>
+              <span className="pl-1">{question()}</span>
             </summary>
             <p className="max-w-[62ch] pb-5 text-sm leading-relaxed text-muted-foreground">
-              {answer}
+              {answer()}
             </p>
           </details>
         ))}

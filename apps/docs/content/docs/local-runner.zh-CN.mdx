@@ -1,0 +1,35 @@
+---
+title: 本地运行器
+description: 使用 Kipivo CLI 启动运行器、查看检查状态和读取日志。
+---
+
+本地运行器执行当前代码库的 `bun run check` 脚本。按照[快速开始](/docs/zh-CN/quickstart)提交一次检查。
+
+| 操作         | 命令                                   |
+| ------------ | -------------------------------------- |
+| 查看可用命令 | `bun run kpdev runner --help`          |
+| 启动运行器   | `bun run kpdev runner serve`           |
+| 提交检查     | `bun run kpdev runner run check`       |
+| 查看状态     | `bun run kpdev runner status <run-id>` |
+| 读取日志     | `bun run kpdev runner logs <run-id>`   |
+
+`kpvo` 是 `kipivo` 的别名，两者均支持 `--version`。请在启动运行器的代码库中执行命令。
+
+## 在浏览器中查看运行
+
+保持运行器开启，执行 `bun run kpdev dev --filter=web`，然后打开开发服务器上的[本地运行页面](http://localhost:3000/runs)。
+
+## 构建 CLI
+
+在代码库根目录运行以下命令，构建 CLI 并检查生成的命令行程序。
+
+```sh
+bun run kpdev turbo run build --filter=kipivo
+bun apps/cli/dist/kipivo.js --help
+```
+
+## 排查检查问题
+
+- 如果 CLI 无法连接，请确认运行器仍在运行，两个终端使用同一代码库和相同的 `KIPIVO_HOME`。
+- 运行器默认监听 `127.0.0.1:4310`，每次执行一个检查。提交下一次检查前，可先查看上一次的状态。
+- 运行历史默认保存在 `~/.kipivo`。若要隔离运行记录，请在两个终端中将 `KIPIVO_HOME` 指向同一个私有目录。

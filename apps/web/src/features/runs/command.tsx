@@ -1,3 +1,4 @@
+import { m } from "@kipivo/i18n/messages";
 import { Button } from "@kipivo/ui/components/button";
 import { copyText } from "@kipivo/ui/lib/clipboard";
 import { useState } from "react";
@@ -20,15 +21,15 @@ export function CopyCommands({
         type="button"
         variant="outline"
         size="sm"
-        aria-label={`Copy commands: ${title}`}
+        aria-label={m.copyCommandsLabel({ title })}
         className={className}
         onClick={async () => setResult(await copyText(commands))}
       >
-        {result === "copied" ? "Copied" : "Copy"}
+        {result === "copied" ? m.commandsCopied() : m.copyCommands()}
       </Button>
       <span role="status" className={result === "failed" ? "basis-full text-xs" : "sr-only"}>
-        {result === "copied" && "Commands copied to clipboard."}
-        {result === "failed" && "Select the command to copy it manually."}
+        {result === "copied" && m.commandsCopiedStatus()}
+        {result === "failed" && m.commandsCopyFailed()}
       </span>
     </>
   );

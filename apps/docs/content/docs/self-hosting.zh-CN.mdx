@@ -1,0 +1,35 @@
+---
+title: 自行部署
+description: 部署 Kipivo 并创建第一个管理员账号。
+---
+
+Kipivo 需要 Web 服务、API 服务和 PostgreSQL。
+
+## Docker
+
+在代码库根目录构建镜像，以便 Docker 读取工作区锁文件和共享资源。按[认证部署指南](https://github.com/kipivo/kipivo/blob/next/docs/auth.md#docker-and-railway)启动 Web、API 和 PostgreSQL。各服务的构建命令和镜像冒烟测试见 [Web 与 Docs](https://github.com/kipivo/kipivo/blob/next/docs/testing.md#web-and-docs-production-image-smoke-tests)、[API](https://github.com/kipivo/kipivo/blob/next/docs/testing.md#api-production-image-smoke-test) 和[网关](https://github.com/kipivo/kipivo/blob/next/docs/testing.md#gateway-production-image-smoke-test)。
+
+## Railway
+
+新建名为 `kipivo` 的空 Railway 项目，授权 Railway GitHub App 访问 `kipivo/kipivo`。安装 [Railway CLI](https://docs.railway.com/cli) 5.42.1 或更高版本。在代码库根目录运行以下命令，关联项目时选择 `next` 环境。
+
+```sh
+bun install --frozen-lockfile
+railway login
+railway link
+railway config plan
+```
+
+查看计划后运行 `railway config apply`。[Railway 配置](https://github.com/kipivo/kipivo/blob/next/.railway/railway.ts)声明了网关、Web、API、Docs、PostgreSQL 和 Redis 服务，通过私有网络连接，并为从 `next` 部署的服务启用 **Wait for CI**。可按[资源指南](https://github.com/kipivo/kipivo/blob/next/docs/resources.md#railway)配置兼容 S3 的对象存储。
+
+将网关作为独立服务部署，同时保留 Web 和 API 现有的公开域名。[路由指南](https://github.com/kipivo/kipivo/blob/next/docs/architecture.md#web-and-public-api)说明了域名路由和上游配置。Railway 在切换 Docs 流量前会检查 `/docs`，网关自身的健康检查路径为 `/gateway-healthz`。
+
+## 配置并验证实例
+
+1. 将 API 连接到 PostgreSQL 并应用数据库迁移。
+2. 将 `AUTH_URL` 设为公开的 Web 源地址，并在 API 服务配置 `AUTH_SECRET`。具体设置见[认证部署指南](https://github.com/kipivo/kipivo/blob/next/docs/auth.md#docker-and-railway)。
+3. 访问 `/healthz` 检查 Web，通过 `/readyz` 确认 API 已就绪。打开 Web 首页创建第一个管理员账号。
+
+使用[服务冒烟测试](https://github.com/kipivo/kipivo/blob/next/docs/testing.md#verify-running-services)验证生产部署。
+
+配置[移动端](/docs/zh-CN/mobile)或调用[公开 API](/docs/zh-CN/api-reference)时，请使用 Web 源地址。

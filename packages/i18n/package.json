@@ -5,6 +5,7 @@
   "sideEffects": false,
   "exports": {
     ".": "./src/index.ts",
+    "./languages": "./src/languages.ts",
     "./messages": "./generated/messages.js",
     "./runtime": "./generated/runtime.js",
     "./server": "./generated/server.js",

@@ -133,6 +133,7 @@ export default defineRailway(() => {
         "/.dockerignore",
         "/packages/tsconfig/**",
         "/packages/ui/**",
+        "/packages/i18n/**",
         "/packages/icons/**",
         "/assets/logo.svg",
         "/apps/docs/**",

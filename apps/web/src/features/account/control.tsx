@@ -1,3 +1,4 @@
+import { m } from "@kipivo/i18n/messages";
 import { buttonVariants } from "@kipivo/ui/components/button";
 import { LoginIcon } from "@kipivo/icons";
 import { cn } from "@kipivo/ui/lib/utils";
@@ -16,6 +17,7 @@ export function AccountControl({
 }) {
   const { session } = useAccountSession();
   const onWorkbench = useLocation({ select: (location) => location.pathname === "/workbench" });
+  const signInLabel = side ? "Sign in" : m.credentialSubmit();
   const signInClassName = cn(
     buttonVariants({ variant: "outline" }),
     side === "top" &&
@@ -32,7 +34,7 @@ export function AccountControl({
           : cn(signInClassName, "pointer-events-none")
       }
     >
-      {!side && <span className="invisible">Sign in</span>}
+      {!side && <span className="invisible">{signInLabel}</span>}
     </span>
   );
 
@@ -48,8 +50,8 @@ export function AccountControl({
     <Link
       to="/sign-in"
       search={onWorkbench ? { next: "/workbench" } : {}}
-      aria-label="Sign in"
-      title="Sign in"
+      aria-label={signInLabel}
+      title={signInLabel}
       className={signInClassName}
     >
       {side === "top" && (
@@ -58,7 +60,7 @@ export function AccountControl({
           aria-hidden="true"
         />
       )}
-      <span>Sign in</span>
+      <span>{signInLabel}</span>
     </Link>
   );
 }

@@ -1,3 +1,4 @@
+import { m } from "@kipivo/i18n/messages";
 import { BackToTopButton } from "@kipivo/ui/components/back-to-top-button";
 import { useEffect, useState, type RefObject } from "react";
 import { homeScrollBehavior } from "./scroll";
@@ -25,6 +26,7 @@ export function BackToTop({ hero }: { hero: RefObject<HTMLElement | null> }) {
   return (
     <BackToTopButton
       visible={visible}
+      label={m.homeBackToTop()}
       onClick={goToTop}
       className="fixed right-[max(1rem,env(safe-area-inset-right))] bottom-[max(1rem,env(safe-area-inset-bottom))] z-20"
     />

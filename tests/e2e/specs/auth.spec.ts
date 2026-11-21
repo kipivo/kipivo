@@ -1107,6 +1107,27 @@ for (const [provider, name, authorizeURL, authPage] of [
 test.describe("password sign-in language", () => {
   test.use({ locale: "zh-CN" });
 
+  for (const width of [390, 1280]) {
+    test(`home language switch shares the sign-in preference at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 800 });
+      await page.goto(origin);
+      await expect(page.getByRole("heading", { level: 1 })).toHaveText("从灵感到完成。");
+      await page.getByRole("button", { name: "失败的检查" }).click();
+      if (width < 1024) await page.getByRole("button", { name: "打开导航" }).click();
+      await page.getByRole("combobox", { name: "语言" }).click();
+      await page.getByRole("option", { name: "English", exact: true }).click();
+      if (width < 1024) await page.getByRole("button", { name: "Close navigation" }).click();
+      await expect(page).toHaveTitle("Kipivo — From spark to done.");
+      await expect(page.getByRole("heading", { level: 1 })).toHaveText("From spark to done.");
+      await expect(page.getByRole("button", { name: "Failing check" })).toHaveAttribute(
+        "aria-pressed",
+        "true",
+      );
+      await page.getByRole("link", { name: "Sign in", exact: true }).click();
+      await expect(page.getByRole("heading", { level: 1 })).toHaveText("Sign in to Kipivo");
+    });
+  }
+
   test("isolates concurrent SSR languages without JavaScript", async ({ browser }) => {
     const [automatic, explicit] = await Promise.all(
       [0, 1].map(() => browser.newContext({ locale: "zh-CN", javaScriptEnabled: false })),
@@ -1147,7 +1168,8 @@ test.describe("password sign-in language", () => {
     await page.getByRole("button", { name: "显示密码" }).click();
     await page.getByRole("button", { name: "登录", exact: true }).click();
     await expect(page.getByText("邮箱或密码不正确。")).toBeVisible();
-    await page.getByRole("combobox", { name: "语言" }).selectOption("en");
+    await page.getByRole("combobox", { name: "语言" }).click();
+    await page.getByRole("option", { name: "English", exact: true }).click();
     await expect(page).toHaveTitle("Sign in | Kipivo");
     await expect(page.locator("html")).toHaveAttribute("lang", "en");
     await expect(page.getByText("The email or password is incorrect.")).toBeVisible();
@@ -1157,11 +1179,12 @@ test.describe("password sign-in language", () => {
     await expect(password).toHaveAttribute("type", "text");
     await expect(page).toHaveURL(url);
     await page.reload();
-    await expect(page.getByRole("combobox", { name: "Language" })).toHaveValue("en");
-    await page.getByRole("combobox", { name: "Language" }).selectOption("auto");
+    await expect(page.getByRole("combobox", { name: "Language" })).toContainText("English");
+    await page.getByRole("combobox", { name: "Language" }).click();
+    await page.getByRole("option", { name: "Use browser language" }).click();
     await expect(page).toHaveTitle("登录 | Kipivo");
     // Wait for hydration so the client can drop the resolved-locale write.
-    await expect(page.getByRole("combobox", { name: "语言" })).toHaveValue("auto");
+    await expect(page.getByRole("combobox", { name: "语言" })).toContainText("跟随浏览器");
     const automatic = await context.cookies(origin);
     expect(automatic.find((c) => c.name === "locale")).toBeUndefined();
     expect(automatic.find((c) => c.name === "locale-auto")?.value).toBe("1");
@@ -1180,12 +1203,15 @@ test.describe("password sign-in language", () => {
     const input = page.getByLabel("邮箱", { exact: true });
     await input.fill("reader@example.com");
     const language = page.getByRole("combobox", { name: "语言" });
-    await language.selectOption("en");
+    await language.press("Enter");
+    await expect(page.getByRole("option", { name: "简体中文", selected: true })).toBeVisible();
+    await page.keyboard.press("ArrowUp");
+    await page.keyboard.press("Enter");
     await expect(page).toHaveTitle("Sign in | Kipivo");
     await expect(page.locator("html")).toHaveAttribute("lang", "en");
     await expect(page.getByLabel("Email", { exact: true })).toHaveValue("reader@example.com");
     await expect(page).toHaveURL(`${origin}/sign-in`);
-    await expect(page.getByRole("combobox", { name: "Language" })).toHaveValue("en");
+    await expect(page.getByRole("combobox", { name: "Language" })).toContainText("English");
     const cookies = await context.cookies(origin);
     expect(cookies.find((value) => value.name === "locale")?.value).toBe("en");
     expect(cookies.find((value) => value.name === "locale-auto")).toBeUndefined();
@@ -1202,7 +1228,7 @@ test.describe("password sign-in language", () => {
       await page.goto(`${origin}/sign-in`);
       await expect(page).toHaveTitle("登录 | Kipivo");
       await expect(page.locator("html")).toHaveAttribute("lang", "zh-CN");
-      await expect(page.getByRole("combobox", { name: "语言" })).toHaveValue("auto");
+      await expect(page.getByRole("combobox", { name: "语言" })).toContainText("跟随浏览器");
       const cookies = await context.cookies(origin);
       expect(cookies.find((c) => c.name === "locale")).toBeUndefined();
       expect(cookies.find((c) => c.name === "locale-auto")?.value).toBe("1");
@@ -1221,7 +1247,8 @@ test.describe("password sign-in language", () => {
     await page.goto(`${origin}/authorize?${new URLSearchParams(flow)}`);
     await expect(page.getByText("登录以继续授权你的设备。")).toBeVisible();
     const url = page.url();
-    await page.getByRole("combobox", { name: "语言" }).selectOption("en");
+    await page.getByRole("combobox", { name: "语言" }).click();
+    await page.getByRole("option", { name: "English", exact: true }).click();
     await expect(page.getByText("Sign in to continue authorizing your device.")).toBeVisible();
     await expect(page).toHaveURL(url);
   });
@@ -1278,7 +1305,8 @@ for (const locale of ["en", "zh-CN"] as const) {
         expect(record.body, record.url).not.toContain("Create the first administrator account.");
       }
       const offset = records.length;
-      await page.getByRole("combobox").selectOption(locale === "en" ? "zh-CN" : "en");
+      await page.getByRole("combobox").click();
+      await page.getByRole("option", { name: locale === "en" ? "简体中文" : "English" }).click();
       await expect(page.locator("html")).toHaveAttribute("lang", locale === "en" ? "zh-CN" : "en");
       await settle();
       expect(records.slice(offset).filter((record) => record.url.includes("/_serverFn/"))).toEqual(

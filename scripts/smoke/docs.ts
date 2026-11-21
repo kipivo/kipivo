@@ -21,9 +21,14 @@ export async function verifyDocs(origin: URL | string) {
 
   const quickstart = await (await request("/docs/quickstart")).text();
   assert.match(quickstart, /<h1\b[^>]*>Quickstart<\/h1>/);
+  const chinese = await (await request("/docs/zh-CN/quickstart")).text();
+  assert.match(chinese, /<html\b[^>]*lang="zh-CN"/);
+  assert.match(chinese, /<h1\b[^>]*>快速开始<\/h1>/);
+  assert.match(chinese, /href="\/docs\/zh-CN\/local-runner"/);
   const searchIndex = await (await request("/docs/search.json")).json();
   assert.ok(searchIndex && typeof searchIndex === "object" && "type" in searchIndex);
   assert.equal(searchIndex.type, "advanced");
+  assert.ok("i18n" in searchIndex && searchIndex.i18n === true);
   await request("/docs/missing-guide", 404);
 }
 

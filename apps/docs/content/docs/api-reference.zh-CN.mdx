@@ -1,0 +1,22 @@
+---
+title: API 参考
+description: 调用 Kipivo REST API 并获取当前实例生成的 OpenAPI 定义。
+---
+
+Kipivo 在 `/api/v1` 提供 REST 接口，在 `/rpc` 提供类型化 RPC。两者均使用公开的 Web 源地址。请求和响应结构见当前实例的 [OpenAPI JSON](/api/openapi.json)。
+
+## 检查 API 连通性
+
+`GET /api/v1/system/ping` 接受匿名请求并返回 `{"ok":true}`。
+
+```sh
+curl --fail https://kipivo.example.com/api/v1/system/ping
+```
+
+请将示例中的 `https://kipivo.example.com` 换成你自己的 Web 源地址。
+
+## 身份验证
+
+受保护的操作使用 Web 会话 Cookie。需要受信任 `Origin` 的写操作使用实例配置的公开 Web 源地址。生成的 OpenAPI 定义列出了各 REST 操作所需的 Cookie 和请求头。
+
+权限说明和类型化 RPC 示例见 [API 访问指南](https://github.com/kipivo/kipivo/blob/next/docs/api.md#route-access)。

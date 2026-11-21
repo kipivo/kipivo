@@ -1,0 +1,28 @@
+---
+title: 快速开始
+description: 启动本地运行器，查看第一次检查的结果。
+---
+
+在 macOS 或 Linux 上安装 [mise](https://mise.jdx.dev/getting-started.html)，然后在可信的 [Kipivo 代码库](https://github.com/kipivo/kipivo)根目录打开两个终端。
+
+## 启动运行器
+
+在第一个终端安装依赖，启动运行器并保持它运行。
+
+```sh
+mise install --locked
+mise exec -- bun install --frozen-lockfile
+mise exec -- bun run kpdev runner serve
+```
+
+## 提交检查
+
+在第二个终端保存运行 ID，并用它查询状态和日志。
+
+```sh
+id=$(mise exec -- bun run kpdev runner run check)
+mise exec -- bun run kpdev runner status "$id"
+mise exec -- bun run kpdev runner logs "$id"
+```
+
+检查结束后，状态中会显示结果。更多命令和排查步骤见[本地运行器](/docs/zh-CN/local-runner)。
